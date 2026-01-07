@@ -1,19 +1,19 @@
 # Driver executable
 add_executable(urbanxx_driver driver.c)
 
-# Link against Kokkos
+# Link against liburban.a, Kokkos, and MPI
 target_link_libraries(urbanxx_driver 
     PRIVATE 
+    urban
     Kokkos::kokkos
     MPI::MPI_C
     MPI::MPI_CXX
 )
 
-# Include directories
+# Include directories (only public Urban.h visible)
 target_include_directories(urbanxx_driver 
     PRIVATE 
     ${CMAKE_SOURCE_DIR}/include
-    ${CMAKE_SOURCE_DIR}/include/private
 )
 
 # Set C++ compiler for the driver since it includes C++ headers

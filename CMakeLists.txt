@@ -63,5 +63,8 @@ elseif(LAYOUT_LEFT)
     add_compile_definitions(LAYOUT_LEFT)
 endif()
 
+# Add src subdirectory to build liburban.a
+add_subdirectory(src)
+
 # Add driver subdirectory
 add_subdirectory(driver)

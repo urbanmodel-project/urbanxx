@@ -1,9 +1,7 @@
 #include <Kokkos_Core.hpp>
 #include <iostream>
 #include <mpi.h>
-#include "private/DataTypesImpl.h"
-
-using namespace URBANXX;
+#include <Urban.h>
 
 int main(int argc, char *argv[]) {
 
