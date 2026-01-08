@@ -46,9 +46,9 @@ jobs:
         lcov --capture --directory build --output-file coverage.info
         lcov --remove coverage.info '/usr/*' '*/externals/*' --output-file coverage.info
         lcov --list coverage.info
-    
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v4
+
+    - name: Upload results to Codecov
+      uses: codecov/codecov-action@v5
       with:
         files: ./coverage.info
         flags: unittests
