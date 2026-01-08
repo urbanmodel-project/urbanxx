@@ -21,7 +21,7 @@ jobs:
 
       - name: Run clang-format check
         run: |
-          FILES=$(ls src/*.cpp include/*.h include/*/*.h 2>/dev/null || true)
+          FILES=$(ls src/*.cpp include/*.h include/private/*.h 2>/dev/null || true)
 
           if [ -z "$FILES" ]; then
             echo "No files to format"
