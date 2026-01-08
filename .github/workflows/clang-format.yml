@@ -28,5 +28,13 @@ jobs:
             exit 0
           fi
 
-          clang-format-14 $FILES | diff -u --color=always $FILES -
+          # Apply formatting in-place
+          clang-format-14 -i $FILES
+
+          # Fail if formatting changed anything
+          git diff --exit-code || {
+            echo "::error::Code is not clang-formatted. Run clang-format-14 -i on affected files."
+            git diff
+            exit 1
+          }
 
