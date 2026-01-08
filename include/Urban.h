@@ -31,8 +31,8 @@ typedef enum {
 } UrbanErrorCode;
 
 // API functions
-URBAN_EXTERN UrbanErrorCode UrbanCreate(int numLandunits, UrbanType *urban);
-URBAN_EXTERN UrbanErrorCode UrbanDestroy(UrbanType *urban);
+URBAN_EXTERN void UrbanCreate(int numLandunits, UrbanType *urban, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanDestroy(UrbanType *urban, UrbanErrorCode *status);
 
 #ifdef __cplusplus
 } // extern "C"

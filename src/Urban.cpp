@@ -13,33 +13,36 @@ struct _p_UrbanType : public URBANXX::_p_UrbanType {
 
 extern "C" {
 
-UrbanErrorCode UrbanCreate(int numLandunits, UrbanType *urban) {
-  if (urban == nullptr) {
-    return URBAN_ERR_INVALID_ARGUMENT;
+void UrbanCreate(int numLandunits, UrbanType *urban, UrbanErrorCode *status) {
+  if (urban == nullptr || status == nullptr) {
+    if (status) *status = URBAN_ERR_INVALID_ARGUMENT;
+    return;
   }
   if (numLandunits <= 0) {
-    return URBAN_ERR_INVALID_ARGUMENT;
+    *status = URBAN_ERR_INVALID_ARGUMENT;
+    return;
   }
 
   try {
     *urban = new _p_UrbanType(numLandunits);
-    return URBAN_SUCCESS;
+    *status = URBAN_SUCCESS;
   } catch (...) {
-    return URBAN_ERR_INTERNAL;
+    *status = URBAN_ERR_INTERNAL;
   }
 }
 
-UrbanErrorCode UrbanDestroy(UrbanType *urban) {
-  if (urban == nullptr || *urban == nullptr) {
-    return URBAN_ERR_INVALID_ARGUMENT;
+void UrbanDestroy(UrbanType *urban, UrbanErrorCode *status) {
+  if (urban == nullptr || *urban == nullptr || status == nullptr) {
+    if (status) *status = URBAN_ERR_INVALID_ARGUMENT;
+    return;
   }
 
   try {
     delete *urban;
     *urban = nullptr;
-    return URBAN_SUCCESS;
+    *status = URBAN_SUCCESS;
   } catch (...) {
-    return URBAN_ERR_INTERNAL;
+    *status = URBAN_ERR_INTERNAL;
   }
 }
 
