@@ -1,0 +1,39 @@
+name: Build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake gfortran libopenmpi-dev
+    
+    - name: Configure CMake
+      run: |
+        cmake -B build \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_CXX_FLAGS="-DURBANXX_ENABLE_OPENMP" \
+          -DKokkos_ENABLE_OPENMP=ON \
+          -DKokkos_ARCH_NATIVE=ON \
+          -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF
+    
+    - name: Build
+      run: cmake --build build --verbose
+    
+    - name: Test C driver
+      run: ./build/driver/urbanxx_driver
+    
+    - name: Test Fortran driver
+      run: ./build/driver/urbanxx_driver_f
