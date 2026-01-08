@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
-project(UrbanXX LANGUAGES CXX C)
+project(UrbanXX LANGUAGES CXX C Fortran)
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
