@@ -20,7 +20,7 @@ using Real = double;
 
 // user-defined literal for generic reals
 KOKKOS_INLINE_FUNCTION constexpr Real operator""_Real(long double x) {
-   return x;
+  return x;
 }
 
 // Aliases for Kokkos memory spaces
@@ -42,35 +42,35 @@ ENABLE_SERIAL is defined."
 // Aliases for Kokkos memory layouts
 #ifdef LAYOUT_RIGHT
 
-using MemLayout    = Kokkos::LayoutRight;
+using MemLayout = Kokkos::LayoutRight;
 using MemInvLayout = Kokkos::LayoutLeft;
 
 #elif LAYOUT_LEFT
 
-using MemLayout    = Kokkos::LayoutLeft;
+using MemLayout = Kokkos::LayoutLeft;
 using MemInvLayout = Kokkos::LayoutRight;
 
 #else
 #error "OMEGA Memory Layout is not defined."
 #endif
 
-using HostMemSpace     = Kokkos::HostSpace;
-using HostMemLayout    = MemLayout;
+using HostMemSpace = Kokkos::HostSpace;
+using HostMemLayout = MemLayout;
 using HostMemInvLayout = MemInvLayout;
 
-#define MAKE_VIEW_DIMS(N, V, T, ML, MS)  \
-   using N##1D##T = Kokkos::V<T *, ML, MS>;    \
-   using N##2D##T = Kokkos::V<T **, ML, MS>;   \
-   using N##3D##T = Kokkos::V<T ***, ML, MS>;  \
-   using N##4D##T = Kokkos::V<T ****, ML, MS>; \
-   using N##5D##T = Kokkos::V<T *****, ML, MS>;
+#define MAKE_VIEW_DIMS(N, V, T, ML, MS)                                        \
+  using N##1D##T = Kokkos::V<T *, ML, MS>;                                     \
+  using N##2D##T = Kokkos::V<T **, ML, MS>;                                    \
+  using N##3D##T = Kokkos::V<T ***, ML, MS>;                                   \
+  using N##4D##T = Kokkos::V<T ****, ML, MS>;                                  \
+  using N##5D##T = Kokkos::V<T *****, ML, MS>;
 
-#define MAKE_VIEW_TYPES(N, V, ML, MS) \
-   MAKE_VIEW_DIMS(N, V, I4, ML, MS)   \
-   MAKE_VIEW_DIMS(N, V, I8, ML, MS)   \
-   MAKE_VIEW_DIMS(N, V, R4, ML, MS)   \
-   MAKE_VIEW_DIMS(N, V, R8, ML, MS)   \
-   MAKE_VIEW_DIMS(N, V, Real, ML, MS)
+#define MAKE_VIEW_TYPES(N, V, ML, MS)                                          \
+  MAKE_VIEW_DIMS(N, V, I4, ML, MS)                                             \
+  MAKE_VIEW_DIMS(N, V, I8, ML, MS)                                             \
+  MAKE_VIEW_DIMS(N, V, R4, ML, MS)                                             \
+  MAKE_VIEW_DIMS(N, V, R8, ML, MS)                                             \
+  MAKE_VIEW_DIMS(N, V, Real, ML, MS)
 
 // Aliases for Kokkos device arrays of various dimensions and types
 MAKE_VIEW_TYPES(Array, View, MemLayout, MemSpace)
@@ -84,7 +84,6 @@ MAKE_VIEW_TYPES(HostArray, View, HostMemLayout, HostMemSpace)
 template <class T>
 inline constexpr bool isKokkosArray = Kokkos::is_view<T>::value;
 
-
-}
+} // namespace URBANXX
 
 #endif // DATA_TYPES_H

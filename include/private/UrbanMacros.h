@@ -4,8 +4,8 @@
 namespace URBANXX {
 
 // Macro to declare dual arrays (host and device)
-#define DECLARE_DUAL_ARRAY(suffix, name) \
-  HostArray##suffix name##H;             \
+#define DECLARE_DUAL_ARRAY(suffix, name)                                       \
+  HostArray##suffix name##H;                                                   \
   Array##suffix name
 
 // Macro to allocate a single view

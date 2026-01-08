@@ -1,7 +1,7 @@
 #include "Urban.h"
-#include "private/UrbanTypeImpl.h"
 #include "private/AtmosphereTypeImpl.h"
 #include "private/DataTypesImpl.h"
+#include "private/UrbanTypeImpl.h"
 
 // Define the C struct to match the C++ class
 struct _p_UrbanType : public URBANXX::_p_UrbanType {
@@ -15,7 +15,8 @@ extern "C" {
 
 void UrbanCreate(int numLandunits, UrbanType *urban, UrbanErrorCode *status) {
   if (urban == nullptr || status == nullptr) {
-    if (status) *status = URBAN_ERR_INVALID_ARGUMENT;
+    if (status)
+      *status = URBAN_ERR_INVALID_ARGUMENT;
     return;
   }
   if (numLandunits <= 0) {
@@ -33,7 +34,8 @@ void UrbanCreate(int numLandunits, UrbanType *urban, UrbanErrorCode *status) {
 
 void UrbanDestroy(UrbanType *urban, UrbanErrorCode *status) {
   if (urban == nullptr || *urban == nullptr || status == nullptr) {
-    if (status) *status = URBAN_ERR_INVALID_ARGUMENT;
+    if (status)
+      *status = URBAN_ERR_INVALID_ARGUMENT;
     return;
   }
 

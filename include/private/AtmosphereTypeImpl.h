@@ -1,9 +1,9 @@
 #ifndef ATMOSPHERE_TYPE_IMPL_H
 #define ATMOSPHERE_TYPE_IMPL_H
 
-#include <Kokkos_Core.hpp>
 #include "private/DataTypesImpl.h"
 #include "private/UrbanMacros.h"
+#include <Kokkos_Core.hpp>
 
 namespace URBANXX {
 
