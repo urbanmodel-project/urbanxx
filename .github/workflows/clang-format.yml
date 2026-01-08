@@ -1,0 +1,40 @@
+name: Clang Format Check
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop   # optional
+
+jobs:
+  clang-format:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install clang-format-14
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-format-14
+
+      - name: Run clang-format check
+        run: |
+          FILES=$(ls src/*.cpp include/*.h include/private/*.h 2>/dev/null || true)
+
+          if [ -z "$FILES" ]; then
+            echo "No files to format"
+            exit 0
+          fi
+
+          # Apply formatting in-place
+          clang-format-14 -i $FILES
+
+          # Fail if formatting changed anything
+          git diff --exit-code || {
+            echo "::error::Code is not clang-formatted. Run clang-format-14 -i on affected files."
+            git diff
+            exit 1
+          }
+
