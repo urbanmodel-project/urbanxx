@@ -2,11 +2,9 @@
 #define URBAN_TYPE_IMPL_H
 #include <private/AtmosphereTypeImpl.h>
 #include <private/DataTypesImpl.h>
+#include <private/UrbanConstants.h>
 
 namespace URBANXX {
-
-// Constants
-constexpr int NUM_RAD_BANDS = 2;
 
 struct _p_UrbanType {
   int numLandunits;
