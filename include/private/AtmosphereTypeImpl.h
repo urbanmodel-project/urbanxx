@@ -8,48 +8,25 @@
 namespace URBANXX {
 
 struct AtmosphereType {
-  // cosine solar zenith angle (-)
-  DECLARE_DUAL_ARRAY(1DR8, Coszen);
+  DECLARE_DUAL_VIEWS(1DR8, Coszen) // cosine solar zenith angle (-)
+  DECLARE_DUAL_VIEWS(
+      3DR8, ForcSRad) // solar radiation on horizontal surface (W/m**2)
+                      // [landunit, band, type] where type is direct/diffuse
+  DECLARE_DUAL_VIEWS(1DR8, FracSnow) // fraction of ground covered by snow (-)
+  DECLARE_DUAL_VIEWS(1DR8, ForcLRad) // downwelling longwave radiation (W/m**2)
+  DECLARE_DUAL_VIEWS(1DR8, ForcTemp) // air temperature (K)
+  DECLARE_DUAL_VIEWS(1DR8, ForcPotTemp) // potential temperature (Pa)
+  DECLARE_DUAL_VIEWS(1DR8, ForcRho)     // air density (kg/m**3)
+  DECLARE_DUAL_VIEWS(1DR8, ForcSpcHumd) // specific humidity (kg/kg)
+  DECLARE_DUAL_VIEWS(1DR8, ForcPress)   // atmospheric pressure (Pa)
+  DECLARE_DUAL_VIEWS(1DR8, ForcWindU)   // wind speed in east direction (m/s)
+  DECLARE_DUAL_VIEWS(1DR8, ForcWindV)   // wind speed in north direction (m/s)
 
-  // direct beam solar radiation on horizontal surface (W/m**2)
-  DECLARE_DUAL_ARRAY(2DR8, SdirHoriz);
-
-  // diffuse solar radiation on horizontal surface (W/m**2)
-  DECLARE_DUAL_ARRAY(2DR8, SdifHoriz);
-
-  // fraction of ground covered by snow (-)
-  DECLARE_DUAL_ARRAY(1DR8, FracSnow);
-
-  // downwelling longwave radiation (W/m**2)
-  DECLARE_DUAL_ARRAY(1DR8, DownwellingLongRad);
-
-  // air temperature (K)
-  DECLARE_DUAL_ARRAY(1DR8, ForcTemp);
-
-  // potential temperature (Pa)
-  DECLARE_DUAL_ARRAY(1DR8, ForcPotTemp);
-
-  // air density (kg/m**3)
-  DECLARE_DUAL_ARRAY(1DR8, ForcRho);
-
-  // specific humidity (kg/kg)
-  DECLARE_DUAL_ARRAY(1DR8, ForcSpcHumd);
-
-  // atomspheric pressure (Pa)
-  DECLARE_DUAL_ARRAY(1DR8, ForcPress);
-
-  // wind speed in east direction (m/s)
-  DECLARE_DUAL_ARRAY(1DR8, ForcWindU);
-
-  // wind speed in north direction (m/s)
-  DECLARE_DUAL_ARRAY(1DR8, ForcWindV);
-
-  AtmosphereType(int numLandunits, int numRadBands) {
+  AtmosphereType(int numLandunits, int numRadBands, int numRadTypes) {
     ALLOCATE_DUAL_VIEWS(Coszen, 1DR8, numLandunits)
-    ALLOCATE_DUAL_VIEWS(SdirHoriz, 2DR8, numLandunits, numRadBands)
-    ALLOCATE_DUAL_VIEWS(SdifHoriz, 2DR8, numLandunits, numRadBands)
+    ALLOCATE_DUAL_VIEWS(ForcSRad, 3DR8, numLandunits, numRadBands, numRadTypes)
     ALLOCATE_DUAL_VIEWS(FracSnow, 1DR8, numLandunits)
-    ALLOCATE_DUAL_VIEWS(DownwellingLongRad, 1DR8, numLandunits)
+    ALLOCATE_DUAL_VIEWS(ForcLRad, 1DR8, numLandunits)
     ALLOCATE_DUAL_VIEWS(ForcTemp, 1DR8, numLandunits)
     ALLOCATE_DUAL_VIEWS(ForcPotTemp, 1DR8, numLandunits)
     ALLOCATE_DUAL_VIEWS(ForcRho, 1DR8, numLandunits)
