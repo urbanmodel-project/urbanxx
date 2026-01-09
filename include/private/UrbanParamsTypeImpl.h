@@ -8,43 +8,27 @@
 namespace URBANXX {
 
 struct Albedo {
-  DECLARE_DEVICE_VIEW(2DR8, PerviousRoadDir) // albedo for pervious road for
-                                             // direct beam solar radiation (-)
-  DECLARE_DEVICE_VIEW(2DR8, PerviousRoadDif) // albedo for pervious road for
-                                             // diffuse solar radiation (-)
-  DECLARE_DEVICE_VIEW(2DR8,
-                      ImperviousRoadDir) // albedo for impervious road for
-                                         // direct beam solar radiation (-)
-  DECLARE_DEVICE_VIEW(2DR8, ImperviousRoadDif) // albedo for impervious road for
-                                               // diffuse solar radiation (-)
-  DECLARE_DEVICE_VIEW(2DR8, SunlitWallDir) // albedo for sunlit wall for direct
-                                           // beam solar radiation (-)
   DECLARE_DEVICE_VIEW(
-      2DR8,
-      SunlitWallDif) // albedo for sunlit wall for diffuse solar radiation (-)
-  DECLARE_DEVICE_VIEW(2DR8, ShadedWallDir) // albedo for shaded wall for direct
-                                           // beam solar radiation (-)
+      3DR8, PerviousRoad) // albedo for pervious road [landunit, band, type]
   DECLARE_DEVICE_VIEW(
-      2DR8,
-      ShadedWallDif) // albedo for shaded wall for diffuse solar radiation (-)
+      3DR8, ImperviousRoad) // albedo for impervious road [landunit, band, type]
   DECLARE_DEVICE_VIEW(
-      2DR8, RoofDir) // albedo for roof for direct beam solar radiation (-)
+      3DR8, SunlitWall) // albedo for sunlit wall [landunit, band, type]
   DECLARE_DEVICE_VIEW(
-      2DR8, RoofDif) // albedo for roof for diffuse solar radiation (-)
+      3DR8, ShadedWall) // albedo for shaded wall [landunit, band, type]
+  DECLARE_DEVICE_VIEW(3DR8, Roof) // albedo for roof [landunit, band, type]
 
-  Albedo(int numLandunits, int numRadBands) {
-    ALLOCATE_DEVICE_VIEW(PerviousRoadDir, Array2DR8, numLandunits, numRadBands)
-    ALLOCATE_DEVICE_VIEW(PerviousRoadDif, Array2DR8, numLandunits, numRadBands)
-    ALLOCATE_DEVICE_VIEW(ImperviousRoadDir, Array2DR8, numLandunits,
-                         numRadBands)
-    ALLOCATE_DEVICE_VIEW(ImperviousRoadDif, Array2DR8, numLandunits,
-                         numRadBands)
-    ALLOCATE_DEVICE_VIEW(SunlitWallDir, Array2DR8, numLandunits, numRadBands)
-    ALLOCATE_DEVICE_VIEW(SunlitWallDif, Array2DR8, numLandunits, numRadBands)
-    ALLOCATE_DEVICE_VIEW(ShadedWallDir, Array2DR8, numLandunits, numRadBands)
-    ALLOCATE_DEVICE_VIEW(ShadedWallDif, Array2DR8, numLandunits, numRadBands)
-    ALLOCATE_DEVICE_VIEW(RoofDir, Array2DR8, numLandunits, numRadBands)
-    ALLOCATE_DEVICE_VIEW(RoofDif, Array2DR8, numLandunits, numRadBands)
+  Albedo(int numLandunits, int numRadBands, int numRadTypes) {
+    ALLOCATE_DEVICE_VIEW(PerviousRoad, Array3DR8, numLandunits, numRadBands,
+                         numRadTypes)
+    ALLOCATE_DEVICE_VIEW(ImperviousRoad, Array3DR8, numLandunits, numRadBands,
+                         numRadTypes)
+    ALLOCATE_DEVICE_VIEW(SunlitWall, Array3DR8, numLandunits, numRadBands,
+                         numRadTypes)
+    ALLOCATE_DEVICE_VIEW(ShadedWall, Array3DR8, numLandunits, numRadBands,
+                         numRadTypes)
+    ALLOCATE_DEVICE_VIEW(Roof, Array3DR8, numLandunits, numRadBands,
+                         numRadTypes)
   }
 };
 
@@ -98,9 +82,10 @@ struct UrbanParamsType {
   Albedo albedo;            // albedo for various urban surfaces
   Emissivity emissivity;    // emissivity for various urban surfaces
 
-  UrbanParamsType(int numLandunits, int numRadBands)
+  UrbanParamsType(int numLandunits, int numRadBands, int numRadTypes)
       : viewFactor(numLandunits), tk(numLandunits), cv(numLandunits),
-        albedo(numLandunits, numRadBands), emissivity(numLandunits) {
+        albedo(numLandunits, numRadBands, numRadTypes),
+        emissivity(numLandunits) {
     ALLOCATE_DUAL_VIEWS(CanyonHwr, 1DR8, numLandunits)
   }
 };

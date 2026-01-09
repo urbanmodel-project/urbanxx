@@ -26,7 +26,7 @@ struct _p_UrbanType {
       : numLandunits(numLandunits_), numRadBands(NUM_RAD_BANDS),
         numRadTypes(NUM_RAD_TYPES),
         atmosphereData(numLandunits_, NUM_RAD_BANDS, NUM_RAD_TYPES),
-        urbanParams(numLandunits_, NUM_RAD_BANDS),
+        urbanParams(numLandunits_, NUM_RAD_BANDS, NUM_RAD_TYPES),
         roof(numLandunits_, NUM_RAD_BANDS, NUM_RAD_TYPES),
         imperviousRoad(numLandunits_, NUM_RAD_BANDS, NUM_RAD_TYPES),
         perviousRoad(numLandunits_, NUM_RAD_BANDS, NUM_RAD_TYPES),
