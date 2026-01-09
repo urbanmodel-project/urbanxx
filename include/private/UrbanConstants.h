@@ -9,6 +9,12 @@ enum RadiationBand {
   NIR = 1  // Near-infrared band
 };
 
+// Radiation type indices
+enum RadiationType {
+  DIRECT = 0, // Direct radiation
+  DIFFUSE = 1 // Diffuse radiation
+};
+
 // Constants
 constexpr int NUM_RAD_BANDS = 2; // vis and nir
 constexpr int NUM_RAD_TYPES = 2; // direct and diffuse
