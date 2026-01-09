@@ -6,10 +6,9 @@ program urbanxx_driver_f
   use urban_kokkos_interface
   implicit none
 
-  integer :: ierr, mpi_rank, mpi_size, i
+  integer :: ierr, mpi_rank, mpi_size
   type(UrbanType) :: urban
   integer(c_int) :: numLandunits, status
-  real(c_double), allocatable, target :: canyonHwr(:)
 
   ! Initialize MPI
   call MPI_Init(ierr)
@@ -33,19 +32,8 @@ program urbanxx_driver_f
     write(*,*) 'Successfully created Urban object with ', numLandunits, ' landunits'
   end if
 
-  ! Set CanyonHwr values
-  allocate(canyonHwr(numLandunits))
-  do i = 1, numLandunits
-    canyonHwr(i) = 4.80000019073486d0
-  end do
-  call UrbanSetCanyonHwr(urban%ptr, c_loc(canyonHwr), numLandunits, status)
-  if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
-
-  if (mpi_rank == 0) then
-    write(*,*) 'Successfully set CanyonHwr values'
-  end if
-
-  deallocate(canyonHwr)
+  ! Set all urban parameters
+  call SetUrbanParameters(urban, numLandunits, mpi_rank)
 
   ! Destroy Urban object
   CallA(UrbanDestroy(urban%ptr, status))
@@ -55,5 +43,236 @@ program urbanxx_driver_f
 
   ! Finalize MPI
   call MPI_Finalize(ierr)
+
+contains
+
+  subroutine SetCanyonHwr(urban, numLandunits, mpi_rank)
+    type(UrbanType), intent(in) :: urban
+    integer(c_int), intent(in) :: numLandunits
+    integer, intent(in) :: mpi_rank
+    integer(c_int) :: status, i
+    real(c_double), allocatable, target :: canyonHwr(:)
+
+    allocate(canyonHwr(numLandunits))
+    do i = 1, numLandunits
+      canyonHwr(i) = 4.80000019073486d0
+    end do
+    call UrbanSetCanyonHwr(urban%ptr, c_loc(canyonHwr), &
+      numLandunits, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+
+    if (mpi_rank == 0) then
+      write(*,*) 'Set canyon height-to-width ratio'
+    end if
+
+    deallocate(canyonHwr)
+  end subroutine SetCanyonHwr
+
+  subroutine SetAlbedo(urban, numLandunits, mpi_rank)
+    type(UrbanType), intent(in) :: urban
+    integer(c_int), intent(in) :: numLandunits
+    integer, intent(in) :: mpi_rank
+    integer(c_int) :: status, i, ilandunit, iband, itype, idx
+    integer(c_int) :: numBands, numTypes, totalSize3D
+    integer(c_int), dimension(3) :: size3D
+    real(c_double), allocatable, target :: albedoPerviousRoad(:)
+    real(c_double), allocatable, target :: albedoImperviousRoad(:)
+    real(c_double), allocatable, target :: albedoSunlitWall(:)
+    real(c_double), allocatable, target :: albedoShadedWall(:)
+    real(c_double), allocatable, target :: albedoRoof(:)
+    real(c_double), parameter :: ALB_IMPROAD = 0.230000004172325d0
+    real(c_double), parameter :: ALB_PERROAD = 0.0799999982118607d0
+    real(c_double), parameter :: ALB_ROOF = 0.254999995231628d0
+    real(c_double), parameter :: ALB_WALL = 0.200000002980232d0
+
+    numBands = 2  ! VIS, NIR
+    numTypes = 2  ! Direct, Diffuse
+    size3D = [numLandunits, numBands, numTypes]
+    totalSize3D = numLandunits * numBands * numTypes
+
+    allocate(albedoPerviousRoad(totalSize3D))
+    allocate(albedoImperviousRoad(totalSize3D))
+    allocate(albedoSunlitWall(totalSize3D))
+    allocate(albedoShadedWall(totalSize3D))
+    allocate(albedoRoof(totalSize3D))
+
+    ! Fill arrays using same indexing as C: idx = ilandunit * numBands * numTypes + iband * numTypes + itype
+    ! Note: Fortran arrays are 1-indexed, so we adjust accordingly
+    do ilandunit = 0, numLandunits - 1
+      do iband = 0, numBands - 1
+        do itype = 0, numTypes - 1
+          idx = ilandunit * numBands * numTypes + iband * numTypes + itype + 1  ! +1 for Fortran 1-indexing
+          albedoPerviousRoad(idx) = ALB_PERROAD
+          albedoImperviousRoad(idx) = ALB_IMPROAD
+          albedoSunlitWall(idx) = ALB_WALL
+          albedoShadedWall(idx) = ALB_WALL
+          albedoRoof(idx) = ALB_ROOF
+        end do
+      end do
+    end do
+
+    call UrbanSetAlbedoPerviousRoad(urban%ptr, &
+      c_loc(albedoPerviousRoad), size3D, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+    call UrbanSetAlbedoImperviousRoad(urban%ptr, &
+      c_loc(albedoImperviousRoad), size3D, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+    call UrbanSetAlbedoSunlitWall(urban%ptr, &
+      c_loc(albedoSunlitWall), size3D, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+    call UrbanSetAlbedoShadedWall(urban%ptr, &
+      c_loc(albedoShadedWall), size3D, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+    call UrbanSetAlbedoRoof(urban%ptr, c_loc(albedoRoof), &
+      size3D, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+
+    if (mpi_rank == 0) then
+      write(*,*) 'Set albedo values for all surfaces'
+    end if
+
+    deallocate(albedoPerviousRoad)
+    deallocate(albedoImperviousRoad)
+    deallocate(albedoSunlitWall)
+    deallocate(albedoShadedWall)
+    deallocate(albedoRoof)
+  end subroutine SetAlbedo
+
+  subroutine SetEmissivity(urban, numLandunits, mpi_rank)
+    type(UrbanType), intent(in) :: urban
+    integer(c_int), intent(in) :: numLandunits
+    integer, intent(in) :: mpi_rank
+    integer(c_int) :: status, i
+    real(c_double), allocatable, target :: emissivityPerviousRoad(:)
+    real(c_double), allocatable, target :: emissivityImperviousRoad(:)
+    real(c_double), allocatable, target :: emissivityWall(:)
+    real(c_double), allocatable, target :: emissivityRoof(:)
+    real(c_double), parameter :: EMISS_ROOF = 0.90600001811981201d0
+    real(c_double), parameter :: EMISS_IMPROAD = 0.87999999523162842d0
+    real(c_double), parameter :: EMISS_PERROAD = 0.94999998807907104d0
+    real(c_double), parameter :: EMISS_WALL = 0.90200001001358032d0
+
+    allocate(emissivityPerviousRoad(numLandunits))
+    allocate(emissivityImperviousRoad(numLandunits))
+    allocate(emissivityWall(numLandunits))
+    allocate(emissivityRoof(numLandunits))
+
+    do i = 1, numLandunits
+      emissivityPerviousRoad(i) = EMISS_PERROAD
+      emissivityImperviousRoad(i) = EMISS_IMPROAD
+      emissivityWall(i) = EMISS_WALL
+      emissivityRoof(i) = EMISS_ROOF
+    end do
+
+    call UrbanSetEmissivityPerviousRoad(urban%ptr, &
+      c_loc(emissivityPerviousRoad), numLandunits, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+    call UrbanSetEmissivityImperviousRoad(urban%ptr, &
+      c_loc(emissivityImperviousRoad), numLandunits, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+    call UrbanSetEmissivityWall(urban%ptr, &
+      c_loc(emissivityWall), numLandunits, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+    call UrbanSetEmissivityRoof(urban%ptr, &
+      c_loc(emissivityRoof), numLandunits, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+
+    if (mpi_rank == 0) then
+      write(*,*) 'Set emissivity values for all surfaces'
+    end if
+
+    deallocate(emissivityPerviousRoad)
+    deallocate(emissivityImperviousRoad)
+    deallocate(emissivityWall)
+    deallocate(emissivityRoof)
+  end subroutine SetEmissivity
+
+  subroutine SetThermalConductivity(urban, numLandunits, mpi_rank)
+    type(UrbanType), intent(in) :: urban
+    integer(c_int), intent(in) :: numLandunits
+    integer, intent(in) :: mpi_rank
+    integer(c_int) :: status, i
+    real(c_double), allocatable, target :: tkRoad(:)
+    real(c_double), allocatable, target :: tkWall(:)
+    real(c_double), allocatable, target :: tkRoof(:)
+
+    allocate(tkRoad(numLandunits))
+    allocate(tkWall(numLandunits))
+    allocate(tkRoof(numLandunits))
+
+    do i = 1, numLandunits
+      tkRoad(i) = 1.0d0
+      tkWall(i) = 0.8d0
+      tkRoof(i) = 0.9d0
+    end do
+
+    call UrbanSetThermalConductivityRoad(urban%ptr, &
+      c_loc(tkRoad), numLandunits, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+    call UrbanSetThermalConductivityWall(urban%ptr, &
+      c_loc(tkWall), numLandunits, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+    call UrbanSetThermalConductivityRoof(urban%ptr, &
+      c_loc(tkRoof), numLandunits, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+
+    if (mpi_rank == 0) then
+      write(*,*) 'Set thermal conductivity values for all surfaces'
+    end if
+
+    deallocate(tkRoad)
+    deallocate(tkWall)
+    deallocate(tkRoof)
+  end subroutine SetThermalConductivity
+
+  subroutine SetHeatCapacity(urban, numLandunits, mpi_rank)
+    type(UrbanType), intent(in) :: urban
+    integer(c_int), intent(in) :: numLandunits
+    integer, intent(in) :: mpi_rank
+    integer(c_int) :: status, i
+    real(c_double), allocatable, target :: cvRoad(:)
+    real(c_double), allocatable, target :: cvWall(:)
+    real(c_double), allocatable, target :: cvRoof(:)
+
+    allocate(cvRoad(numLandunits))
+    allocate(cvWall(numLandunits))
+    allocate(cvRoof(numLandunits))
+
+    do i = 1, numLandunits
+      cvRoad(i) = 2.0d6
+      cvWall(i) = 1.8d6
+      cvRoof(i) = 1.9d6
+    end do
+
+    call UrbanSetHeatCapacityRoad(urban%ptr, &
+      c_loc(cvRoad), numLandunits, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+    call UrbanSetHeatCapacityWall(urban%ptr, &
+      c_loc(cvWall), numLandunits, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+    call UrbanSetHeatCapacityRoof(urban%ptr, &
+      c_loc(cvRoof), numLandunits, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+
+    if (mpi_rank == 0) then
+      write(*,*) 'Set heat capacity values for all surfaces'
+    end if
+
+    deallocate(cvRoad)
+    deallocate(cvWall)
+    deallocate(cvRoof)
+  end subroutine SetHeatCapacity
+
+  subroutine SetUrbanParameters(urban, numLandunits, mpi_rank)
+    type(UrbanType), intent(in) :: urban
+    integer(c_int), intent(in) :: numLandunits
+    integer, intent(in) :: mpi_rank
+
+    call SetCanyonHwr(urban, numLandunits, mpi_rank)
+    call SetAlbedo(urban, numLandunits, mpi_rank)
+    call SetEmissivity(urban, numLandunits, mpi_rank)
+    call SetThermalConductivity(urban, numLandunits, mpi_rank)
+    call SetHeatCapacity(urban, numLandunits, mpi_rank)
+  end subroutine SetUrbanParameters
 
 end program urbanxx_driver_f

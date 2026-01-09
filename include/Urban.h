@@ -38,6 +38,65 @@ URBAN_EXTERN void UrbanDestroy(UrbanType *urban, UrbanErrorCode *status);
 URBAN_EXTERN void UrbanSetCanyonHwr(UrbanType urban, const double *values,
                                     int length, UrbanErrorCode *status);
 
+// Albedo setter functions
+URBAN_EXTERN void UrbanSetAlbedoPerviousRoad(UrbanType urban,
+                                             const double *values,
+                                             const int size[3],
+                                             UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetAlbedoImperviousRoad(UrbanType urban,
+                                               const double *values,
+                                               const int size[3],
+                                               UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetAlbedoSunlitWall(UrbanType urban,
+                                           const double *values,
+                                           const int size[3],
+                                           UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetAlbedoShadedWall(UrbanType urban,
+                                           const double *values,
+                                           const int size[3],
+                                           UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetAlbedoRoof(UrbanType urban, const double *values,
+                                     const int size[3], UrbanErrorCode *status);
+
+// Emissivity setter functions
+URBAN_EXTERN void UrbanSetEmissivityPerviousRoad(UrbanType urban,
+                                                 const double *values,
+                                                 int length,
+                                                 UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetEmissivityImperviousRoad(UrbanType urban,
+                                                   const double *values,
+                                                   int length,
+                                                   UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetEmissivityWall(UrbanType urban, const double *values,
+                                         int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetEmissivityRoof(UrbanType urban, const double *values,
+                                         int length, UrbanErrorCode *status);
+
+// Thermal conductivity setter functions
+URBAN_EXTERN void UrbanSetThermalConductivityRoad(UrbanType urban,
+                                                  const double *values,
+                                                  int length,
+                                                  UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetThermalConductivityWall(UrbanType urban,
+                                                  const double *values,
+                                                  int length,
+                                                  UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetThermalConductivityRoof(UrbanType urban,
+                                                  const double *values,
+                                                  int length,
+                                                  UrbanErrorCode *status);
+
+// Heat capacity setter functions
+URBAN_EXTERN void UrbanSetHeatCapacityRoad(UrbanType urban,
+                                           const double *values, int length,
+                                           UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetHeatCapacityWall(UrbanType urban,
+                                           const double *values, int length,
+                                           UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetHeatCapacityRoof(UrbanType urban,
+                                           const double *values, int length,
+                                           UrbanErrorCode *status);
+
 #ifdef __cplusplus
 } // extern "C"
 #endif
