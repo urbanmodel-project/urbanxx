@@ -93,4 +93,4 @@ struct RoofDataType : SnowCoveredSurfaceData {
 };
 } // namespace URBANXX
 
-#endif // URBAN_SURFACE_TYPE_IMPL_Hs
+#endif // URBAN_SURFACE_TYPE_IMPL_H

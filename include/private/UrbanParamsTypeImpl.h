@@ -63,13 +63,13 @@ struct ViewFactor {
   DECLARE_DEVICE_VIEW(1DR8, SkyFrmWall)  // view factor of sky from wall (-)
   DECLARE_DEVICE_VIEW(1DR8, WallFrmRoad) // view factor of wall from road (-)
   DECLARE_DEVICE_VIEW(
-      1DR8, OthrWallFrmWall) // view factor of other wall from wall (-)
+      1DR8, OtherWallFrmWall) // view factor of other wall from wall (-)
 
   ViewFactor(int numLandunits) {
     ALLOCATE_DEVICE_VIEW(SkyFrmRoad, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(SkyFrmWall, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(WallFrmRoad, Array1DR8, numLandunits)
-    ALLOCATE_DEVICE_VIEW(OthrWallFrmWall, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(OtherWallFrmWall, Array1DR8, numLandunits)
   }
 };
 
