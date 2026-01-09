@@ -11,6 +11,7 @@ enum RadiationBand {
 
 // Constants
 constexpr int NUM_RAD_BANDS = 2; // vis and nir
+constexpr int NUM_RAD_TYPES = 2; // direct and diffuse
 
 } // namespace URBANXX
 

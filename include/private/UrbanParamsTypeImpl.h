@@ -33,18 +33,20 @@ struct Albedo {
       2DR8, RoofDif) // albedo for roof for diffuse solar radiation (-)
 
   Albedo(int numLandunits, int numRadBands) {
-    ALLOCATE_DEVICE_VIEW(PerviousRoadDir, 2DR8, numLandunits, numRadBands)
-    ALLOCATE_DEVICE_VIEW(PerviousRoadDif, 2DR8, numLandunits, numRadBands)
-    ALLOCATE_DEVICE_VIEW(ImperviousRoadDir, 2DR8, numLandunits, numRadBands)
-    ALLOCATE_DEVICE_VIEW(ImperviousRoadDif, 2DR8, numLandunits, numRadBands)
-    ALLOCATE_DEVICE_VIEW(SunlitWallDir, 2DR8, numLandunits, numRadBands)
-    ALLOCATE_DEVICE_VIEW(SunlitWallDif, 2DR8, numLandunits, numRadBands)
-    ALLOCATE_DEVICE_VIEW(ShadedWallDir, 2DR8, numLandunits, numRadBands)
-    ALLOCATE_DEVICE_VIEW(ShadedWallDif, 2DR8, numLandunits, numRadBands)
-    ALLOCATE_DEVICE_VIEW(RoofDir, 2DR8, numLandunits, numRadBands)
-    ALLOCATE_DEVICE_VIEW(RoofDif, 2DR8, numLandunits, numRadBands)
+    ALLOCATE_DEVICE_VIEW(PerviousRoadDir, Array2DR8, numLandunits, numRadBands)
+    ALLOCATE_DEVICE_VIEW(PerviousRoadDif, Array2DR8, numLandunits, numRadBands)
+    ALLOCATE_DEVICE_VIEW(ImperviousRoadDir, Array2DR8, numLandunits,
+                         numRadBands)
+    ALLOCATE_DEVICE_VIEW(ImperviousRoadDif, Array2DR8, numLandunits,
+                         numRadBands)
+    ALLOCATE_DEVICE_VIEW(SunlitWallDir, Array2DR8, numLandunits, numRadBands)
+    ALLOCATE_DEVICE_VIEW(SunlitWallDif, Array2DR8, numLandunits, numRadBands)
+    ALLOCATE_DEVICE_VIEW(ShadedWallDir, Array2DR8, numLandunits, numRadBands)
+    ALLOCATE_DEVICE_VIEW(ShadedWallDif, Array2DR8, numLandunits, numRadBands)
+    ALLOCATE_DEVICE_VIEW(RoofDir, Array2DR8, numLandunits, numRadBands)
+    ALLOCATE_DEVICE_VIEW(RoofDif, Array2DR8, numLandunits, numRadBands)
   }
-}
+};
 
 struct Emissivity {
   DECLARE_DEVICE_VIEW(1DR8, PerviousRoad)   // emissivity for road material (-)
@@ -53,10 +55,10 @@ struct Emissivity {
   DECLARE_DEVICE_VIEW(1DR8, Roof)           // emissivity for roof material (-)
 
   Emissivity(int numLandunits) {
-    ALLOCATE_DEVICE_VIEW(PerviousRoad, 1DR8, numLandunits)
-    ALLOCATE_DEVICE_VIEW(ImperviousRoad, 1DR8, numLandunits)
-    ALLOCATE_DEVICE_VIEW(Wall, 1DR8, numLandunits)
-    ALLOCATE_DEVICE_VIEW(Roof, 1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(PerviousRoad, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(ImperviousRoad, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(Wall, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(Roof, Array1DR8, numLandunits)
   }
 };
 
@@ -66,9 +68,9 @@ struct PropertiesForSurfaces {
   DECLARE_DEVICE_VIEW(1DR8, Roof) // property value for roof material
 
   PropertiesForSurfaces(int numLandunits) {
-    ALLOCATE_DEVICE_VIEW(Road, 1DR8, numLandunits)
-    ALLOCATE_DEVICE_VIEW(Wall, 1DR8, numLandunits)
-    ALLOCATE_DEVICE_VIEW(Roof, 1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(Road, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(Wall, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(Roof, Array1DR8, numLandunits)
   }
 };
 
@@ -80,10 +82,10 @@ struct ViewFactor {
       1DR8, OthrWallFrmWall) // view factor of other wall from wall (-)
 
   ViewFactor(int numLandunits) {
-    ALLOCATE_DEVICE_VIEW(SkyFrmRoad, 1DR8, numLandunits)
-    ALLOCATE_DEVICE_VIEW(SkyFrmWall, 1DR8, numLandunits)
-    ALLOCATE_DEVICE_VIEW(WallFrmRoad, 1DR8, numLandunits)
-    ALLOCATE_DEVICE_VIEW(OthrWallFrmWall, 1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(SkyFrmRoad, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(SkyFrmWall, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(WallFrmRoad, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(OthrWallFrmWall, Array1DR8, numLandunits)
   }
 };
 

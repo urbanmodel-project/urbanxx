@@ -9,12 +9,9 @@ namespace URBANXX {
 
 struct AtmosphereType {
   DECLARE_DUAL_VIEWS(1DR8, Coszen) // cosine solar zenith angle (-)
-  DECLARE_DUAL_VIEWS(2DR8,
-                     ForcSradDir) // direct beam solar radiation on horizontal
-                                  // surface (W/m**2)
   DECLARE_DUAL_VIEWS(
-      2DR8,
-      ForcSradDif) // diffuse solar radiation on horizontal surface (W/m**2)
+      3DR8, ForcSRad) // solar radiation on horizontal surface (W/m**2)
+                      // [landunit, band, type] where type is direct/diffuse
   DECLARE_DUAL_VIEWS(1DR8, FracSnow) // fraction of ground covered by snow (-)
   DECLARE_DUAL_VIEWS(1DR8, ForcLRad) // downwelling longwave radiation (W/m**2)
   DECLARE_DUAL_VIEWS(1DR8, ForcTemp) // air temperature (K)
@@ -25,10 +22,9 @@ struct AtmosphereType {
   DECLARE_DUAL_VIEWS(1DR8, ForcWindU)   // wind speed in east direction (m/s)
   DECLARE_DUAL_VIEWS(1DR8, ForcWindV)   // wind speed in north direction (m/s)
 
-  AtmosphereType(int numLandunits, int numRadBands) {
+  AtmosphereType(int numLandunits, int numRadBands, int numRadTypes) {
     ALLOCATE_DUAL_VIEWS(Coszen, 1DR8, numLandunits)
-    ALLOCATE_DUAL_VIEWS(ForcSradDir, 2DR8, numLandunits, numRadBands)
-    ALLOCATE_DUAL_VIEWS(ForcSradDif, 2DR8, numLandunits, numRadBands)
+    ALLOCATE_DUAL_VIEWS(ForcSRad, 3DR8, numLandunits, numRadBands, numRadTypes)
     ALLOCATE_DUAL_VIEWS(FracSnow, 1DR8, numLandunits)
     ALLOCATE_DUAL_VIEWS(ForcLRad, 1DR8, numLandunits)
     ALLOCATE_DUAL_VIEWS(ForcTemp, 1DR8, numLandunits)
