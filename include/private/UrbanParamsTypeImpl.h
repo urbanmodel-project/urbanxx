@@ -46,12 +46,12 @@ struct Emissivity {
   }
 };
 
-struct PropertiesForSurfaces {
+struct CommonSurfaceProperties {
   DECLARE_DEVICE_VIEW(1DR8, Road) // property value for road material
   DECLARE_DEVICE_VIEW(1DR8, Wall) // property value for wall material
   DECLARE_DEVICE_VIEW(1DR8, Roof) // property value for roof material
 
-  PropertiesForSurfaces(int numLandunits) {
+  CommonSurfaceProperties(int numLandunits) {
     ALLOCATE_DEVICE_VIEW(Road, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(Wall, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(Roof, Array1DR8, numLandunits)
@@ -77,10 +77,10 @@ struct UrbanParamsType {
   DECLARE_DUAL_VIEWS(1DR8, CanyonHwr) // canyon height-to-width ratio (-)
 
   ViewFactor viewFactor;
-  PropertiesForSurfaces tk; // thermal conductivity (W/m/K)
-  PropertiesForSurfaces cv; // heat capacity (J/m^3/K)
-  Albedo albedo;            // albedo for various urban surfaces
-  Emissivity emissivity;    // emissivity for various urban surfaces
+  CommonSurfaceProperties tk; // thermal conductivity (W/m/K)
+  CommonSurfaceProperties cv; // heat capacity (J/m^3/K)
+  Albedo albedo;              // albedo for various urban surfaces
+  Emissivity emissivity;      // emissivity for various urban surfaces
 
   UrbanParamsType(int numLandunits, int numRadBands, int numRadTypes)
       : viewFactor(numLandunits), tk(numLandunits), cv(numLandunits),
