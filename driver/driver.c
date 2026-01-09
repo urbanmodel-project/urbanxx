@@ -2,6 +2,7 @@
 #include <iostream>
 #include <mpi.h>
 #include <Urban.h>
+#include <UrbanMacros.h>
 
 int main(int argc, char *argv[]) {
 
@@ -22,26 +23,22 @@ int main(int argc, char *argv[]) {
     int numLandunits = 10;
     UrbanType urban = nullptr;
     UrbanErrorCode ierr;
-    UrbanCreate(numLandunits, &urban, &ierr);
-    
-    if (ierr != URBAN_SUCCESS) {
-      if (mpi_rank == 0) {
-        std::cerr << "Error creating Urban object: " << ierr << std::endl;
-      }
-    }
+    UrbanCall(UrbanCreate(numLandunits, &urban, &ierr), &ierr);
 
     if (mpi_rank == 0) {
       std::cout << "Successfully created Urban object with " << numLandunits 
                 << " landunits" << std::endl;
     }
 
-    // Destroy Urban object
-    UrbanDestroy(&urban, &ierr);
-    if (ierr != URBAN_SUCCESS) {
-      if (mpi_rank == 0) {
-        std::cerr << "Error destroying Urban object: " << ierr << std::endl;
-      }
+    // Set CanyonHwr values
+    double canyonHwr[numLandunits];
+    for (int i = 0; i < numLandunits; ++i) {
+      canyonHwr[i] = 4.80000019073486;
     }
+    UrbanCall(UrbanSetCanyonHwr(urban, canyonHwr, numLandunits, &ierr), &ierr);
+
+    // Destroy Urban object
+    UrbanCall(UrbanDestroy(&urban, &ierr), &ierr);
 
   }
 

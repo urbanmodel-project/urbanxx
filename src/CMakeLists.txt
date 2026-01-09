@@ -1,6 +1,7 @@
 # Urban library source files
 set(URBAN_SOURCES
     Urban.cpp
+    UrbanParamsType.cpp
     KokkosWrappers.cpp
 )
 

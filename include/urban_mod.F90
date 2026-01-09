@@ -13,6 +13,7 @@ module urban_mod
   integer(c_int), parameter :: URBAN_ERR_INVALID_ARGUMENT = 1
   integer(c_int), parameter :: URBAN_ERR_NOT_INITIALIZED = 2
   integer(c_int), parameter :: URBAN_ERR_INTERNAL = 3
+  integer(c_int), parameter :: URBAN_ERR_SIZE_MISMATCH = 4
 
   ! Interface declarations for C API functions
   interface
@@ -28,6 +29,14 @@ module urban_mod
       type(c_ptr) :: urban
       integer(c_int) :: status
     end subroutine UrbanDestroy
+
+    subroutine UrbanSetCanyonHwr(urban, values, length, status) bind(C, name="UrbanSetCanyonHwr")
+      import :: c_ptr, c_int, c_double
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetCanyonHwr
   end interface
 
   contains

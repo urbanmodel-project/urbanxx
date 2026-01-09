@@ -6,9 +6,10 @@ program urbanxx_driver_f
   use urban_kokkos_interface
   implicit none
 
-  integer :: ierr, mpi_rank, mpi_size
+  integer :: ierr, mpi_rank, mpi_size, i
   type(UrbanType) :: urban
   integer(c_int) :: numLandunits, status
+  real(c_double), allocatable, target :: canyonHwr(:)
 
   ! Initialize MPI
   call MPI_Init(ierr)
@@ -31,6 +32,20 @@ program urbanxx_driver_f
   if (mpi_rank == 0) then
     write(*,*) 'Successfully created Urban object with ', numLandunits, ' landunits'
   end if
+
+  ! Set CanyonHwr values
+  allocate(canyonHwr(numLandunits))
+  do i = 1, numLandunits
+    canyonHwr(i) = 4.80000019073486d0
+  end do
+  call UrbanSetCanyonHwr(urban%ptr, c_loc(canyonHwr), numLandunits, status)
+  if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+
+  if (mpi_rank == 0) then
+    write(*,*) 'Successfully set CanyonHwr values'
+  end if
+
+  deallocate(canyonHwr)
 
   ! Destroy Urban object
   CallA(UrbanDestroy(urban%ptr, status))

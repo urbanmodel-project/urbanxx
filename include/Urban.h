@@ -27,13 +27,16 @@ typedef enum {
   URBAN_SUCCESS = 0,
   URBAN_ERR_INVALID_ARGUMENT = 1,
   URBAN_ERR_NOT_INITIALIZED = 2,
-  URBAN_ERR_INTERNAL = 3
+  URBAN_ERR_INTERNAL = 3,
+  URBAN_ERR_SIZE_MISMATCH = 4
 } UrbanErrorCode;
 
 // API functions
 URBAN_EXTERN void UrbanCreate(int numLandunits, UrbanType *urban,
                               UrbanErrorCode *status);
 URBAN_EXTERN void UrbanDestroy(UrbanType *urban, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetCanyonHwr(UrbanType urban, const double *values,
+                                    int length, UrbanErrorCode *status);
 
 #ifdef __cplusplus
 } // extern "C"

@@ -74,7 +74,7 @@ struct ViewFactor {
 };
 
 struct UrbanParamsType {
-  DECLARE_DUAL_VIEWS(1DR8, CanyonHwr) // canyon height-to-width ratio (-)
+  DECLARE_DEVICE_VIEW(1DR8, CanyonHwr) // canyon height-to-width ratio (-)
 
   ViewFactor viewFactor;
   CommonSurfaceProperties tk; // thermal conductivity (W/m/K)
@@ -86,7 +86,7 @@ struct UrbanParamsType {
       : viewFactor(numLandunits), tk(numLandunits), cv(numLandunits),
         albedo(numLandunits, numRadBands, numRadTypes),
         emissivity(numLandunits) {
-    ALLOCATE_DUAL_VIEWS(CanyonHwr, 1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(CanyonHwr, Array1DR8, numLandunits)
   }
 };
 } // namespace URBANXX
