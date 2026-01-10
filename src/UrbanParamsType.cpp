@@ -91,7 +91,7 @@ static void ComputeViewFactors(UrbanType urban, UrbanErrorCode *status) {
     auto &CanyonHwr = urban->urbanParams.CanyonHwr;
     auto &sr = urban->urbanParams.viewFactor.SkyFrmRoad;
     auto &sw = urban->urbanParams.viewFactor.SkyFrmWall;
-    auto &rw = urban->urbanParams.viewFactor.RoadFromWall;
+    auto &rw = urban->urbanParams.viewFactor.RoadFrmWall;
     auto &wr = urban->urbanParams.viewFactor.WallFrmRoad;
     auto &ww = urban->urbanParams.viewFactor.OtherWallFrmWall;
 

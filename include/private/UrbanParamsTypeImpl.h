@@ -2,7 +2,7 @@
 #define URBAN_PARAMS_TYPE_IMPL_H
 
 #include "private/DataTypesImpl.h"
-#include "private/UrbanMacros.h"
+#include "private/KokkosViewMacros.h"
 #include <Kokkos_Core.hpp>
 
 namespace URBANXX {
@@ -63,14 +63,14 @@ struct ViewFactor {
   DECLARE_DEVICE_VIEW(1DR8, SkyFrmWall)  // view factor of sky from wall (-)
   DECLARE_DEVICE_VIEW(1DR8, WallFrmRoad) // view factor of wall from road (-)
   DECLARE_DEVICE_VIEW(1DR8,
-                      RoadFromWall) // view factor of road from wall (-)
+                      RoadFrmWall) // view factor of road from wall (-)
   DECLARE_DEVICE_VIEW(
       1DR8, OtherWallFrmWall) // view factor of other wall from wall (-)
 
   ViewFactor(int numLandunits) {
     ALLOCATE_DEVICE_VIEW(SkyFrmRoad, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(SkyFrmWall, Array1DR8, numLandunits)
-    ALLOCATE_DEVICE_VIEW(RoadFromWall, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(RoadFrmWall, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(WallFrmRoad, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(OtherWallFrmWall, Array1DR8, numLandunits)
   }

@@ -1,17 +1,19 @@
 #include <Kokkos_Core.hpp>
 #include <iostream>
 #include <mpi.h>
+#include <stdlib.h>
 #include <Urban.h>
 #include <UrbanMacros.h>
 
 void SetCanyonHwr(UrbanType urban, int numLandunits, int mpi_rank) {
   UrbanErrorCode ierr;
 
-  double canyonHwr[numLandunits];
+  double *canyonHwr = (double *)malloc(numLandunits * sizeof(double));
   for (int i = 0; i < numLandunits; ++i) {
     canyonHwr[i] = 4.80000019073486;
   }
   UrbanCall(UrbanSetCanyonHwr(urban, canyonHwr, numLandunits, &ierr), &ierr);
+  free(canyonHwr);
   
   if (mpi_rank == 0) {
     std::cout << "Set canyon height-to-width ratio" << std::endl;
@@ -31,11 +33,11 @@ void SetAlbedo(UrbanType urban, int numLandunits, int mpi_rank) {
   const double ALB_ROOF = 0.254999995231628;
   const double ALB_WALL = 0.200000002980232;
 
-  double albedoPerviousRoad[totalSize3D];
-  double albedoImperviousRoad[totalSize3D];
-  double albedoSunlitWall[totalSize3D];
-  double albedoShadedWall[totalSize3D];
-  double albedoRoof[totalSize3D];
+  double *albedoPerviousRoad = (double *)malloc(totalSize3D * sizeof(double));
+  double *albedoImperviousRoad = (double *)malloc(totalSize3D * sizeof(double));
+  double *albedoSunlitWall = (double *)malloc(totalSize3D * sizeof(double));
+  double *albedoShadedWall = (double *)malloc(totalSize3D * sizeof(double));
+  double *albedoRoof = (double *)malloc(totalSize3D * sizeof(double));
 
   for (int ilandunit = 0; ilandunit < numLandunits; ++ilandunit) {
     for (int iband = 0; iband < numBands; ++iband) {
@@ -56,6 +58,12 @@ void SetAlbedo(UrbanType urban, int numLandunits, int mpi_rank) {
   UrbanCall(UrbanSetAlbedoShadedWall(urban, albedoShadedWall, size3D, &ierr), &ierr);
   UrbanCall(UrbanSetAlbedoRoof(urban, albedoRoof, size3D, &ierr), &ierr);
 
+  free(albedoPerviousRoad);
+  free(albedoImperviousRoad);
+  free(albedoSunlitWall);
+  free(albedoShadedWall);
+  free(albedoRoof);
+
   if (mpi_rank == 0) {
     std::cout << "Set albedo values for all surfaces" << std::endl;
   }
@@ -64,10 +72,10 @@ void SetAlbedo(UrbanType urban, int numLandunits, int mpi_rank) {
 void SetEmissivity(UrbanType urban, int numLandunits, int mpi_rank) {
   UrbanErrorCode ierr;
 
-  double emissivityPerviousRoad[numLandunits];
-  double emissivityImperviousRoad[numLandunits];
-  double emissivityWall[numLandunits];
-  double emissivityRoof[numLandunits];
+  double *emissivityPerviousRoad = (double *)malloc(numLandunits * sizeof(double));
+  double *emissivityImperviousRoad = (double *)malloc(numLandunits * sizeof(double));
+  double *emissivityWall = (double *)malloc(numLandunits * sizeof(double));
+  double *emissivityRoof = (double *)malloc(numLandunits * sizeof(double));
 
   const double EMISS_ROOF = 0.90600001811981201;
   const double EMISS_IMPROAD = 0.87999999523162842;
@@ -86,6 +94,11 @@ void SetEmissivity(UrbanType urban, int numLandunits, int mpi_rank) {
   UrbanCall(UrbanSetEmissivityWall(urban, emissivityWall, numLandunits, &ierr), &ierr);
   UrbanCall(UrbanSetEmissivityRoof(urban, emissivityRoof, numLandunits, &ierr), &ierr);
 
+  free(emissivityPerviousRoad);
+  free(emissivityImperviousRoad);
+  free(emissivityWall);
+  free(emissivityRoof);
+
   if (mpi_rank == 0) {
     std::cout << "Set emissivity values for all surfaces" << std::endl;
   }
@@ -94,9 +107,9 @@ void SetEmissivity(UrbanType urban, int numLandunits, int mpi_rank) {
 void SetThermalConductivity(UrbanType urban, int numLandunits, int mpi_rank) {
   UrbanErrorCode ierr;
 
-  double tkRoad[numLandunits];
-  double tkWall[numLandunits];
-  double tkRoof[numLandunits];
+  double *tkRoad = (double *)malloc(numLandunits * sizeof(double));
+  double *tkWall = (double *)malloc(numLandunits * sizeof(double));
+  double *tkRoof = (double *)malloc(numLandunits * sizeof(double));
 
   for (int i = 0; i < numLandunits; ++i) {
     tkRoad[i] = 1.0;
@@ -108,6 +121,10 @@ void SetThermalConductivity(UrbanType urban, int numLandunits, int mpi_rank) {
   UrbanCall(UrbanSetThermalConductivityWall(urban, tkWall, numLandunits, &ierr), &ierr);
   UrbanCall(UrbanSetThermalConductivityRoof(urban, tkRoof, numLandunits, &ierr), &ierr);
 
+  free(tkRoad);
+  free(tkWall);
+  free(tkRoof);
+
   if (mpi_rank == 0) {
     std::cout << "Set thermal conductivity values for all surfaces" << std::endl;
   }
@@ -116,9 +133,9 @@ void SetThermalConductivity(UrbanType urban, int numLandunits, int mpi_rank) {
 void SetHeatCapacity(UrbanType urban, int numLandunits, int mpi_rank) {
   UrbanErrorCode ierr;
 
-  double cvRoad[numLandunits];
-  double cvWall[numLandunits];
-  double cvRoof[numLandunits];
+  double *cvRoad = (double *)malloc(numLandunits * sizeof(double));
+  double *cvWall = (double *)malloc(numLandunits * sizeof(double));
+  double *cvRoof = (double *)malloc(numLandunits * sizeof(double));
 
   for (int i = 0; i < numLandunits; ++i) {
     cvRoad[i] = 2.0e6;
@@ -129,6 +146,10 @@ void SetHeatCapacity(UrbanType urban, int numLandunits, int mpi_rank) {
   UrbanCall(UrbanSetHeatCapacityRoad(urban, cvRoad, numLandunits, &ierr), &ierr);
   UrbanCall(UrbanSetHeatCapacityWall(urban, cvWall, numLandunits, &ierr), &ierr);
   UrbanCall(UrbanSetHeatCapacityRoof(urban, cvRoof, numLandunits, &ierr), &ierr);
+
+  free(cvRoad);
+  free(cvWall);
+  free(cvRoof);
 
   if (mpi_rank == 0) {
     std::cout << "Set heat capacity values for all surfaces" << std::endl;

@@ -1,5 +1,5 @@
 ! Fortran preprocessor macros for Urban library
-! This file should be included with #include "finclude/UrbanMacros.h"
+! This file should be included with #include "finclude/UrbanFortranMacros.h"
 
 #define CallA(func) \
   call func ;\

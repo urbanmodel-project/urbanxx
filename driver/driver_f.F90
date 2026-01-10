@@ -1,5 +1,5 @@
 program urbanxx_driver_f
-#include "finclude/UrbanMacros.h"
+#include "finclude/UrbanFortranMacros.h"
   use iso_c_binding
   use mpi
   use urban_mod
