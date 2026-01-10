@@ -1,6 +1,7 @@
 #include "Urban.h"
 #include "private/AtmosphereTypeImpl.h"
 #include "private/DataTypesImpl.h"
+#include "private/UrbanLongwaveRadImpl.h"
 #include "private/UrbanTypeImpl.h"
 
 // Define the C struct to match the C++ class
@@ -56,8 +57,9 @@ void UrbanAdvance(UrbanType urban, UrbanErrorCode *status) {
   }
 
   try {
-    // TODO: Implement time-stepping logic
-    // For now, this is a placeholder that does nothing
+    // Compute net longwave radiation
+    URBANXX::ComputeNetLongwave(*urban);
+
     *status = URBAN_SUCCESS;
   } catch (...) {
     *status = URBAN_ERR_INTERNAL;
