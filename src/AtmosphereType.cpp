@@ -19,7 +19,7 @@ void UrbanSetAtmTemp(UrbanType urban, const double *values, int length,
   if (!ValidateInputsWithData(urban, values, status))
     return;
 
-  SetView1D(urban->atmosphereData.ForcTempH, values, length, status);
+  SetView1D(urban->atmosphereData.ForcTemp, values, length, status);
 }
 
 void UrbanSetAtmPotTemp(UrbanType urban, const double *values, int length,
@@ -27,7 +27,7 @@ void UrbanSetAtmPotTemp(UrbanType urban, const double *values, int length,
   if (!ValidateInputsWithData(urban, values, status))
     return;
 
-  SetView1D(urban->atmosphereData.ForcPotTempH, values, length, status);
+  SetView1D(urban->atmosphereData.ForcPotTemp, values, length, status);
 }
 
 void UrbanSetAtmRho(UrbanType urban, const double *values, int length,
@@ -35,7 +35,7 @@ void UrbanSetAtmRho(UrbanType urban, const double *values, int length,
   if (!ValidateInputsWithData(urban, values, status))
     return;
 
-  SetView1D(urban->atmosphereData.ForcRhoH, values, length, status);
+  SetView1D(urban->atmosphereData.ForcRho, values, length, status);
 }
 
 void UrbanSetAtmSpcHumd(UrbanType urban, const double *values, int length,
@@ -43,7 +43,7 @@ void UrbanSetAtmSpcHumd(UrbanType urban, const double *values, int length,
   if (!ValidateInputsWithData(urban, values, status))
     return;
 
-  SetView1D(urban->atmosphereData.ForcSpcHumdH, values, length, status);
+  SetView1D(urban->atmosphereData.ForcSpcHumd, values, length, status);
 }
 
 void UrbanSetAtmPress(UrbanType urban, const double *values, int length,
@@ -51,7 +51,7 @@ void UrbanSetAtmPress(UrbanType urban, const double *values, int length,
   if (!ValidateInputsWithData(urban, values, status))
     return;
 
-  SetView1D(urban->atmosphereData.ForcPressH, values, length, status);
+  SetView1D(urban->atmosphereData.ForcPress, values, length, status);
 }
 
 void UrbanSetAtmWindU(UrbanType urban, const double *values, int length,
@@ -59,7 +59,7 @@ void UrbanSetAtmWindU(UrbanType urban, const double *values, int length,
   if (!ValidateInputsWithData(urban, values, status))
     return;
 
-  SetView1D(urban->atmosphereData.ForcWindUH, values, length, status);
+  SetView1D(urban->atmosphereData.ForcWindU, values, length, status);
 }
 
 void UrbanSetAtmWindV(UrbanType urban, const double *values, int length,
@@ -67,7 +67,7 @@ void UrbanSetAtmWindV(UrbanType urban, const double *values, int length,
   if (!ValidateInputsWithData(urban, values, status))
     return;
 
-  SetView1D(urban->atmosphereData.ForcWindVH, values, length, status);
+  SetView1D(urban->atmosphereData.ForcWindV, values, length, status);
 }
 
 void UrbanSetAtmCoszen(UrbanType urban, const double *values, int length,
@@ -75,7 +75,7 @@ void UrbanSetAtmCoszen(UrbanType urban, const double *values, int length,
   if (!ValidateInputsWithData(urban, values, status))
     return;
 
-  SetView1D(urban->atmosphereData.CoszenH, values, length, status);
+  SetView1D(urban->atmosphereData.Coszen, values, length, status);
 }
 
 void UrbanSetAtmFracSnow(UrbanType urban, const double *values, int length,
@@ -83,7 +83,7 @@ void UrbanSetAtmFracSnow(UrbanType urban, const double *values, int length,
   if (!ValidateInputsWithData(urban, values, status))
     return;
 
-  SetView1D(urban->atmosphereData.FracSnowH, values, length, status);
+  SetView1D(urban->atmosphereData.FracSnow, values, length, status);
 }
 
 void UrbanSetAtmLongwaveDown(UrbanType urban, const double *values, int length,
@@ -91,39 +91,15 @@ void UrbanSetAtmLongwaveDown(UrbanType urban, const double *values, int length,
   if (!ValidateInputsWithData(urban, values, status))
     return;
 
-  SetView1D(urban->atmosphereData.ForcLRadH, values, length, status);
+  SetView1D(urban->atmosphereData.ForcLRad, values, length, status);
 }
 
 void UrbanSetAtmShortwaveDown(UrbanType urban, const double *values,
                               const int size[3], UrbanErrorCode *status) {
-  using namespace URBANXX;
-
   if (!ValidateInputsWithSize(urban, values, size, status))
     return;
 
-  try {
-    auto &h_ForcSRad = urban->atmosphereData.ForcSRadH;
-
-    // Check if each dimension matches the view extent
-    if (size[0] != static_cast<int>(h_ForcSRad.extent(0)) ||
-        size[1] != static_cast<int>(h_ForcSRad.extent(1)) ||
-        size[2] != static_cast<int>(h_ForcSRad.extent(2))) {
-      *status = URBAN_ERR_SIZE_MISMATCH;
-      return;
-    }
-
-    // Create an unmanaged host view from the input array
-    auto values_view = Kokkos::View<const double ***, Kokkos::HostSpace,
-                                    Kokkos::MemoryTraits<Kokkos::Unmanaged>>(
-        values, size[0], size[1], size[2]);
-
-    // Deep copy from the temporary host view to the host view
-    Kokkos::deep_copy(h_ForcSRad, values_view);
-
-    *status = URBAN_SUCCESS;
-  } catch (...) {
-    *status = URBAN_ERR_INTERNAL;
-  }
+  SetView3D(urban->atmosphereData.ForcSRad, values, size, status);
 }
 
 } // extern "C"
