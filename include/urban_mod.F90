@@ -168,6 +168,95 @@ module urban_mod
       type(c_ptr), value :: urban
       integer(c_int) :: status
     end subroutine UrbanInitializeTemperature
+
+    ! Atmospheric forcing setter functions
+    subroutine UrbanSetAtmTemp(urban, values, length, status) bind(C, name="UrbanSetAtmTemp")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetAtmTemp
+
+    subroutine UrbanSetAtmPotTemp(urban, values, length, status) bind(C, name="UrbanSetAtmPotTemp")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetAtmPotTemp
+
+    subroutine UrbanSetAtmRho(urban, values, length, status) bind(C, name="UrbanSetAtmRho")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetAtmRho
+
+    subroutine UrbanSetAtmSpcHumd(urban, values, length, status) bind(C, name="UrbanSetAtmSpcHumd")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetAtmSpcHumd
+
+    subroutine UrbanSetAtmPress(urban, values, length, status) bind(C, name="UrbanSetAtmPress")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetAtmPress
+
+    subroutine UrbanSetAtmWindU(urban, values, length, status) bind(C, name="UrbanSetAtmWindU")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetAtmWindU
+
+    subroutine UrbanSetAtmWindV(urban, values, length, status) bind(C, name="UrbanSetAtmWindV")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetAtmWindV
+
+    subroutine UrbanSetAtmCoszen(urban, values, length, status) bind(C, name="UrbanSetAtmCoszen")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetAtmCoszen
+
+    subroutine UrbanSetAtmFracSnow(urban, values, length, status) bind(C, name="UrbanSetAtmFracSnow")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetAtmFracSnow
+
+    subroutine UrbanSetAtmLongwaveDown(urban, values, length, status) bind(C, name="UrbanSetAtmLongwaveDown")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetAtmLongwaveDown
+
+    subroutine UrbanSetAtmShortwaveDown(urban, values, size, status) bind(C, name="UrbanSetAtmShortwaveDown")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), dimension(3) :: size
+      integer(c_int) :: status
+    end subroutine UrbanSetAtmShortwaveDown
   end interface
 
   contains
