@@ -169,6 +169,12 @@ int main(int argc, char *argv[]) {
                 << " landunits" << std::endl;
     }
 
+    // Initialize temperatures
+    UrbanCall(UrbanInitializeTemperature(urban, &ierr), &ierr);
+    if (mpi_rank == 0) {
+      std::cout << "Initialized surface temperatures" << std::endl;
+    }
+
     // Set all urban parameters
     SetUrbanParameters(urban, numLandunits, mpi_rank);
 

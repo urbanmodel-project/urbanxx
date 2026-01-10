@@ -161,6 +161,13 @@ module urban_mod
       integer(c_int), value :: length
       integer(c_int) :: status
     end subroutine UrbanSetHeatCapacityRoof
+
+    ! Initialization functions
+    subroutine UrbanInitializeTemperature(urban, status) bind(C, name="UrbanInitializeTemperature")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      integer(c_int) :: status
+    end subroutine UrbanInitializeTemperature
   end interface
 
   contains

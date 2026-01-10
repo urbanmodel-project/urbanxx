@@ -97,6 +97,10 @@ URBAN_EXTERN void UrbanSetHeatCapacityRoof(UrbanType urban,
                                            const double *values, int length,
                                            UrbanErrorCode *status);
 
+// Initialization functions
+URBAN_EXTERN void UrbanInitializeTemperature(UrbanType urban,
+                                             UrbanErrorCode *status);
+
 #ifdef __cplusplus
 } // extern "C"
 #endif
