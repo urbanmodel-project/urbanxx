@@ -2,6 +2,7 @@
 #include "private/DataTypesImpl.h"
 #include "private/UrbanParamsTypeImpl.h"
 #include "private/UrbanTypeImpl.h"
+#include "private/UrbanValidation.h"
 
 // Define the C struct to match the C++ class
 struct _p_UrbanType : public URBANXX::_p_UrbanType {
@@ -117,11 +118,8 @@ using namespace URBANXX;
 
 void UrbanSetCanyonHwr(UrbanType urban, const double *values, int length,
                        UrbanErrorCode *status) {
-  if (urban == nullptr || values == nullptr || status == nullptr) {
-    if (status)
-      *status = URBAN_ERR_INVALID_ARGUMENT;
+  if (!ValidateInputsWithData(urban, values, status))
     return;
-  }
 
   // Set the canyon height-to-width ratio using the template function
   SetView1D(urban->urbanParams.CanyonHwr, values, length, status);
@@ -137,60 +135,40 @@ void UrbanSetCanyonHwr(UrbanType urban, const double *values, int length,
 
 void UrbanSetAlbedoPerviousRoad(UrbanType urban, const double *values,
                                 const int size[3], UrbanErrorCode *status) {
-  if (urban == nullptr || values == nullptr || size == nullptr ||
-      status == nullptr) {
-    if (status)
-      *status = URBAN_ERR_INVALID_ARGUMENT;
+  if (!ValidateInputsWithSize(urban, values, size, status))
     return;
-  }
 
   SetView3D(urban->urbanParams.albedo.PerviousRoad, values, size, status);
 }
 
 void UrbanSetAlbedoImperviousRoad(UrbanType urban, const double *values,
                                   const int size[3], UrbanErrorCode *status) {
-  if (urban == nullptr || values == nullptr || size == nullptr ||
-      status == nullptr) {
-    if (status)
-      *status = URBAN_ERR_INVALID_ARGUMENT;
+  if (!ValidateInputsWithSize(urban, values, size, status))
     return;
-  }
 
   SetView3D(urban->urbanParams.albedo.ImperviousRoad, values, size, status);
 }
 
 void UrbanSetAlbedoSunlitWall(UrbanType urban, const double *values,
                               const int size[3], UrbanErrorCode *status) {
-  if (urban == nullptr || values == nullptr || size == nullptr ||
-      status == nullptr) {
-    if (status)
-      *status = URBAN_ERR_INVALID_ARGUMENT;
+  if (!ValidateInputsWithSize(urban, values, size, status))
     return;
-  }
 
   SetView3D(urban->urbanParams.albedo.SunlitWall, values, size, status);
 }
 
 void UrbanSetAlbedoShadedWall(UrbanType urban, const double *values,
                               const int size[3], UrbanErrorCode *status) {
-  if (urban == nullptr || values == nullptr || size == nullptr ||
-      status == nullptr) {
-    if (status)
-      *status = URBAN_ERR_INVALID_ARGUMENT;
+  if (!ValidateInputsWithSize(urban, values, size, status))
     return;
-  }
 
   SetView3D(urban->urbanParams.albedo.ShadedWall, values, size, status);
 }
 
 void UrbanSetAlbedoRoof(UrbanType urban, const double *values,
                         const int size[3], UrbanErrorCode *status) {
-  if (urban == nullptr || values == nullptr || size == nullptr ||
-      status == nullptr) {
-    if (status)
-      *status = URBAN_ERR_INVALID_ARGUMENT;
+  if (!ValidateInputsWithSize(urban, values, size, status))
     return;
-  }
 
   SetView3D(urban->urbanParams.albedo.Roof, values, size, status);
 }
@@ -198,22 +176,16 @@ void UrbanSetAlbedoRoof(UrbanType urban, const double *values,
 // Emissivity setter functions
 void UrbanSetEmissivityPerviousRoad(UrbanType urban, const double *values,
                                     int length, UrbanErrorCode *status) {
-  if (urban == nullptr || values == nullptr || status == nullptr) {
-    if (status)
-      *status = URBAN_ERR_INVALID_ARGUMENT;
+  if (!ValidateInputsWithData(urban, values, status))
     return;
-  }
 
   SetView1D(urban->urbanParams.emissivity.PerviousRoad, values, length, status);
 }
 
 void UrbanSetEmissivityImperviousRoad(UrbanType urban, const double *values,
                                       int length, UrbanErrorCode *status) {
-  if (urban == nullptr || values == nullptr || status == nullptr) {
-    if (status)
-      *status = URBAN_ERR_INVALID_ARGUMENT;
+  if (!ValidateInputsWithData(urban, values, status))
     return;
-  }
 
   SetView1D(urban->urbanParams.emissivity.ImperviousRoad, values, length,
             status);
@@ -221,22 +193,16 @@ void UrbanSetEmissivityImperviousRoad(UrbanType urban, const double *values,
 
 void UrbanSetEmissivityWall(UrbanType urban, const double *values, int length,
                             UrbanErrorCode *status) {
-  if (urban == nullptr || values == nullptr || status == nullptr) {
-    if (status)
-      *status = URBAN_ERR_INVALID_ARGUMENT;
+  if (!ValidateInputsWithData(urban, values, status))
     return;
-  }
 
   SetView1D(urban->urbanParams.emissivity.Wall, values, length, status);
 }
 
 void UrbanSetEmissivityRoof(UrbanType urban, const double *values, int length,
                             UrbanErrorCode *status) {
-  if (urban == nullptr || values == nullptr || status == nullptr) {
-    if (status)
-      *status = URBAN_ERR_INVALID_ARGUMENT;
+  if (!ValidateInputsWithData(urban, values, status))
     return;
-  }
 
   SetView1D(urban->urbanParams.emissivity.Roof, values, length, status);
 }
@@ -244,33 +210,24 @@ void UrbanSetEmissivityRoof(UrbanType urban, const double *values, int length,
 // Thermal conductivity setter functions
 void UrbanSetThermalConductivityRoad(UrbanType urban, const double *values,
                                      int length, UrbanErrorCode *status) {
-  if (urban == nullptr || values == nullptr || status == nullptr) {
-    if (status)
-      *status = URBAN_ERR_INVALID_ARGUMENT;
+  if (!ValidateInputsWithData(urban, values, status))
     return;
-  }
 
   SetView1D(urban->urbanParams.tk.Road, values, length, status);
 }
 
 void UrbanSetThermalConductivityWall(UrbanType urban, const double *values,
                                      int length, UrbanErrorCode *status) {
-  if (urban == nullptr || values == nullptr || status == nullptr) {
-    if (status)
-      *status = URBAN_ERR_INVALID_ARGUMENT;
+  if (!ValidateInputsWithData(urban, values, status))
     return;
-  }
 
   SetView1D(urban->urbanParams.tk.Wall, values, length, status);
 }
 
 void UrbanSetThermalConductivityRoof(UrbanType urban, const double *values,
                                      int length, UrbanErrorCode *status) {
-  if (urban == nullptr || values == nullptr || status == nullptr) {
-    if (status)
-      *status = URBAN_ERR_INVALID_ARGUMENT;
+  if (!ValidateInputsWithData(urban, values, status))
     return;
-  }
 
   SetView1D(urban->urbanParams.tk.Roof, values, length, status);
 }
@@ -278,33 +235,24 @@ void UrbanSetThermalConductivityRoof(UrbanType urban, const double *values,
 // Heat capacity setter functions
 void UrbanSetHeatCapacityRoad(UrbanType urban, const double *values, int length,
                               UrbanErrorCode *status) {
-  if (urban == nullptr || values == nullptr || status == nullptr) {
-    if (status)
-      *status = URBAN_ERR_INVALID_ARGUMENT;
+  if (!ValidateInputsWithData(urban, values, status))
     return;
-  }
 
   SetView1D(urban->urbanParams.cv.Road, values, length, status);
 }
 
 void UrbanSetHeatCapacityWall(UrbanType urban, const double *values, int length,
                               UrbanErrorCode *status) {
-  if (urban == nullptr || values == nullptr || status == nullptr) {
-    if (status)
-      *status = URBAN_ERR_INVALID_ARGUMENT;
+  if (!ValidateInputsWithData(urban, values, status))
     return;
-  }
 
   SetView1D(urban->urbanParams.cv.Wall, values, length, status);
 }
 
 void UrbanSetHeatCapacityRoof(UrbanType urban, const double *values, int length,
                               UrbanErrorCode *status) {
-  if (urban == nullptr || values == nullptr || status == nullptr) {
-    if (status)
-      *status = URBAN_ERR_INVALID_ARGUMENT;
+  if (!ValidateInputsWithData(urban, values, status))
     return;
-  }
 
   SetView1D(urban->urbanParams.cv.Roof, values, length, status);
 }
