@@ -76,23 +76,13 @@ static void SetView1D(ViewType &view, const double *values, int length,
   }
 }
 
-extern "C" {
+// Helper function to compute view factors from canyon height-to-width ratio
+static void ComputeViewFactors(UrbanType urban, UrbanErrorCode *status) {
+  using namespace URBANXX;
 
-using namespace URBANXX;
-
-void UrbanSetCanyonHwr(UrbanType urban, const double *values, int length,
-                       UrbanErrorCode *status) {
-  if (urban == nullptr || values == nullptr || status == nullptr) {
+  if (urban == nullptr || status == nullptr) {
     if (status)
       *status = URBAN_ERR_INVALID_ARGUMENT;
-    return;
-  }
-
-  // Set the canyon height-to-width ratio using the template function
-  SetView1D(urban->urbanParams.CanyonHwr, values, length, status);
-
-  // If the set operation failed, return early
-  if (*status != URBAN_SUCCESS) {
     return;
   }
 
@@ -119,6 +109,30 @@ void UrbanSetCanyonHwr(UrbanType urban, const double *values, int length,
   } catch (...) {
     *status = URBAN_ERR_INTERNAL;
   }
+}
+
+extern "C" {
+
+using namespace URBANXX;
+
+void UrbanSetCanyonHwr(UrbanType urban, const double *values, int length,
+                       UrbanErrorCode *status) {
+  if (urban == nullptr || values == nullptr || status == nullptr) {
+    if (status)
+      *status = URBAN_ERR_INVALID_ARGUMENT;
+    return;
+  }
+
+  // Set the canyon height-to-width ratio using the template function
+  SetView1D(urban->urbanParams.CanyonHwr, values, length, status);
+
+  // If the set operation failed, return early
+  if (*status != URBAN_SUCCESS) {
+    return;
+  }
+
+  // Compute the view factors based on the canyon geometry
+  ComputeViewFactors(urban, status);
 }
 
 void UrbanSetAlbedoPerviousRoad(UrbanType urban, const double *values,
