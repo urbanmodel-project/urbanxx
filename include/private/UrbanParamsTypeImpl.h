@@ -2,7 +2,7 @@
 #define URBAN_PARAMS_TYPE_IMPL_H
 
 #include "private/DataTypesImpl.h"
-#include "private/UrbanMacros.h"
+#include "private/KokkosViewMacros.h"
 #include <Kokkos_Core.hpp>
 
 namespace URBANXX {
@@ -62,19 +62,22 @@ struct ViewFactor {
   DECLARE_DEVICE_VIEW(1DR8, SkyFrmRoad)  // view factor of sky from road (-)
   DECLARE_DEVICE_VIEW(1DR8, SkyFrmWall)  // view factor of sky from wall (-)
   DECLARE_DEVICE_VIEW(1DR8, WallFrmRoad) // view factor of wall from road (-)
+  DECLARE_DEVICE_VIEW(1DR8,
+                      RoadFrmWall) // view factor of road from wall (-)
   DECLARE_DEVICE_VIEW(
       1DR8, OtherWallFrmWall) // view factor of other wall from wall (-)
 
   ViewFactor(int numLandunits) {
     ALLOCATE_DEVICE_VIEW(SkyFrmRoad, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(SkyFrmWall, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(RoadFrmWall, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(WallFrmRoad, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(OtherWallFrmWall, Array1DR8, numLandunits)
   }
 };
 
 struct UrbanParamsType {
-  DECLARE_DUAL_VIEWS(1DR8, CanyonHwr) // canyon height-to-width ratio (-)
+  DECLARE_DEVICE_VIEW(1DR8, CanyonHwr) // canyon height-to-width ratio (-)
 
   ViewFactor viewFactor;
   CommonSurfaceProperties tk; // thermal conductivity (W/m/K)
@@ -86,7 +89,7 @@ struct UrbanParamsType {
       : viewFactor(numLandunits), tk(numLandunits), cv(numLandunits),
         albedo(numLandunits, numRadBands, numRadTypes),
         emissivity(numLandunits) {
-    ALLOCATE_DUAL_VIEWS(CanyonHwr, 1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(CanyonHwr, Array1DR8, numLandunits)
   }
 };
 } // namespace URBANXX

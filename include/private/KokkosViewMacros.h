@@ -1,5 +1,5 @@
-#ifndef URBANXX_PRIVATE_MACROS_H
-#define URBANXX_PRIVATE_MACROS_H
+#ifndef KOKKOS_VIEW_MACROS_H
+#define KOKKOS_VIEW_MACROS_H
 
 namespace URBANXX {
 
@@ -27,4 +27,4 @@ namespace URBANXX {
 
 } // namespace URBANXX
 
-#endif // URBANXX_PRIVATE_MACROS_H
+#endif // KOKKOS_VIEW_MACROS_H
