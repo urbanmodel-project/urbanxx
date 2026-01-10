@@ -106,6 +106,7 @@ static void ComputeViewFactors(UrbanType urban, UrbanErrorCode *status) {
           rw(l) = sw(l);                               // eqn 2.27
           ww(l) = 1.0 - sw(l) - rw(l);                 // eqn 2.28
         });
+    Kokkos::fence();
     *status = URBAN_SUCCESS;
   } catch (...) {
     *status = URBAN_ERR_INTERNAL;

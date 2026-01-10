@@ -43,6 +43,7 @@ void UrbanInitializeTemperature(UrbanType urban, UrbanErrorCode *status) {
           sunlitWallTemp(l) = TEMP_WALL_INIT;
           shadedWallTemp(l) = TEMP_WALL_INIT;
         });
+    Kokkos::fence();
 
     *status = URBAN_SUCCESS;
   } catch (...) {
