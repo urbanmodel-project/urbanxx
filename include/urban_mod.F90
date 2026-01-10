@@ -169,6 +169,13 @@ module urban_mod
       integer(c_int) :: status
     end subroutine UrbanInitializeTemperature
 
+    ! Time-stepping functions
+    subroutine UrbanAdvance(urban, status) bind(C, name="UrbanAdvance")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      integer(c_int) :: status
+    end subroutine UrbanAdvance
+
     ! Atmospheric forcing setter functions
     subroutine UrbanSetAtmTemp(urban, values, length, status) bind(C, name="UrbanSetAtmTemp")
       import :: c_ptr, c_int

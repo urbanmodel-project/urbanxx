@@ -297,6 +297,12 @@ int main(int argc, char *argv[]) {
     // Set all urban parameters
     SetUrbanParameters(urban, numLandunits, mpi_rank);
 
+    // Advance the model one time step
+    UrbanCall(UrbanAdvance(urban, &ierr), &ierr);
+    if (mpi_rank == 0) {
+      std::cout << "Advanced model one time step" << std::endl;
+    }
+
     // Destroy Urban object
     UrbanCall(UrbanDestroy(&urban, &ierr), &ierr);
 

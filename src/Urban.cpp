@@ -48,4 +48,20 @@ void UrbanDestroy(UrbanType *urban, UrbanErrorCode *status) {
   }
 }
 
+void UrbanAdvance(UrbanType urban, UrbanErrorCode *status) {
+  if (urban == nullptr || status == nullptr) {
+    if (status)
+      *status = URBAN_ERR_INVALID_ARGUMENT;
+    return;
+  }
+
+  try {
+    // TODO: Implement time-stepping logic
+    // For now, this is a placeholder that does nothing
+    *status = URBAN_SUCCESS;
+  } catch (...) {
+    *status = URBAN_ERR_INTERNAL;
+  }
+}
+
 } // extern "C"

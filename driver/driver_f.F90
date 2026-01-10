@@ -42,6 +42,13 @@ program urbanxx_driver_f
   ! Set all urban parameters
   call SetUrbanParameters(urban, numLandunits, mpi_rank)
 
+  ! Advance the model one time step
+  call UrbanAdvance(urban%ptr, status)
+  if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+  if (mpi_rank == 0) then
+    write(*,*) 'Advanced model one time step'
+  end if
+
   ! Destroy Urban object
   CallA(UrbanDestroy(urban%ptr, status))
 

@@ -101,6 +101,9 @@ URBAN_EXTERN void UrbanSetHeatCapacityRoof(UrbanType urban,
 URBAN_EXTERN void UrbanInitializeTemperature(UrbanType urban,
                                              UrbanErrorCode *status);
 
+// Time-stepping functions
+URBAN_EXTERN void UrbanAdvance(UrbanType urban, UrbanErrorCode *status);
+
 // Atmospheric forcing setter functions
 URBAN_EXTERN void UrbanSetAtmTemp(UrbanType urban, const double *values,
                                   int length, UrbanErrorCode *status);
