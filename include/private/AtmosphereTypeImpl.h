@@ -15,7 +15,7 @@ struct AtmosphereType {
   DECLARE_DEVICE_VIEW(1DR8, FracSnow) // fraction of ground covered by snow (-)
   DECLARE_DEVICE_VIEW(1DR8, ForcLRad) // downwelling longwave radiation (W/m**2)
   DECLARE_DEVICE_VIEW(1DR8, ForcTemp) // air temperature (K)
-  DECLARE_DEVICE_VIEW(1DR8, ForcPotTemp) // potential temperature (Pa)
+  DECLARE_DEVICE_VIEW(1DR8, ForcPotTemp) // potential temperature (K)
   DECLARE_DEVICE_VIEW(1DR8, ForcRho)     // air density (kg/m**3)
   DECLARE_DEVICE_VIEW(1DR8, ForcSpcHumd) // specific humidity (kg/kg)
   DECLARE_DEVICE_VIEW(1DR8, ForcPress)   // atmospheric pressure (Pa)
@@ -24,7 +24,8 @@ struct AtmosphereType {
 
   AtmosphereType(int numLandunits, int numRadBands, int numRadTypes) {
     ALLOCATE_DEVICE_VIEW(Coszen, Array1DR8, numLandunits)
-    ALLOCATE_DEVICE_VIEW(ForcSRad, Array3DR8, numLandunits, numRadBands, numRadTypes)
+    ALLOCATE_DEVICE_VIEW(ForcSRad, Array3DR8, numLandunits, numRadBands,
+                         numRadTypes)
     ALLOCATE_DEVICE_VIEW(FracSnow, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(ForcLRad, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(ForcTemp, Array1DR8, numLandunits)

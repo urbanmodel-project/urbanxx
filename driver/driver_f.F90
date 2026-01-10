@@ -274,7 +274,7 @@ contains
     type(UrbanType), intent(in) :: urban
     integer(c_int), intent(in) :: numLandunits
     integer, intent(in) :: mpi_rank
-    integer(c_int) :: status, i, ilandunit, iband, itype, idx
+    integer(c_int) :: status, i
     integer(c_int) :: numBands, numTypes, totalSize3D
     integer(c_int), dimension(3) :: size3D
     real(c_double), allocatable, target :: atmTemp(:)
