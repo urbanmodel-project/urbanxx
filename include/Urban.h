@@ -101,6 +101,32 @@ URBAN_EXTERN void UrbanSetHeatCapacityRoof(UrbanType urban,
 URBAN_EXTERN void UrbanInitializeTemperature(UrbanType urban,
                                              UrbanErrorCode *status);
 
+// Atmospheric forcing setter functions
+URBAN_EXTERN void UrbanSetAtmTemp(UrbanType urban, const double *values,
+                                  int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetAtmPotTemp(UrbanType urban, const double *values,
+                                     int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetAtmRho(UrbanType urban, const double *values,
+                                 int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetAtmSpcHumd(UrbanType urban, const double *values,
+                                     int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetAtmPress(UrbanType urban, const double *values,
+                                   int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetAtmWindU(UrbanType urban, const double *values,
+                                   int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetAtmWindV(UrbanType urban, const double *values,
+                                   int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetAtmCoszen(UrbanType urban, const double *values,
+                                    int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetAtmFracSnow(UrbanType urban, const double *values,
+                                      int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetAtmLongwaveDown(UrbanType urban, const double *values,
+                                          int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetAtmShortwaveDown(UrbanType urban,
+                                           const double *values,
+                                           const int size[3],
+                                           UrbanErrorCode *status);
+
 #ifdef __cplusplus
 } // extern "C"
 #endif

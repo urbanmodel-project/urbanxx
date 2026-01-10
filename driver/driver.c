@@ -167,12 +167,99 @@ void SetHeatCapacity(UrbanType urban, int numLandunits, int mpi_rank) {
   }
 }
 
+void SetAtmosphericForcing(UrbanType urban, int numLandunits, int mpi_rank) {
+  UrbanErrorCode ierr;
+
+  // Atmospheric forcing constants
+  const double TEMP_AIR = 297.26422743678319;
+  const double TH_AIR = 297.26422743678319;
+  const double RHO_AIR = 1.1382761848551157;
+  const double Q_AIR = 1.9217052569985755E-002;
+  const double PBOT_AIR = 98260.450580263219;
+  const double WIND_U = 0.52482489069830152;
+  const double WIND_V = 0.0;
+  const double COSZEN = 7.9054122593736065E-003;
+  const double SNOW = 0.0;
+  const double LWDOWN = 432.79580327766450;
+  const double SWDOWN = 1.0;
+
+  // Allocate arrays
+  double *atmTemp = AllocateArray(numLandunits, "atmTemp");
+  double *atmPotTemp = AllocateArray(numLandunits, "atmPotTemp");
+  double *atmRho = AllocateArray(numLandunits, "atmRho");
+  double *atmSpcHumd = AllocateArray(numLandunits, "atmSpcHumd");
+  double *atmPress = AllocateArray(numLandunits, "atmPress");
+  double *atmWindU = AllocateArray(numLandunits, "atmWindU");
+  double *atmWindV = AllocateArray(numLandunits, "atmWindV");
+  double *atmCoszen = AllocateArray(numLandunits, "atmCoszen");
+  double *atmFracSnow = AllocateArray(numLandunits, "atmFracSnow");
+  double *atmLongwave = AllocateArray(numLandunits, "atmLongwave");
+
+  int numBands = 2;    // VIS, NIR
+  int numTypes = 2;    // Direct, Diffuse
+  int size3D[3] = {numLandunits, numBands, numTypes};
+  int totalSize3D = numLandunits * numBands * numTypes;
+  double *atmShortwave = AllocateArray(totalSize3D, "atmShortwave");
+
+  // Fill arrays with constant values
+  for (int i = 0; i < numLandunits; ++i) {
+    atmTemp[i] = TEMP_AIR;
+    atmPotTemp[i] = TH_AIR;
+    atmRho[i] = RHO_AIR;
+    atmSpcHumd[i] = Q_AIR;
+    atmPress[i] = PBOT_AIR;
+    atmWindU[i] = WIND_U;
+    atmWindV[i] = WIND_V;
+    atmCoszen[i] = COSZEN;
+    atmFracSnow[i] = SNOW;
+    atmLongwave[i] = LWDOWN;
+  }
+
+  for (int i = 0; i < totalSize3D; ++i) {
+    atmShortwave[i] = SWDOWN;
+  }
+
+  // Set atmospheric forcing
+  UrbanCall(UrbanSetAtmTemp(urban, atmTemp, numLandunits, &ierr), &ierr);
+  UrbanCall(UrbanSetAtmPotTemp(urban, atmPotTemp, numLandunits, &ierr), &ierr);
+  UrbanCall(UrbanSetAtmRho(urban, atmRho, numLandunits, &ierr), &ierr);
+  UrbanCall(UrbanSetAtmSpcHumd(urban, atmSpcHumd, numLandunits, &ierr), &ierr);
+  UrbanCall(UrbanSetAtmPress(urban, atmPress, numLandunits, &ierr), &ierr);
+  UrbanCall(UrbanSetAtmWindU(urban, atmWindU, numLandunits, &ierr), &ierr);
+  UrbanCall(UrbanSetAtmWindV(urban, atmWindV, numLandunits, &ierr), &ierr);
+  UrbanCall(UrbanSetAtmCoszen(urban, atmCoszen, numLandunits, &ierr), &ierr);
+  UrbanCall(UrbanSetAtmFracSnow(urban, atmFracSnow, numLandunits, &ierr), &ierr);
+  UrbanCall(UrbanSetAtmLongwaveDown(urban, atmLongwave, numLandunits, &ierr), &ierr);
+  UrbanCall(UrbanSetAtmShortwaveDown(urban, atmShortwave, size3D, &ierr), &ierr);
+
+  // Free arrays
+  double *atmArrays[] = {atmTemp, atmPotTemp, atmRho, atmSpcHumd, atmPress,
+                         atmWindU, atmWindV, atmCoszen, atmFracSnow,
+                         atmLongwave, atmShortwave};
+  FreeArrays(atmArrays, 11);
+
+  if (mpi_rank == 0) {
+    std::cout << "Set atmospheric forcing:" << std::endl;
+    std::cout << "  Temperature: " << TEMP_AIR << " K" << std::endl;
+    std::cout << "  Pressure: " << PBOT_AIR << " Pa" << std::endl;
+    std::cout << "  Density: " << RHO_AIR << " kg/m^3" << std::endl;
+    std::cout << "  Specific humidity: " << Q_AIR << " kg/kg" << std::endl;
+    std::cout << "  Wind U: " << WIND_U << " m/s" << std::endl;
+    std::cout << "  Wind V: " << WIND_V << " m/s" << std::endl;
+    std::cout << "  Cosine zenith: " << COSZEN << std::endl;
+    std::cout << "  Snow fraction: " << SNOW << std::endl;
+    std::cout << "  Longwave down: " << LWDOWN << " W/m^2" << std::endl;
+    std::cout << "  Shortwave down: " << SWDOWN << " W/m^2" << std::endl;
+  }
+}
+
 void SetUrbanParameters(UrbanType urban, int numLandunits, int mpi_rank) {
   SetCanyonHwr(urban, numLandunits, mpi_rank);
   SetAlbedo(urban, numLandunits, mpi_rank);
   SetEmissivity(urban, numLandunits, mpi_rank);
   SetThermalConductivity(urban, numLandunits, mpi_rank);
   SetHeatCapacity(urban, numLandunits, mpi_rank);
+  SetAtmosphericForcing(urban, numLandunits, mpi_rank);
 }
 
 int main(int argc, char *argv[]) {

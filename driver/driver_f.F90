@@ -270,6 +270,126 @@ contains
     deallocate(cvRoof)
   end subroutine SetHeatCapacity
 
+  subroutine SetAtmosphericForcing(urban, numLandunits, mpi_rank)
+    type(UrbanType), intent(in) :: urban
+    integer(c_int), intent(in) :: numLandunits
+    integer, intent(in) :: mpi_rank
+    integer(c_int) :: status, i
+    integer(c_int) :: numBands, numTypes, totalSize3D
+    integer(c_int), dimension(3) :: size3D
+    real(c_double), allocatable, target :: atmTemp(:)
+    real(c_double), allocatable, target :: atmPotTemp(:)
+    real(c_double), allocatable, target :: atmRho(:)
+    real(c_double), allocatable, target :: atmSpcHumd(:)
+    real(c_double), allocatable, target :: atmPress(:)
+    real(c_double), allocatable, target :: atmWindU(:)
+    real(c_double), allocatable, target :: atmWindV(:)
+    real(c_double), allocatable, target :: atmCoszen(:)
+    real(c_double), allocatable, target :: atmFracSnow(:)
+    real(c_double), allocatable, target :: atmLongwave(:)
+    real(c_double), allocatable, target :: atmShortwave(:)
+
+    ! Atmospheric forcing constants
+    real(c_double), parameter :: TEMP_AIR = 297.26422743678319d0
+    real(c_double), parameter :: TH_AIR = 297.26422743678319d0
+    real(c_double), parameter :: RHO_AIR = 1.1382761848551157d0
+    real(c_double), parameter :: Q_AIR = 1.9217052569985755d-2
+    real(c_double), parameter :: PBOT_AIR = 98260.450580263219d0
+    real(c_double), parameter :: WIND_U = 0.52482489069830152d0
+    real(c_double), parameter :: WIND_V = 0.0d0
+    real(c_double), parameter :: COSZEN = 7.9054122593736065d-3
+    real(c_double), parameter :: SNOW = 0.0d0
+    real(c_double), parameter :: LWDOWN = 432.79580327766450d0
+    real(c_double), parameter :: SWDOWN = 1.0d0
+
+    ! Allocate arrays
+    allocate(atmTemp(numLandunits))
+    allocate(atmPotTemp(numLandunits))
+    allocate(atmRho(numLandunits))
+    allocate(atmSpcHumd(numLandunits))
+    allocate(atmPress(numLandunits))
+    allocate(atmWindU(numLandunits))
+    allocate(atmWindV(numLandunits))
+    allocate(atmCoszen(numLandunits))
+    allocate(atmFracSnow(numLandunits))
+    allocate(atmLongwave(numLandunits))
+
+    numBands = 2  ! VIS, NIR
+    numTypes = 2  ! Direct, Diffuse
+    size3D = [numLandunits, numBands, numTypes]
+    totalSize3D = numLandunits * numBands * numTypes
+    allocate(atmShortwave(totalSize3D))
+
+    ! Fill arrays with constant values
+    do i = 1, numLandunits
+      atmTemp(i) = TEMP_AIR
+      atmPotTemp(i) = TH_AIR
+      atmRho(i) = RHO_AIR
+      atmSpcHumd(i) = Q_AIR
+      atmPress(i) = PBOT_AIR
+      atmWindU(i) = WIND_U
+      atmWindV(i) = WIND_V
+      atmCoszen(i) = COSZEN
+      atmFracSnow(i) = SNOW
+      atmLongwave(i) = LWDOWN
+    end do
+
+    do i = 1, totalSize3D
+      atmShortwave(i) = SWDOWN
+    end do
+
+    ! Set atmospheric forcing
+    call UrbanSetAtmTemp(urban%ptr, c_loc(atmTemp), numLandunits, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+    call UrbanSetAtmPotTemp(urban%ptr, c_loc(atmPotTemp), numLandunits, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+    call UrbanSetAtmRho(urban%ptr, c_loc(atmRho), numLandunits, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+    call UrbanSetAtmSpcHumd(urban%ptr, c_loc(atmSpcHumd), numLandunits, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+    call UrbanSetAtmPress(urban%ptr, c_loc(atmPress), numLandunits, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+    call UrbanSetAtmWindU(urban%ptr, c_loc(atmWindU), numLandunits, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+    call UrbanSetAtmWindV(urban%ptr, c_loc(atmWindV), numLandunits, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+    call UrbanSetAtmCoszen(urban%ptr, c_loc(atmCoszen), numLandunits, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+    call UrbanSetAtmFracSnow(urban%ptr, c_loc(atmFracSnow), numLandunits, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+    call UrbanSetAtmLongwaveDown(urban%ptr, c_loc(atmLongwave), numLandunits, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+    call UrbanSetAtmShortwaveDown(urban%ptr, c_loc(atmShortwave), size3D, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+
+    if (mpi_rank == 0) then
+      write(*,*) 'Set atmospheric forcing:'
+      write(*,*) '  Temperature:', TEMP_AIR, 'K'
+      write(*,*) '  Pressure:', PBOT_AIR, 'Pa'
+      write(*,*) '  Density:', RHO_AIR, 'kg/m^3'
+      write(*,*) '  Specific humidity:', Q_AIR, 'kg/kg'
+      write(*,*) '  Wind U:', WIND_U, 'm/s'
+      write(*,*) '  Wind V:', WIND_V, 'm/s'
+      write(*,*) '  Cosine zenith:', COSZEN
+      write(*,*) '  Snow fraction:', SNOW
+      write(*,*) '  Longwave down:', LWDOWN, 'W/m^2'
+      write(*,*) '  Shortwave down:', SWDOWN, 'W/m^2'
+    end if
+
+    ! Free arrays
+    deallocate(atmTemp)
+    deallocate(atmPotTemp)
+    deallocate(atmRho)
+    deallocate(atmSpcHumd)
+    deallocate(atmPress)
+    deallocate(atmWindU)
+    deallocate(atmWindV)
+    deallocate(atmCoszen)
+    deallocate(atmFracSnow)
+    deallocate(atmLongwave)
+    deallocate(atmShortwave)
+  end subroutine SetAtmosphericForcing
+
   subroutine SetUrbanParameters(urban, numLandunits, mpi_rank)
     type(UrbanType), intent(in) :: urban
     integer(c_int), intent(in) :: numLandunits
@@ -280,6 +400,7 @@ contains
     call SetEmissivity(urban, numLandunits, mpi_rank)
     call SetThermalConductivity(urban, numLandunits, mpi_rank)
     call SetHeatCapacity(urban, numLandunits, mpi_rank)
+    call SetAtmosphericForcing(urban, numLandunits, mpi_rank)
   end subroutine SetUrbanParameters
 
 end program urbanxx_driver_f
