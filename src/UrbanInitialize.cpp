@@ -29,14 +29,14 @@ void UrbanInitializeTemperature(UrbanType urban, UrbanErrorCode *status) {
 
     const int numLandunits = urban->numLandunits;
 
+    // Temperature initialization constants
+    constexpr Real TEMP_ROOF_INIT = 274.0;
+    constexpr Real TEMP_WALL_INIT = 292.0;
+    constexpr Real TEMP_ROAD_INIT = 274.0;
+
     // Initialize all surface temperatures in a single parallel loop
     Kokkos::parallel_for(
         "InitializeSurfaceTemperatures", numLandunits, KOKKOS_LAMBDA(int l) {
-          // Temperature initialization constants
-          const Real TEMP_ROOF_INIT = 274.0;
-          const Real TEMP_WALL_INIT = 292.0;
-          const Real TEMP_ROAD_INIT = 274.0;
-
           roofTemp(l) = TEMP_ROOF_INIT;
           imperviousRoadTemp(l) = TEMP_ROAD_INIT;
           perviousRoadTemp(l) = TEMP_ROAD_INIT;
