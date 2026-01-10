@@ -5,10 +5,28 @@
 #include <Urban.h>
 #include <UrbanMacros.h>
 
+// Helper function to allocate memory with error checking
+static double* AllocateArray(int size, const char* name) {
+  double *arr = (double *)malloc(size * sizeof(double));
+  if (arr == NULL) {
+    fprintf(stderr, "Failed to allocate memory for %s\n", name);
+    exit(1);
+  }
+  return arr;
+}
+
+// Helper function to safely free multiple arrays
+static void FreeArrays(double **arrays, int count) {
+  for (int i = 0; i < count; ++i) {
+    free(arrays[i]);
+    arrays[i] = NULL;
+  }
+}
+
 void SetCanyonHwr(UrbanType urban, int numLandunits, int mpi_rank) {
   UrbanErrorCode ierr;
 
-  double *canyonHwr = (double *)malloc(numLandunits * sizeof(double));
+  double *canyonHwr = AllocateArray(numLandunits, "canyonHwr");
   for (int i = 0; i < numLandunits; ++i) {
     canyonHwr[i] = 4.80000019073486;
   }
@@ -33,11 +51,11 @@ void SetAlbedo(UrbanType urban, int numLandunits, int mpi_rank) {
   const double ALB_ROOF = 0.254999995231628;
   const double ALB_WALL = 0.200000002980232;
 
-  double *albedoPerviousRoad = (double *)malloc(totalSize3D * sizeof(double));
-  double *albedoImperviousRoad = (double *)malloc(totalSize3D * sizeof(double));
-  double *albedoSunlitWall = (double *)malloc(totalSize3D * sizeof(double));
-  double *albedoShadedWall = (double *)malloc(totalSize3D * sizeof(double));
-  double *albedoRoof = (double *)malloc(totalSize3D * sizeof(double));
+  double *albedoPerviousRoad = AllocateArray(totalSize3D, "albedoPerviousRoad");
+  double *albedoImperviousRoad = AllocateArray(totalSize3D, "albedoImperviousRoad");
+  double *albedoSunlitWall = AllocateArray(totalSize3D, "albedoSunlitWall");
+  double *albedoShadedWall = AllocateArray(totalSize3D, "albedoShadedWall");
+  double *albedoRoof = AllocateArray(totalSize3D, "albedoRoof");
 
   for (int ilandunit = 0; ilandunit < numLandunits; ++ilandunit) {
     for (int iband = 0; iband < numBands; ++iband) {
@@ -58,11 +76,8 @@ void SetAlbedo(UrbanType urban, int numLandunits, int mpi_rank) {
   UrbanCall(UrbanSetAlbedoShadedWall(urban, albedoShadedWall, size3D, &ierr), &ierr);
   UrbanCall(UrbanSetAlbedoRoof(urban, albedoRoof, size3D, &ierr), &ierr);
 
-  free(albedoPerviousRoad);
-  free(albedoImperviousRoad);
-  free(albedoSunlitWall);
-  free(albedoShadedWall);
-  free(albedoRoof);
+  double *albedoArrays[] = {albedoPerviousRoad, albedoImperviousRoad, albedoSunlitWall, albedoShadedWall, albedoRoof};
+  FreeArrays(albedoArrays, 5);
 
   if (mpi_rank == 0) {
     std::cout << "Set albedo values for all surfaces" << std::endl;
@@ -72,10 +87,10 @@ void SetAlbedo(UrbanType urban, int numLandunits, int mpi_rank) {
 void SetEmissivity(UrbanType urban, int numLandunits, int mpi_rank) {
   UrbanErrorCode ierr;
 
-  double *emissivityPerviousRoad = (double *)malloc(numLandunits * sizeof(double));
-  double *emissivityImperviousRoad = (double *)malloc(numLandunits * sizeof(double));
-  double *emissivityWall = (double *)malloc(numLandunits * sizeof(double));
-  double *emissivityRoof = (double *)malloc(numLandunits * sizeof(double));
+  double *emissivityPerviousRoad = AllocateArray(numLandunits, "emissivityPerviousRoad");
+  double *emissivityImperviousRoad = AllocateArray(numLandunits, "emissivityImperviousRoad");
+  double *emissivityWall = AllocateArray(numLandunits, "emissivityWall");
+  double *emissivityRoof = AllocateArray(numLandunits, "emissivityRoof");
 
   const double EMISS_ROOF = 0.90600001811981201;
   const double EMISS_IMPROAD = 0.87999999523162842;
@@ -94,10 +109,8 @@ void SetEmissivity(UrbanType urban, int numLandunits, int mpi_rank) {
   UrbanCall(UrbanSetEmissivityWall(urban, emissivityWall, numLandunits, &ierr), &ierr);
   UrbanCall(UrbanSetEmissivityRoof(urban, emissivityRoof, numLandunits, &ierr), &ierr);
 
-  free(emissivityPerviousRoad);
-  free(emissivityImperviousRoad);
-  free(emissivityWall);
-  free(emissivityRoof);
+  double *emissivityArrays[] = {emissivityPerviousRoad, emissivityImperviousRoad, emissivityWall, emissivityRoof};
+  FreeArrays(emissivityArrays, 4);
 
   if (mpi_rank == 0) {
     std::cout << "Set emissivity values for all surfaces" << std::endl;
@@ -107,9 +120,9 @@ void SetEmissivity(UrbanType urban, int numLandunits, int mpi_rank) {
 void SetThermalConductivity(UrbanType urban, int numLandunits, int mpi_rank) {
   UrbanErrorCode ierr;
 
-  double *tkRoad = (double *)malloc(numLandunits * sizeof(double));
-  double *tkWall = (double *)malloc(numLandunits * sizeof(double));
-  double *tkRoof = (double *)malloc(numLandunits * sizeof(double));
+  double *tkRoad = AllocateArray(numLandunits, "tkRoad");
+  double *tkWall = AllocateArray(numLandunits, "tkWall");
+  double *tkRoof = AllocateArray(numLandunits, "tkRoof");
 
   for (int i = 0; i < numLandunits; ++i) {
     tkRoad[i] = 1.0;
@@ -121,9 +134,8 @@ void SetThermalConductivity(UrbanType urban, int numLandunits, int mpi_rank) {
   UrbanCall(UrbanSetThermalConductivityWall(urban, tkWall, numLandunits, &ierr), &ierr);
   UrbanCall(UrbanSetThermalConductivityRoof(urban, tkRoof, numLandunits, &ierr), &ierr);
 
-  free(tkRoad);
-  free(tkWall);
-  free(tkRoof);
+  double *tkArrays[] = {tkRoad, tkWall, tkRoof};
+  FreeArrays(tkArrays, 3);
 
   if (mpi_rank == 0) {
     std::cout << "Set thermal conductivity values for all surfaces" << std::endl;
@@ -133,9 +145,9 @@ void SetThermalConductivity(UrbanType urban, int numLandunits, int mpi_rank) {
 void SetHeatCapacity(UrbanType urban, int numLandunits, int mpi_rank) {
   UrbanErrorCode ierr;
 
-  double *cvRoad = (double *)malloc(numLandunits * sizeof(double));
-  double *cvWall = (double *)malloc(numLandunits * sizeof(double));
-  double *cvRoof = (double *)malloc(numLandunits * sizeof(double));
+  double *cvRoad = AllocateArray(numLandunits, "cvRoad");
+  double *cvWall = AllocateArray(numLandunits, "cvWall");
+  double *cvRoof = AllocateArray(numLandunits, "cvRoof");
 
   for (int i = 0; i < numLandunits; ++i) {
     cvRoad[i] = 2.0e6;
@@ -147,9 +159,8 @@ void SetHeatCapacity(UrbanType urban, int numLandunits, int mpi_rank) {
   UrbanCall(UrbanSetHeatCapacityWall(urban, cvWall, numLandunits, &ierr), &ierr);
   UrbanCall(UrbanSetHeatCapacityRoof(urban, cvRoof, numLandunits, &ierr), &ierr);
 
-  free(cvRoad);
-  free(cvWall);
-  free(cvRoof);
+  double *cvArrays[] = {cvRoad, cvWall, cvRoof};
+  FreeArrays(cvArrays, 3);
 
   if (mpi_rank == 0) {
     std::cout << "Set heat capacity values for all surfaces" << std::endl;
