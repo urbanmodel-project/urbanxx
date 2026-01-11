@@ -50,6 +50,14 @@ extern "C" {
 
 using namespace URBANXX;
 
+void UrbanSetFracPervRoadOfTotalRoad(UrbanType urban, const double *values,
+                                     int length, UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  SetView1D(urban->urbanParams.FracPervRoadOfTotalRoad, values, length, status);
+}
+
 void UrbanSetCanyonHwr(UrbanType urban, const double *values, int length,
                        UrbanErrorCode *status) {
   if (!ValidateInputsWithData(urban, values, status))

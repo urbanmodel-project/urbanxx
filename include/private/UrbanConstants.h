@@ -19,6 +19,8 @@ enum RadiationType {
 constexpr int NUM_RAD_BANDS = 2; // vis and nir
 constexpr int NUM_RAD_TYPES = 2; // direct and diffuse
 
+#define STEBOL 5.670374419e-8
+
 } // namespace URBANXX
 
 #endif // URBAN_CONSTANTS_H

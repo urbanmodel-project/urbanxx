@@ -4,6 +4,7 @@ set(URBAN_SOURCES
     UrbanParamsType.cpp
     UrbanInitialize.cpp
     AtmosphereType.cpp
+    UrbanLongwaveRad.cpp
     KokkosWrappers.cpp
 )
 
