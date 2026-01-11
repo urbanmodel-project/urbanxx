@@ -78,7 +78,9 @@ struct ViewFactor {
 
 struct UrbanParamsType {
   DECLARE_DEVICE_VIEW(1DR8, CanyonHwr) // canyon height-to-width ratio (-)
-  DECLARE_DEVICE_VIEW(1DR8, FracPervRoadOfTotalRoad) // fraction of pervious road w.r.t. total road (-)
+  DECLARE_DEVICE_VIEW(1DR8,
+                      FracPervRoadOfTotalRoad) // fraction of pervious road
+                                               // w.r.t. total road (-)
 
   ViewFactor viewFactor;
   CommonSurfaceProperties tk; // thermal conductivity (W/m/K)

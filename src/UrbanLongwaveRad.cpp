@@ -9,14 +9,33 @@
 
 namespace URBANXX {
 
+// Structure to hold longwave radiation components for a surface
+struct SurfaceLongwaveFluxes {
+  Real absorbed;          // absorbed longwave radiation
+  Real reflected;         // reflected longwave radiation
+  Real emitted;           // emitted longwave radiation
+  Real absorbedWeighted;  // absorbed * weight (for fractional surfaces)
+  Real reflectedWeighted; // reflected * weight
+  Real emittedWeighted;   // emitted * weight
+};
+
 // Helper function to compute longwave radiation components for a surface
 KOKKOS_INLINE_FUNCTION
-void ComputeAbsRefEmiRadiation(const Real emissivity, const Real temperature,
-                               const Real LtotForSurface, Real &absorbed,
-                               Real &reflected, Real &emitted) {
-  absorbed = emissivity * LtotForSurface;
-  reflected = (1.0 - emissivity) * LtotForSurface;
-  emitted = emissivity * STEBOL * Kokkos::pow(temperature, 4.0);
+SurfaceLongwaveFluxes ComputeAbsRefEmiRadiation(const Real emissivity,
+                                                const Real temperature,
+                                                const Real LtotForSurface,
+                                                const Real weight) {
+  SurfaceLongwaveFluxes fluxes;
+
+  fluxes.absorbed = emissivity * LtotForSurface;
+  fluxes.reflected = (1.0 - emissivity) * LtotForSurface;
+  fluxes.emitted = emissivity * STEBOL * Kokkos::pow(temperature, 4.0);
+
+  fluxes.absorbedWeighted = fluxes.absorbed * weight;
+  fluxes.reflectedWeighted = fluxes.reflected * weight;
+  fluxes.emittedWeighted = fluxes.emitted * weight;
+
+  return fluxes;
 }
 
 void ComputeNetLongwave(URBANXX::_p_UrbanType &urban) {
@@ -31,6 +50,7 @@ void ComputeNetLongwave(URBANXX::_p_UrbanType &urban) {
   auto &vf_sr = urban.urbanParams.viewFactor.SkyFrmRoad;
   auto &vf_sw = urban.urbanParams.viewFactor.SkyFrmWall;
   auto &hwr = urban.urbanParams.CanyonHwr;
+  auto &fracPervRoad = urban.urbanParams.FracPervRoadOfTotalRoad;
 
   // Access urban parameters - emissivities
   auto &emissRoof = urban.urbanParams.emissivity.Roof;
@@ -62,18 +82,44 @@ void ComputeNetLongwave(URBANXX::_p_UrbanType &urban) {
         netLwImpRoad(l) = 0.0;
         netLwPerRoad(l) = 0.0;
 
+        // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        // Computations for roads
+        // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
         // Total longwave downwelling to road
         const Real LtotForRoad = forcLRad(l) * vf_sr(l);
 
-        // Impervious road
-        Real absImpRoad, refImpRoad, emiImpRoad;
-        ComputeAbsRefEmiRadiation(emissImpRoad(l), tempImpRoad(l), LtotForRoad,
-                                  absImpRoad, refImpRoad, emiImpRoad);
+        // Impervious road (weight = 1 - fraction of pervious road)
+        const Real fracImpRoad = 1.0 - fracPervRoad(l);
+        auto fluxImpRoad = ComputeAbsRefEmiRadiation(
+            emissImpRoad(l), tempImpRoad(l), LtotForRoad, fracImpRoad);
 
         // Pervious road
-        Real absPerRoad, refPerRoad, emiPerRoad;
-        ComputeAbsRefEmiRadiation(emissPerRoad(l), tempPerRoad(l), LtotForRoad,
-                                  absPerRoad, refPerRoad, emiPerRoad);
+        auto fluxPerRoad = ComputeAbsRefEmiRadiation(
+            emissPerRoad(l), tempPerRoad(l), LtotForRoad, fracPervRoad(l));
+
+        // Combinging data from the roads
+        Real RoadAbs =
+            fluxImpRoad.absorbedWeighted + fluxPerRoad.absorbedWeighted;
+        Real RoadRef =
+            fluxImpRoad.reflectedWeighted + fluxPerRoad.reflectedWeighted;
+        Real RoadEmi =
+            fluxImpRoad.emittedWeighted + fluxPerRoad.emittedWeighted;
+
+        // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        // Computations for walls
+        // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        // Total longwave downwelling to wall
+        const Real LtotForWall = forcLRad(l) * vf_sw(l);
+
+        // Sunlit wall
+        auto fluxSunlitWall = ComputeAbsRefEmiRadiation(
+            emissWall(l), tempSunlitWall(l), LtotForWall, 1.0);
+
+        // Shaded wall
+        auto fluxShadedWall = ComputeAbsRefEmiRadiation(
+            emissWall(l), tempShadedWall(l), LtotForWall, 1.0);
       });
 
   Kokkos::fence();
