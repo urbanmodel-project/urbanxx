@@ -58,6 +58,27 @@ SurfaceLongwaveFluxes ComputeAbsRefEmiRadiation(const Real emissivity,
   return fluxes;
 }
 
+// Helper function to distribute radiation from road to other surfaces
+KOKKOS_INLINE_FUNCTION
+ReflectedRadFromRoad DistributeRadiationFromRoad(const Real radiation,
+                                                 const Real vf_sr,
+                                                 const Real vf_wr,
+                                                 const Real weight) {
+  ReflectedRadFromRoad ref;
+
+  // Distribute radiation by view factors
+  ref.toSky = radiation * vf_sr;
+  ref.toSunwall = radiation * vf_wr;
+  ref.toShadewall = radiation * vf_wr;
+
+  // Apply weight (fraction of total road)
+  ref.toSkyByWt = ref.toSky * weight;
+  ref.toSunwallByWt = ref.toSunwall * weight;
+  ref.toShadewallByWt = ref.toShadewall * weight;
+
+  return ref;
+}
+
 // Helper function to compute reflected radiation components from road
 KOKKOS_INLINE_FUNCTION
 ReflectedRadFromRoad ComputeReflectedRadFromRoad(const Real incomingRad,
@@ -65,20 +86,44 @@ ReflectedRadFromRoad ComputeReflectedRadFromRoad(const Real incomingRad,
                                                  const Real vf_sr,
                                                  const Real vf_wr,
                                                  const Real weight) {
-  ReflectedRadFromRoad ref;
-
   // Compute reflected radiation
   const Real reflectedRad = (1.0 - emissivity) * incomingRad;
 
-  // Distribute reflected radiation by view factors
-  ref.toSky = reflectedRad * vf_sr;
-  ref.toSunwall = reflectedRad * vf_wr;
-  ref.toShadewall = reflectedRad * vf_wr;
+  // Distribute using common function
+  return DistributeRadiationFromRoad(reflectedRad, vf_sr, vf_wr, weight);
+}
 
-  // Apply weight (fraction of total road)
-  ref.toSkyByWt = ref.toSky * weight;
-  ref.toSunwallByWt = ref.toSunwall * weight;
-  ref.toShadewallByWt = ref.toShadewall * weight;
+// Helper function to compute emitted radiation components from road
+KOKKOS_INLINE_FUNCTION
+ReflectedRadFromRoad ComputeEmittedRadFromRoad(const Real emissivity,
+                                               const Real temperature,
+                                               const Real vf_sr,
+                                               const Real vf_wr,
+                                               const Real weight) {
+  // Compute emitted radiation
+  const Real emittedRad = emissivity * STEBOL * Kokkos::pow(temperature, 4.0);
+
+  // Distribute using common function
+  return DistributeRadiationFromRoad(emittedRad, vf_sr, vf_wr, weight);
+}
+
+// Helper function to distribute radiation from wall to other surfaces
+KOKKOS_INLINE_FUNCTION
+ReflectedRadFromWall DistributeRadiationFromWall(const Real radiation,
+                                                 const Real vf_sw,
+                                                 const Real vf_rw,
+                                                 const Real vf_ww) {
+  ReflectedRadFromWall ref;
+
+  // Distribute radiation by view factors
+  ref.toSky = radiation * vf_sw;
+  ref.toRoad = radiation * vf_rw;
+  ref.toOtherwall = radiation * vf_ww;
+
+  // For walls, weight is always 1.0 (no fractional surfaces)
+  ref.toSkyByWt = ref.toSky;
+  ref.toRoadByWt = ref.toRoad;
+  ref.toOtherwallByWt = ref.toOtherwall;
 
   return ref;
 }
@@ -90,22 +135,25 @@ ReflectedRadFromWall ComputeReflectedRadFromWall(const Real incomingRad,
                                                  const Real vf_sw,
                                                  const Real vf_rw,
                                                  const Real vf_ww) {
-  ReflectedRadFromWall ref;
-
   // Compute reflected radiation
   const Real reflectedRad = (1.0 - emissivity) * incomingRad;
 
-  // Distribute reflected radiation by view factors
-  ref.toSky = reflectedRad * vf_sw;
-  ref.toRoad = reflectedRad * vf_rw;
-  ref.toOtherwall = reflectedRad * vf_ww;
+  // Distribute using common function
+  return DistributeRadiationFromWall(reflectedRad, vf_sw, vf_rw, vf_ww);
+}
 
-  // For walls, weight is always 1.0 (no fractional surfaces)
-  ref.toSkyByWt = ref.toSky;
-  ref.toRoadByWt = ref.toRoad;
-  ref.toOtherwallByWt = ref.toOtherwall;
+// Helper function to compute emitted radiation components from wall
+KOKKOS_INLINE_FUNCTION
+ReflectedRadFromWall ComputeEmittedRadFromWall(const Real emissivity,
+                                               const Real temperature,
+                                               const Real vf_sw,
+                                               const Real vf_rw,
+                                               const Real vf_ww) {
+  // Compute emitted radiation
+  const Real emittedRad = emissivity * STEBOL * Kokkos::pow(temperature, 4.0);
 
-  return ref;
+  // Distribute using common function
+  return DistributeRadiationFromWall(emittedRad, vf_sw, vf_rw, vf_ww);
 }
 
 void ComputeNetLongwave(URBANXX::_p_UrbanType &urban) {
@@ -164,16 +212,26 @@ void ComputeNetLongwave(URBANXX::_p_UrbanType &urban) {
 
         // Impervious road (weight = 1 - fraction of pervious road)
         const Real fracImpRoad = 1.0 - fracPervRoad(l);
+
         auto fluxImpRoad = ComputeAbsRefEmiRadiation(
             emissImpRoad(l), tempImpRoad(l), LtotForRoad, fracImpRoad);
+
         auto refImpRoad = ComputeReflectedRadFromRoad(
             LtotForRoad, emissImpRoad(l), vf_sr(l), vf_wr(l), fracImpRoad);
+
+        auto emiImpRoad = ComputeEmittedRadFromRoad(
+            emissImpRoad(l), tempImpRoad(l), vf_sr(l), vf_wr(l), fracImpRoad);
 
         // Pervious road
         auto fluxPerRoad = ComputeAbsRefEmiRadiation(
             emissPerRoad(l), tempPerRoad(l), LtotForRoad, fracPervRoad(l));
+
         auto refPerRoad = ComputeReflectedRadFromRoad(
             LtotForRoad, emissPerRoad(l), vf_sr(l), vf_wr(l), fracPervRoad(l));
+
+        auto emiPerRoad =
+            ComputeEmittedRadFromRoad(emissPerRoad(l), tempPerRoad(l), vf_sr(l),
+                                      vf_wr(l), fracPervRoad(l));
 
         // Combinging data from the roads
         Real RoadAbs =
@@ -205,6 +263,14 @@ void ComputeNetLongwave(URBANXX::_p_UrbanType &urban) {
         // Compute reflected radiation from shaded wall
         auto refShadedWall = ComputeReflectedRadFromWall(
             LtotForWall, emissWall(l), vf_sw(l), vf_rw(l), vf_ww(l));
+
+        // Compute emitted radiation from sunlit wall
+        auto emiSunlitWall = ComputeEmittedRadFromWall(
+            emissWall(l), tempSunlitWall(l), vf_sw(l), vf_rw(l), vf_ww(l));
+
+        // Compute emitted radiation from shaded wall
+        auto emiShadedWall = ComputeEmittedRadFromWall(
+            emissWall(l), tempShadedWall(l), vf_sw(l), vf_rw(l), vf_ww(l));
       });
 
   Kokkos::fence();
