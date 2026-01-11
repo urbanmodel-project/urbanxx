@@ -38,6 +38,21 @@ void SetCanyonHwr(UrbanType urban, int numLandunits, int mpi_rank) {
   }
 }
 
+void SetFracPervRoadOfTotalRoad(UrbanType urban, int numLandunits, int mpi_rank) {
+  UrbanErrorCode ierr;
+
+  double *fracPervRoadOfTotalRoad = AllocateArray(numLandunits, "fracPervRoadOfTotalRoad");
+  for (int i = 0; i < numLandunits; ++i) {
+    fracPervRoadOfTotalRoad[i] = 0.16666667163372040;
+  }
+  UrbanCall(UrbanSetFracPervRoadOfTotalRoad(urban, fracPervRoadOfTotalRoad, numLandunits, &ierr), &ierr);
+  free(fracPervRoadOfTotalRoad);
+  
+  if (mpi_rank == 0) {
+    std::cout << "Set fraction of pervious road w.r.t. total road" << std::endl;
+  }
+}
+
 void SetAlbedo(UrbanType urban, int numLandunits, int mpi_rank) {
   UrbanErrorCode ierr;
 
@@ -255,6 +270,7 @@ void SetAtmosphericForcing(UrbanType urban, int numLandunits, int mpi_rank) {
 
 void SetUrbanParameters(UrbanType urban, int numLandunits, int mpi_rank) {
   SetCanyonHwr(urban, numLandunits, mpi_rank);
+  SetFracPervRoadOfTotalRoad(urban, numLandunits, mpi_rank);
   SetAlbedo(urban, numLandunits, mpi_rank);
   SetEmissivity(urban, numLandunits, mpi_rank);
   SetThermalConductivity(urban, numLandunits, mpi_rank);

@@ -38,6 +38,14 @@ module urban_mod
       integer(c_int) :: status
     end subroutine UrbanSetCanyonHwr
 
+    subroutine UrbanSetFracPervRoadOfTotalRoad(urban, values, length, status) bind(C, name="UrbanSetFracPervRoadOfTotalRoad")
+      import :: c_ptr, c_int, c_double
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetFracPervRoadOfTotalRoad
+
     ! Albedo setter functions
     subroutine UrbanSetAlbedoPerviousRoad(urban, values, size, status) bind(C, name="UrbanSetAlbedoPerviousRoad")
       import :: c_ptr, c_int

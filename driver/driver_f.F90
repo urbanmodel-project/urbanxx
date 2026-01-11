@@ -82,6 +82,28 @@ contains
     deallocate(canyonHwr)
   end subroutine SetCanyonHwr
 
+  subroutine SetFracPervRoadOfTotalRoad(urban, numLandunits, mpi_rank)
+    type(UrbanType), intent(in) :: urban
+    integer(c_int), intent(in) :: numLandunits
+    integer, intent(in) :: mpi_rank
+    integer(c_int) :: status, i
+    real(c_double), allocatable, target :: fracPervRoadOfTotalRoad(:)
+
+    allocate(fracPervRoadOfTotalRoad(numLandunits))
+    do i = 1, numLandunits
+      fracPervRoadOfTotalRoad(i) = 0.16666667163372040d0
+    end do
+    call UrbanSetFracPervRoadOfTotalRoad(urban%ptr, c_loc(fracPervRoadOfTotalRoad), &
+      numLandunits, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+
+    if (mpi_rank == 0) then
+      write(*,*) 'Set fraction of pervious road w.r.t. total road'
+    end if
+
+    deallocate(fracPervRoadOfTotalRoad)
+  end subroutine SetFracPervRoadOfTotalRoad
+
   subroutine SetAlbedo(urban, numLandunits, mpi_rank)
     type(UrbanType), intent(in) :: urban
     integer(c_int), intent(in) :: numLandunits
@@ -403,6 +425,7 @@ contains
     integer, intent(in) :: mpi_rank
 
     call SetCanyonHwr(urban, numLandunits, mpi_rank)
+    call SetFracPervRoadOfTotalRoad(urban, numLandunits, mpi_rank)
     call SetAlbedo(urban, numLandunits, mpi_rank)
     call SetEmissivity(urban, numLandunits, mpi_rank)
     call SetThermalConductivity(urban, numLandunits, mpi_rank)
