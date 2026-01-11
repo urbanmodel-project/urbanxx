@@ -266,23 +266,19 @@ void ComputeNetLongwave(URBANXX::_p_UrbanType &urban) {
         auto fluxSunlitWall = ComputeAbsRefEmiRadiation(
             emissWall(l), tempSunlitWall(l), LtotForWall, 1.0);
 
+        auto refSunlitWall = ComputeReflectedRadFromWall(
+            LtotForWall, emissWall(l), vf_sw(l), vf_rw(l), vf_ww(l));
+
+        auto emiSunlitWall = ComputeEmittedRadFromWall(
+            emissWall(l), tempSunlitWall(l), vf_sw(l), vf_rw(l), vf_ww(l));
+
         // Shaded wall
         auto fluxShadedWall = ComputeAbsRefEmiRadiation(
             emissWall(l), tempShadedWall(l), LtotForWall, 1.0);
 
-        // Compute reflected radiation from sunlit wall
-        auto refSunlitWall = ComputeReflectedRadFromWall(
-            LtotForWall, emissWall(l), vf_sw(l), vf_rw(l), vf_ww(l));
-
-        // Compute reflected radiation from shaded wall
         auto refShadedWall = ComputeReflectedRadFromWall(
             LtotForWall, emissWall(l), vf_sw(l), vf_rw(l), vf_ww(l));
 
-        // Compute emitted radiation from sunlit wall
-        auto emiSunlitWall = ComputeEmittedRadFromWall(
-            emissWall(l), tempSunlitWall(l), vf_sw(l), vf_rw(l), vf_ww(l));
-
-        // Compute emitted radiation from shaded wall
         auto emiShadedWall = ComputeEmittedRadFromWall(
             emissWall(l), tempShadedWall(l), vf_sw(l), vf_rw(l), vf_ww(l));
       });
