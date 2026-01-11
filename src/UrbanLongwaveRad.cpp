@@ -193,6 +193,13 @@ void ComputeNetLongwave(URBANXX::_p_UrbanType &urban) {
   auto &netLwImpRoad = urban.imperviousRoad.NetLongRad;
   auto &netLwPerRoad = urban.perviousRoad.NetLongRad;
 
+  // Access upward longwave radiation fields (to be updated)
+  auto &upLwRoof = urban.roof.UpwardLongRad;
+  auto &upLwSunlitWall = urban.sunlitWall.UpwardLongRad;
+  auto &upLwShadedWall = urban.shadedWall.UpwardLongRad;
+  auto &upLwImpRoad = urban.imperviousRoad.UpwardLongRad;
+  auto &upLwPerRoad = urban.perviousRoad.UpwardLongRad;
+
   Kokkos::parallel_for(
       "ComputeNetLongwave", numLandunits, KOKKOS_LAMBDA(const int l) {
         // Net longwave calculation will go here
@@ -281,6 +288,19 @@ void ComputeNetLongwave(URBANXX::_p_UrbanType &urban) {
 
         auto emiShadedWall = ComputeEmittedRadFromWall(
             emissWall(l), tempShadedWall(l), vf_sw(l), vf_rw(l), vf_ww(l));
+
+        // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        // initialize the net longwave radiation for each surface
+        // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        netLwImpRoad(l) = fluxImpRoad.emitted - fluxImpRoad.absorbed;
+        netLwPerRoad(l) = fluxPerRoad.emitted - fluxPerRoad.absorbed;
+        netLwSunlitWall(l) = fluxSunlitWall.emitted - fluxSunlitWall.absorbed;
+        netLwShadedWall(l) = fluxShadedWall.emitted - fluxShadedWall.absorbed;
+
+        upLwImpRoad(l) = refImpRoad.toSky + emiImpRoad.toSky;
+        upLwPerRoad(l) = refPerRoad.toSky + emiPerRoad.toSky;
+        upLwSunlitWall(l) = refSunlitWall.toSky + emiSunlitWall.toSky;
+        upLwShadedWall(l) = refShadedWall.toSky + emiShadedWall.toSky;
       });
 
   Kokkos::fence();
