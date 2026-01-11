@@ -241,6 +241,20 @@ void ComputeNetLongwave(URBANXX::_p_UrbanType &urban) {
         Real RoadEmi =
             fluxImpRoad.emittedWeighted + fluxPerRoad.emittedWeighted;
 
+        // Reflected radiation from roads to sky, sunwall, and shadewall
+        Real RoadRefToSky = refImpRoad.toSkyByWt + refPerRoad.toSkyByWt;
+        Real RoadRefToSunwall =
+            refImpRoad.toSunwallByWt + refPerRoad.toSunwallByWt;
+        Real RoadRefToShadewall =
+            refImpRoad.toShadewallByWt + refPerRoad.toShadewallByWt;
+
+        // Emitted radiation from roads to sky, sunwall, and shadewall
+        Real RoadEmiToSky = emiImpRoad.toSkyByWt + emiPerRoad.toSkyByWt;
+        Real RoadEmiToSunwall =
+            emiImpRoad.toSunwallByWt + emiPerRoad.toSunwallByWt;
+        Real RoadEmiToShadewall =
+            emiImpRoad.toShadewallByWt + emiPerRoad.toShadewallByWt;
+
         // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         // Computations for walls
         // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
