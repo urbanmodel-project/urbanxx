@@ -215,7 +215,7 @@ void ComputeNetLongwave(URBANXX::_p_UrbanType &urban) {
         // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
         // Total longwave downwelling to road
-        const Real LtotForRoad = forcLRad(l) * vf_sr(l);
+        Real LtotForRoad = forcLRad(l) * vf_sr(l);
 
         // Impervious road (weight = 1 - fraction of pervious road)
         const Real fracImpRoad = 1.0 - fracPervRoad(l);
@@ -267,7 +267,7 @@ void ComputeNetLongwave(URBANXX::_p_UrbanType &urban) {
         // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
         // Total longwave downwelling to wall
-        const Real LtotForWall = forcLRad(l) * vf_sw(l);
+        Real LtotForWall = forcLRad(l) * vf_sw(l);
 
         // Sunlit wall
         auto fluxSunlitWall = ComputeAbsRefEmiRadiation(
@@ -301,6 +301,89 @@ void ComputeNetLongwave(URBANXX::_p_UrbanType &urban) {
         upLwPerRoad(l) = refPerRoad.toSky + emiPerRoad.toSky;
         upLwSunlitWall(l) = refSunlitWall.toSky + emiSunlitWall.toSky;
         upLwShadedWall(l) = refShadedWall.toSky + emiShadedWall.toSky;
+
+        // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        // Iteration loop for multiple reflections between surfaces
+        // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        const int max_iter = 50;
+        for (int iter = 0; iter < max_iter; iter++) {
+
+          // step(1): Compute incoming radiation from wall-to-road and
+          // wall-to-wall reflections
+
+          // For roads: incoming from walls
+          LtotForRoad = (refSunlitWall.toRoad + emiSunlitWall.toRoad +
+                         refShadedWall.toRoad + emiShadedWall.toRoad) *
+                        hwr(l);
+
+          fluxImpRoad = ComputeAbsRefEmiRadiation(
+              emissImpRoad(l), tempImpRoad(l), LtotForRoad, fracImpRoad);
+          fluxPerRoad = ComputeAbsRefEmiRadiation(
+              emissPerRoad(l), tempPerRoad(l), LtotForRoad, fracPervRoad(l));
+
+          RoadAbs = fluxImpRoad.absorbedWeighted + fluxPerRoad.absorbedWeighted;
+          RoadRef =
+              fluxImpRoad.reflectedWeighted + fluxPerRoad.reflectedWeighted;
+
+          // For sunlit wall: incoming from roads and shaded wall
+          LtotForWall = (RoadRefToSunwall + RoadEmiToSunwall) / hwr(l) +
+                        refShadedWall.toOtherwall + emiShadedWall.toOtherwall;
+          fluxSunlitWall = ComputeAbsRefEmiRadiation(
+              emissWall(l), tempSunlitWall(l), LtotForWall, 1.0);
+
+          // For shaded wall: incoming from roads and sunlit wall
+          LtotForWall = (RoadRefToShadewall + RoadEmiToShadewall) / hwr(l) +
+                        refSunlitWall.toOtherwall + emiSunlitWall.toOtherwall;
+          fluxShadedWall = ComputeAbsRefEmiRadiation(
+              emissWall(l), tempShadedWall(l), LtotForWall, 1.0);
+
+          // Set emitted values to zero so they are not counted multiple times
+          emiSunlitWall.toRoad = 0.0;
+          emiSunlitWall.toOtherwall = 0.0;
+          emiShadedWall.toRoad = 0.0;
+          emiShadedWall.toOtherwall = 0.0;
+          RoadEmiToSunwall = 0.0;
+          RoadEmiToShadewall = 0.0;
+
+          // step(2): Update net longwave by subtracting newly absorbed
+          // radiation
+          netLwImpRoad(l) -= fluxImpRoad.absorbed;
+          netLwPerRoad(l) -= fluxPerRoad.absorbed;
+          netLwSunlitWall(l) -= fluxSunlitWall.absorbed;
+          netLwShadedWall(l) -= fluxShadedWall.absorbed;
+
+          // step(3): Compute reflected radiation components for this iteration
+          refImpRoad = ComputeReflectedRadFromRoad(
+              LtotForRoad, emissImpRoad(l), vf_sr(l), vf_wr(l), fracImpRoad);
+          refPerRoad =
+              ComputeReflectedRadFromRoad(LtotForRoad, emissPerRoad(l),
+                                          vf_sr(l), vf_wr(l), fracPervRoad(l));
+
+          RoadRefToSky = refImpRoad.toSkyByWt + refPerRoad.toSkyByWt;
+          RoadRefToSunwall =
+              refImpRoad.toSunwallByWt + refPerRoad.toSunwallByWt;
+          RoadRefToShadewall =
+              refImpRoad.toShadewallByWt + refPerRoad.toShadewallByWt;
+
+          refSunlitWall = ComputeReflectedRadFromWall(
+              LtotForWall, emissWall(l), vf_sw(l), vf_rw(l), vf_ww(l));
+          refShadedWall = ComputeReflectedRadFromWall(
+              LtotForWall, emissWall(l), vf_sw(l), vf_rw(l), vf_ww(l));
+
+          // step(4): Update upward longwave radiation
+          upLwImpRoad(l) += refImpRoad.toSky;
+          upLwPerRoad(l) += refPerRoad.toSky;
+          upLwSunlitWall(l) += refSunlitWall.toSky;
+          upLwShadedWall(l) += refShadedWall.toSky;
+
+          // Check convergence
+          Real crit =
+              Kokkos::max(RoadAbs, Kokkos::max(fluxSunlitWall.absorbed,
+                                               fluxShadedWall.absorbed));
+          const Real errcrit = 0.001;
+          if (crit < errcrit)
+            break;
+        }
       });
 
   Kokkos::fence();
