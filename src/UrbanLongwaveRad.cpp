@@ -9,33 +9,48 @@
 
 namespace URBANXX {
 
+// Helper function to compute longwave radiation components for a surface
+KOKKOS_INLINE_FUNCTION
+void ComputeAbsRefEmiRadiation(const Real emissivity, const Real temperature,
+                               const Real LtotForSurface, Real &absorbed,
+                               Real &reflected, Real &emitted) {
+  absorbed = emissivity * LtotForSurface;
+  reflected = (1.0 - emissivity) * LtotForSurface;
+  emitted = emissivity * STEBOL * Kokkos::pow(temperature, 4.0);
+}
+
 void ComputeNetLongwave(URBANXX::_p_UrbanType &urban) {
   // Get number of landunits for parallel execution
   const int numLandunits = urban.numLandunits;
 
   // Access atmospheric forcing data
-  auto& forcTemp = urban.atmosphereData.ForcTemp;
-  auto& forcLRad = urban.atmosphereData.ForcLRad;
+  auto &forcTemp = urban.atmosphereData.ForcTemp;
+  auto &forcLRad = urban.atmosphereData.ForcLRad;
+
+  // Access urban parameters - view factors and canyon height-to-width ratio
+  auto &vf_sr = urban.urbanParams.viewFactor.SkyFrmRoad;
+  auto &vf_sw = urban.urbanParams.viewFactor.SkyFrmWall;
+  auto &hwr = urban.urbanParams.CanyonHwr;
 
   // Access urban parameters - emissivities
-  auto& emissRoof = urban.urbanParams.emissivity.Roof;
-  auto& emissWall = urban.urbanParams.emissivity.Wall;
-  auto& emissImpRoad = urban.urbanParams.emissivity.ImperviousRoad;
-  auto& emissPerRoad = urban.urbanParams.emissivity.PerviousRoad;
+  auto &emissRoof = urban.urbanParams.emissivity.Roof;
+  auto &emissWall = urban.urbanParams.emissivity.Wall;
+  auto &emissImpRoad = urban.urbanParams.emissivity.ImperviousRoad;
+  auto &emissPerRoad = urban.urbanParams.emissivity.PerviousRoad;
 
   // Access surface temperatures
-  auto& tempRoof = urban.roof.Temperature;
-  auto& tempSunlitWall = urban.sunlitWall.Temperature;
-  auto& tempShadedWall = urban.shadedWall.Temperature;
-  auto& tempImpRoad = urban.imperviousRoad.Temperature;
-  auto& tempPerRoad = urban.perviousRoad.Temperature;
+  auto &tempRoof = urban.roof.Temperature;
+  auto &tempSunlitWall = urban.sunlitWall.Temperature;
+  auto &tempShadedWall = urban.shadedWall.Temperature;
+  auto &tempImpRoad = urban.imperviousRoad.Temperature;
+  auto &tempPerRoad = urban.perviousRoad.Temperature;
 
   // Access net longwave radiation fields (to be updated)
-  auto& netLwRoof = urban.roof.NetLongRad;
-  auto& netLwSunlitWall = urban.sunlitWall.NetLongRad;
-  auto& netLwShadedWall = urban.shadedWall.NetLongRad;
-  auto& netLwImpRoad = urban.imperviousRoad.NetLongRad;
-  auto& netLwPerRoad = urban.perviousRoad.NetLongRad;
+  auto &netLwRoof = urban.roof.NetLongRad;
+  auto &netLwSunlitWall = urban.sunlitWall.NetLongRad;
+  auto &netLwShadedWall = urban.shadedWall.NetLongRad;
+  auto &netLwImpRoad = urban.imperviousRoad.NetLongRad;
+  auto &netLwPerRoad = urban.perviousRoad.NetLongRad;
 
   Kokkos::parallel_for(
       "ComputeNetLongwave", numLandunits, KOKKOS_LAMBDA(const int l) {
@@ -46,6 +61,19 @@ void ComputeNetLongwave(URBANXX::_p_UrbanType &urban) {
         netLwShadedWall(l) = 0.0;
         netLwImpRoad(l) = 0.0;
         netLwPerRoad(l) = 0.0;
+
+        // Total longwave downwelling to road
+        const Real LtotForRoad = forcLRad(l) * vf_sr(l);
+
+        // Impervious road
+        Real absImpRoad, refImpRoad, emiImpRoad;
+        ComputeAbsRefEmiRadiation(emissImpRoad(l), tempImpRoad(l), LtotForRoad,
+                                  absImpRoad, refImpRoad, emiImpRoad);
+
+        // Pervious road
+        Real absPerRoad, refPerRoad, emiPerRoad;
+        ComputeAbsRefEmiRadiation(emissPerRoad(l), tempPerRoad(l), LtotForRoad,
+                                  absPerRoad, refPerRoad, emiPerRoad);
       });
 
   Kokkos::fence();
