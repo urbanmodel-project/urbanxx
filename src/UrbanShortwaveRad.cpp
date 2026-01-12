@@ -40,6 +40,22 @@ struct RoadShortwaveRadiation {
   ReflectedShortwaveFromRoad ref;
 };
 
+// Structure to hold reflected radiation components from wall
+struct ReflectedShortwaveFromWall {
+  Real toSky;           // reflected radiation to sky
+  Real toRoad;          // reflected radiation to road
+  Real toOtherWall;     // reflected radiation to other wall
+  Real toSkyByWt;       // reflected to sky * weight
+  Real toRoadByWt;      // reflected to road * weight
+  Real toOtherWallByWt; // reflected to other wall * weight
+};
+
+// Structure to hold all radiation components for a wall surface
+struct WallShortwaveRadiation {
+  SurfaceShortwaveFluxes flux;
+  ReflectedShortwaveFromWall ref;
+};
+
 // Helper function to compute shortwave radiation components for a surface
 KOKKOS_INLINE_FUNCTION
 SurfaceShortwaveFluxes ShortwaveFluxes(const Real albedo,
@@ -101,6 +117,55 @@ RoadShortwaveRadiation InitializeSingleRoadShortwave(const Real StotForRoad,
   rad.flux = ShortwaveFluxes(albedo, StotForRoad, fraction);
   rad.ref =
       ReflectShortwaveRoad(StotForRoad, albedo, vf_sky, vf_wall, fraction);
+  return rad;
+}
+
+// Helper function to distribute radiation from wall to other surfaces
+KOKKOS_INLINE_FUNCTION
+ReflectedShortwaveFromWall DistributeShortwaveFromWall(const Real radiation,
+                                                       const Real vf_sky,
+                                                       const Real vf_road,
+                                                       const Real vf_wall) {
+  ReflectedShortwaveFromWall ref;
+
+  // Distribute radiation by view factors
+  ref.toSky = radiation * vf_sky;
+  ref.toRoad = radiation * vf_road;
+  ref.toOtherWall = radiation * vf_wall;
+
+  // For walls, weight is always 1.0 (no fractional surfaces)
+  ref.toSkyByWt = ref.toSky;
+  ref.toRoadByWt = ref.toRoad;
+  ref.toOtherWallByWt = ref.toOtherWall;
+
+  return ref;
+}
+
+// Helper function to compute reflected radiation components from wall
+KOKKOS_INLINE_FUNCTION
+ReflectedShortwaveFromWall ReflectShortwaveWall(const Real incomingRad,
+                                                const Real albedo,
+                                                const Real vf_sky,
+                                                const Real vf_road,
+                                                const Real vf_wall) {
+  // Compute reflected radiation
+  const Real reflectedRad = albedo * incomingRad;
+
+  // Distribute using common function
+  return DistributeShortwaveFromWall(reflectedRad, vf_sky, vf_road, vf_wall);
+}
+
+// Helper function to initialize a single wall surface (sunlit or shaded)
+KOKKOS_INLINE_FUNCTION
+WallShortwaveRadiation InitializeSingleWallShortwave(const Real StotForWall,
+                                                     const Real albedo,
+                                                     const Real vf_sky,
+                                                     const Real vf_road,
+                                                     const Real vf_wall) {
+
+  WallShortwaveRadiation rad;
+  rad.flux = ShortwaveFluxes(albedo, StotForWall, 1.0);
+  rad.ref = ReflectShortwaveWall(StotForWall, albedo, vf_sky, vf_road, vf_wall);
   return rad;
 }
 
@@ -306,7 +371,29 @@ void ComputeNetShortwave(URBANXX::_p_UrbanType &urban) {
             Real RoadRefToShadedWall =
                 impRoad.ref.toShadedWallByWt + perRoad.ref.toShadedWallByWt;
 
-            // TODO: Add wall initialization and iteration loop
+            // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+            // Computations for walls
+            // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+            // Total shortwave downwelling to sunlit wall for this band and
+            // type
+            Real StotForSunlitWall = sunlitWall_downRad(l, ib, it);
+
+            // Initialize sunlit wall
+            auto sunlitWall = InitializeSingleWallShortwave(
+                StotForSunlitWall, sunlitWall_baseAlb(l, ib, it),
+                vf_skyFromWall(l), vf_roadFromWall(l), vf_wallFromWall(l));
+
+            // Total shortwave downwelling to shaded wall for this band and
+            // type
+            Real StotForShadedWall = shadedWall_downRad(l, ib, it);
+
+            // Initialize shaded wall
+            auto shadedWall = InitializeSingleWallShortwave(
+                StotForShadedWall, shadedWall_baseAlb(l, ib, it),
+                vf_skyFromWall(l), vf_roadFromWall(l), vf_wallFromWall(l));
+
+            // TODO: Add iteration loop
           }
         }
       });
