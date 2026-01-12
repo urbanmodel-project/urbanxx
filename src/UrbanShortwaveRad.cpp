@@ -318,6 +318,17 @@ void ComputeNetShortwave(URBANXX::_p_UrbanType &urban) {
   auto impRoad_albWithSnow = urban.imperviousRoad.AlbedoWithSnowEffects;
   auto perRoad_albWithSnow = urban.perviousRoad.AlbedoWithSnowEffects;
 
+  // Access absorbed and reflected shortwave radiation fields (to be updated)
+  auto absImpRoad = urban.imperviousRoad.AbsorbedShortRad;
+  auto absPerRoad = urban.perviousRoad.AbsorbedShortRad;
+  auto absSunlitWall = urban.sunlitWall.AbsorbedShortRad;
+  auto absShadedWall = urban.shadedWall.AbsorbedShortRad;
+
+  auto refImpRoad = urban.imperviousRoad.ReflectedShortRad;
+  auto refPerRoad = urban.perviousRoad.ReflectedShortRad;
+  auto refSunlitWall = urban.sunlitWall.ReflectedShortRad;
+  auto refShadedWall = urban.shadedWall.ReflectedShortRad;
+
   // Snow fraction (placeholder - will be computed from snow model later)
   constexpr Real frac_sno = 0.0;
 
@@ -392,6 +403,20 @@ void ComputeNetShortwave(URBANXX::_p_UrbanType &urban) {
             auto shadedWall = InitializeSingleWallShortwave(
                 StotForShadedWall, shadedWall_baseAlb(l, ib, it),
                 vf_skyFromWall(l), vf_roadFromWall(l), vf_wallFromWall(l));
+
+            // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+            // Initialize cumulative absorbed and reflected radiation for all
+            // surfaces
+            // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+            absImpRoad(l, ib, it) = impRoad.flux.absorbed;
+            absPerRoad(l, ib, it) = perRoad.flux.absorbed;
+            absSunlitWall(l, ib, it) = sunlitWall.flux.absorbed;
+            absShadedWall(l, ib, it) = shadedWall.flux.absorbed;
+
+            refImpRoad(l, ib, it) = impRoad.ref.toSky;
+            refPerRoad(l, ib, it) = perRoad.ref.toSky;
+            refSunlitWall(l, ib, it) = sunlitWall.ref.toSky;
+            refShadedWall(l, ib, it) = shadedWall.ref.toSky;
 
             // TODO: Add iteration loop
           }
