@@ -16,6 +16,94 @@ namespace URBANXX {
 constexpr Real SNOW_ALBEDO_VIS = 0.66;
 constexpr Real SNOW_ALBEDO_NIR = 0.56;
 
+// Structure to hold shortwave radiation components for a surface
+struct SurfaceShortwaveFluxes {
+  Real absorbed;          // absorbed shortwave radiation
+  Real reflected;         // reflected shortwave radiation
+  Real absorbedWeighted;  // absorbed * weight (for fractional surfaces)
+  Real reflectedWeighted; // reflected * weight
+};
+
+// Structure to hold reflected radiation components from road
+struct ReflectedShortwaveFromRoad {
+  Real toSky;            // reflected radiation to sky
+  Real toSunlitWall;     // reflected radiation to sunlit wall
+  Real toShadedWall;     // reflected radiation to shaded wall
+  Real toSkyByWt;        // reflected to sky * weight
+  Real toSunlitWallByWt; // reflected to sunlit wall * weight
+  Real toShadedWallByWt; // reflected to shaded wall * weight
+};
+
+// Structure to hold all radiation components for a road surface
+struct RoadShortwaveRadiation {
+  SurfaceShortwaveFluxes flux;
+  ReflectedShortwaveFromRoad ref;
+};
+
+// Helper function to compute shortwave radiation components for a surface
+KOKKOS_INLINE_FUNCTION
+SurfaceShortwaveFluxes ShortwaveFluxes(const Real albedo,
+                                       const Real StotForSurface,
+                                       const Real weight) {
+  SurfaceShortwaveFluxes fluxes;
+
+  fluxes.absorbed = (1.0 - albedo) * StotForSurface;
+  fluxes.reflected = albedo * StotForSurface;
+
+  fluxes.absorbedWeighted = fluxes.absorbed * weight;
+  fluxes.reflectedWeighted = fluxes.reflected * weight;
+
+  return fluxes;
+}
+
+// Helper function to distribute radiation from road to other surfaces
+KOKKOS_INLINE_FUNCTION
+ReflectedShortwaveFromRoad DistributeShortwaveFromRoad(const Real radiation,
+                                                       const Real vf_sky,
+                                                       const Real vf_wall,
+                                                       const Real weight) {
+  ReflectedShortwaveFromRoad ref;
+
+  // Distribute radiation by view factors
+  ref.toSky = radiation * vf_sky;
+  ref.toSunlitWall = radiation * vf_wall;
+  ref.toShadedWall = radiation * vf_wall;
+
+  // Apply weight (fraction of total road)
+  ref.toSkyByWt = ref.toSky * weight;
+  ref.toSunlitWallByWt = ref.toSunlitWall * weight;
+  ref.toShadedWallByWt = ref.toShadedWall * weight;
+
+  return ref;
+}
+
+// Helper function to compute reflected radiation components from road
+KOKKOS_INLINE_FUNCTION
+ReflectedShortwaveFromRoad
+ReflectShortwaveRoad(const Real incomingRad, const Real albedo,
+                     const Real vf_sky, const Real vf_wall, const Real weight) {
+  // Compute reflected radiation
+  const Real reflectedRad = albedo * incomingRad;
+
+  // Distribute using common function
+  return DistributeShortwaveFromRoad(reflectedRad, vf_sky, vf_wall, weight);
+}
+
+// Helper function to initialize a single road surface (impervious or pervious)
+KOKKOS_INLINE_FUNCTION
+RoadShortwaveRadiation InitializeSingleRoadShortwave(const Real StotForRoad,
+                                                     const Real albedo,
+                                                     const Real vf_sky,
+                                                     const Real vf_wall,
+                                                     const Real fraction) {
+
+  RoadShortwaveRadiation rad;
+  rad.flux = ShortwaveFluxes(albedo, StotForRoad, fraction);
+  rad.ref =
+      ReflectShortwaveRoad(StotForRoad, albedo, vf_sky, vf_wall, fraction);
+  return rad;
+}
+
 // Compute snow albedo for surfaces with snow coverage
 KOKKOS_INLINE_FUNCTION
 void ComputeSnowAlbedo(const int l, const Real coszen, Array3DR8 roof_snowAlb,
@@ -142,6 +230,10 @@ void ComputeNetShortwave(URBANXX::_p_UrbanType &urban) {
   auto hwr = urban.urbanParams.CanyonHwr;
   auto vf_skyFromRoad = urban.urbanParams.viewFactor.SkyFrmRoad;
   auto vf_skyFromWall = urban.urbanParams.viewFactor.SkyFrmWall;
+  auto vf_wallFromRoad = urban.urbanParams.viewFactor.WallFrmRoad;
+  auto vf_roadFromWall = urban.urbanParams.viewFactor.RoadFrmWall;
+  auto vf_wallFromWall = urban.urbanParams.viewFactor.OtherWallFrmWall;
+  auto fracPervRoad = urban.urbanParams.FracPervRoadOfTotalRoad;
 
   auto sunlitWall_downRad = urban.sunlitWall.DownwellingShortRad;
   auto shadedWall_downRad = urban.shadedWall.DownwellingShortRad;
@@ -154,6 +246,8 @@ void ComputeNetShortwave(URBANXX::_p_UrbanType &urban) {
   auto roof_baseAlb = urban.urbanParams.albedo.Roof;
   auto impRoad_baseAlb = urban.urbanParams.albedo.ImperviousRoad;
   auto perRoad_baseAlb = urban.urbanParams.albedo.PerviousRoad;
+  auto sunlitWall_baseAlb = urban.urbanParams.albedo.SunlitWall;
+  auto shadedWall_baseAlb = urban.urbanParams.albedo.ShadedWall;
 
   auto roof_albWithSnow = urban.roof.AlbedoWithSnowEffects;
   auto impRoad_albWithSnow = urban.imperviousRoad.AlbedoWithSnowEffects;
@@ -175,6 +269,46 @@ void ComputeNetShortwave(URBANXX::_p_UrbanType &urban) {
             l, frac_sno, roof_snowAlb, roof_baseAlb, roof_albWithSnow,
             impRoad_snowAlb, impRoad_baseAlb, impRoad_albWithSnow,
             perRoad_snowAlb, perRoad_baseAlb, perRoad_albWithSnow);
+
+        // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        // Compute net shortwave radiation with multiple reflections
+        // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        for (int ib = 0; ib < NUM_RAD_BANDS; ++ib) {
+          for (int it = 0; it < NUM_RAD_TYPES; ++it) {
+
+            // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+            // Computations for roads
+            // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+            // Total shortwave downwelling to road for this band and type
+            Real StotForRoad = road_downRad(l, ib, it);
+
+            // Impervious road (weight = 1 - fraction of pervious road)
+            const Real fracImpRoad = 1.0 - fracPervRoad(l);
+
+            // Initialize impervious and pervious roads
+            auto impRoad = InitializeSingleRoadShortwave(
+                StotForRoad, impRoad_albWithSnow(l, ib, it), vf_skyFromRoad(l),
+                vf_wallFromRoad(l), fracImpRoad);
+            auto perRoad = InitializeSingleRoadShortwave(
+                StotForRoad, perRoad_albWithSnow(l, ib, it), vf_skyFromRoad(l),
+                vf_wallFromRoad(l), fracPervRoad(l));
+
+            // Combine both roads
+            Real RoadAbs =
+                impRoad.flux.absorbedWeighted + perRoad.flux.absorbedWeighted;
+            Real RoadRef =
+                impRoad.flux.reflectedWeighted + perRoad.flux.reflectedWeighted;
+
+            Real RoadRefToSky = impRoad.ref.toSkyByWt + perRoad.ref.toSkyByWt;
+            Real RoadRefToSunlitWall =
+                impRoad.ref.toSunlitWallByWt + perRoad.ref.toSunlitWallByWt;
+            Real RoadRefToShadedWall =
+                impRoad.ref.toShadedWallByWt + perRoad.ref.toShadedWallByWt;
+
+            // TODO: Add wall initialization and iteration loop
+          }
+        }
       });
 
   Kokkos::fence();
