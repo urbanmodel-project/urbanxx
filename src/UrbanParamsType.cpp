@@ -55,7 +55,7 @@ void UrbanSetFracPervRoadOfTotalRoad(UrbanType urban, const double *values,
   if (!ValidateInputsWithData(urban, values, status))
     return;
 
-    // Validate that the fraction values are within [0, 1]
+  // Validate that the fraction values are within [0, 1]
   for (int i = 0; i < length; ++i) {
     const double v = values[i];
     if (v < 0.0 || v > 1.0) {
