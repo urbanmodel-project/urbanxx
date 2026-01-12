@@ -1,6 +1,7 @@
 #include "private/AtmosphereTypeImpl.h"
 #include "private/DataTypesImpl.h"
 #include "private/UrbanConstants.h"
+#include "private/UrbanDebugUtils.h"
 #include "private/UrbanLongwaveRadImpl.h"
 #include "private/UrbanParamsTypeImpl.h"
 #include "private/UrbanSurfaceTypeImpl.h"
@@ -434,6 +435,13 @@ void ComputeNetLongwave(URBANXX::_p_UrbanType &urban) {
     std::cerr << "WARNING: Longwave radiation iteration did not converge for "
               << nonConvergedCount_h(0) << " landunit(s)" << std::endl;
     // TODO: Consider adding error handling mechanism here
+  }
+
+  if (0) {
+    print_view_1d(urban.imperviousRoad.NetLongRad, "imperviousRoad.NetLongRad");
+    print_view_1d(urban.imperviousRoad.NetLongRad, "imperviousRoad.NetLongRad");
+    print_view_1d(urban.sunlitWall.NetLongRad, "sunlitWall.NetLongRad");
+    print_view_1d(urban.shadedWall.NetLongRad, "shadedWall.NetLongRad");
   }
 }
 
