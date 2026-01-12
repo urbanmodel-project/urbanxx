@@ -28,7 +28,6 @@ struct SurfaceDataBase {
   DECLARE_DEVICE_VIEW(3DR8,
                       ReflectedShortRad) // reflected solar radiation per unit
                                          // surface area per unit incident flux
-  DECLARE_DEVICE_VIEW(3DR8, BaseAlbedo)  // albedo of surface
   DECLARE_DEVICE_VIEW(3DR8,
                       AbsorbedShortRad)  // absorbed solar radiation per unit
                                          // surface area per unit incident flux
@@ -40,8 +39,6 @@ struct SurfaceDataBase {
   SurfaceDataBase(int numLandunits, int numRadBands, int numRadTypes) {
     ALLOCATE_DEVICE_VIEW(ReflectedShortRad, Array3DR8, numLandunits,
                          numRadBands, numRadTypes)
-    ALLOCATE_DEVICE_VIEW(BaseAlbedo, Array3DR8, numLandunits, numRadBands,
-                         numRadTypes)
     ALLOCATE_DEVICE_VIEW(AbsorbedShortRad, Array3DR8, numLandunits, numRadBands,
                          numRadTypes)
     ALLOCATE_DEVICE_VIEW(Emissivity, Array1DR8, numLandunits)
