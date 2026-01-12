@@ -12,6 +12,35 @@
 
 namespace URBANXX {
 
+// Snow albedo constants
+constexpr Real SNOW_ALBEDO_VIS = 0.66;
+constexpr Real SNOW_ALBEDO_NIR = 0.56;
+
+// Compute snow albedo for surfaces with snow coverage
+KOKKOS_INLINE_FUNCTION
+void ComputeSnowAlbedo(const int l, const Real coszen, Array3DR8 roof_snowAlb,
+                       Array3DR8 impRoad_snowAlb, Array3DR8 perRoad_snowAlb) {
+
+  if (coszen > 0) {
+    // Set snow albedo for both VIS and NIR bands, both direct and diffuse
+    for (int ib = 0; ib < NUM_RAD_BANDS; ++ib) {
+      const Real snowAlb = (ib == VIS) ? SNOW_ALBEDO_VIS : SNOW_ALBEDO_NIR;
+
+      // Roof snow albedo
+      roof_snowAlb(l, ib, DIRECT) = snowAlb;
+      roof_snowAlb(l, ib, DIFFUSE) = snowAlb;
+
+      // Impervious road snow albedo
+      impRoad_snowAlb(l, ib, DIRECT) = snowAlb;
+      impRoad_snowAlb(l, ib, DIFFUSE) = snowAlb;
+
+      // Pervious road snow albedo
+      perRoad_snowAlb(l, ib, DIRECT) = snowAlb;
+      perRoad_snowAlb(l, ib, DIFFUSE) = snowAlb;
+    }
+  }
+}
+
 // Compute incident direct and diffuse radiation in VIS and NIR bands
 KOKKOS_INLINE_FUNCTION
 void ComputeIncidentRadiation(const int l, const Real coszen, const Real hwr,
@@ -80,9 +109,15 @@ void ComputeNetShortwave(URBANXX::_p_UrbanType &urban) {
   auto shadedWall_downRad = urban.shadedWall.DownwellingShortRad;
   auto road_downRad = urban.compositeRoadSurface.DownwellingShortRad;
 
-  // Compute incident radiation for each landunit
+  auto roof_snowAlb = urban.roof.SnowAlbedo;
+  auto impRoad_snowAlb = urban.imperviousRoad.SnowAlbedo;
+  auto perRoad_snowAlb = urban.perviousRoad.SnowAlbedo;
+
+  // Compute snow albedo and incident radiation for each landunit
   Kokkos::parallel_for(
-      "ComputeIncidentRadiation", numLandunits, KOKKOS_LAMBDA(const int l) {
+      "ComputeShortwaveRadiation", numLandunits, KOKKOS_LAMBDA(const int l) {
+        ComputeSnowAlbedo(l, coszen(l), roof_snowAlb, impRoad_snowAlb,
+                          perRoad_snowAlb);
         ComputeIncidentRadiation(l, coszen(l), hwr(l), vf_skyFromRoad(l),
                                  vf_skyFromWall(l), sunlitWall_downRad,
                                  shadedWall_downRad, road_downRad);
