@@ -31,7 +31,7 @@ static void ComputeViewFactors(UrbanType urban, UrbanErrorCode *status) {
     Kokkos::parallel_for(
         "ComputingViewFactor", urban->numLandunits, KOKKOS_LAMBDA(int l) {
           const Real hwr = CanyonHwr(l);
-          const Real sqrt_term = sqrtf(hwr * hwr + 1.0);
+          const Real sqrt_term = std::sqrt(hwr * hwr + 1.0);
 
           sr(l) = sqrt_term - hwr;                     // eqn 2.25
           wr(l) = 0.5 * (1.0 - sr(l));                 // eqn 2.27
