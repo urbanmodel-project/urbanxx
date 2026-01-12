@@ -31,7 +31,7 @@ static void ComputeViewFactors(UrbanType urban, UrbanErrorCode *status) {
     Kokkos::parallel_for(
         "ComputingViewFactor", urban->numLandunits, KOKKOS_LAMBDA(int l) {
           const Real hwr = CanyonHwr(l);
-          const Real sqrt_term = sqrtf(hwr * hwr + 1.0);
+          const Real sqrt_term = std::sqrt(hwr * hwr + 1.0);
 
           sr(l) = sqrt_term - hwr;                     // eqn 2.25
           wr(l) = 0.5 * (1.0 - sr(l));                 // eqn 2.27
@@ -49,6 +49,25 @@ static void ComputeViewFactors(UrbanType urban, UrbanErrorCode *status) {
 extern "C" {
 
 using namespace URBANXX;
+
+void UrbanSetFracPervRoadOfTotalRoad(UrbanType urban, const double *values,
+                                     int length, UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  // Validate that the fraction values are within [0, 1]
+  for (int i = 0; i < length; ++i) {
+    const double v = values[i];
+    if (v < 0.0 || v > 1.0) {
+      if (status) {
+        *status = URBAN_ERR_INVALID_ARGUMENT;
+      }
+      return;
+    }
+  }
+
+  SetView1D(urban->urbanParams.FracPervRoadOfTotalRoad, values, length, status);
+}
 
 void UrbanSetCanyonHwr(UrbanType urban, const double *values, int length,
                        UrbanErrorCode *status) {

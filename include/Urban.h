@@ -37,6 +37,10 @@ URBAN_EXTERN void UrbanCreate(int numLandunits, UrbanType *urban,
 URBAN_EXTERN void UrbanDestroy(UrbanType *urban, UrbanErrorCode *status);
 URBAN_EXTERN void UrbanSetCanyonHwr(UrbanType urban, const double *values,
                                     int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetFracPervRoadOfTotalRoad(UrbanType urban,
+                                                  const double *values,
+                                                  int length,
+                                                  UrbanErrorCode *status);
 
 // Albedo setter functions
 URBAN_EXTERN void UrbanSetAlbedoPerviousRoad(UrbanType urban,
@@ -100,6 +104,9 @@ URBAN_EXTERN void UrbanSetHeatCapacityRoof(UrbanType urban,
 // Initialization functions
 URBAN_EXTERN void UrbanInitializeTemperature(UrbanType urban,
                                              UrbanErrorCode *status);
+
+// Time-stepping functions
+URBAN_EXTERN void UrbanAdvance(UrbanType urban, UrbanErrorCode *status);
 
 // Atmospheric forcing setter functions
 URBAN_EXTERN void UrbanSetAtmTemp(UrbanType urban, const double *values,

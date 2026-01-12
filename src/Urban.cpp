@@ -1,6 +1,7 @@
 #include "Urban.h"
 #include "private/AtmosphereTypeImpl.h"
 #include "private/DataTypesImpl.h"
+#include "private/UrbanLongwaveRadImpl.h"
 #include "private/UrbanTypeImpl.h"
 
 // Define the C struct to match the C++ class
@@ -42,6 +43,23 @@ void UrbanDestroy(UrbanType *urban, UrbanErrorCode *status) {
   try {
     delete *urban;
     *urban = nullptr;
+    *status = URBAN_SUCCESS;
+  } catch (...) {
+    *status = URBAN_ERR_INTERNAL;
+  }
+}
+
+void UrbanAdvance(UrbanType urban, UrbanErrorCode *status) {
+  if (urban == nullptr || status == nullptr) {
+    if (status)
+      *status = URBAN_ERR_INVALID_ARGUMENT;
+    return;
+  }
+
+  try {
+    // Compute net longwave radiation
+    URBANXX::ComputeNetLongwave(*urban);
+
     *status = URBAN_SUCCESS;
   } catch (...) {
     *status = URBAN_ERR_INTERNAL;
