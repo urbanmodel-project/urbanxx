@@ -86,6 +86,14 @@ void UrbanSetCanyonHwr(UrbanType urban, const double *values, int length,
   ComputeViewFactors(urban, status);
 }
 
+void UrbanSetWtRoof(UrbanType urban, const double *values, int length,
+                    UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  SetView1D(urban->urbanParams.WtRoof, values, length, status);
+}
+
 void UrbanSetAlbedoPerviousRoad(UrbanType urban, const double *values,
                                 const int size[3], UrbanErrorCode *status) {
   if (!ValidateInputsWithSize(urban, values, size, status))
@@ -208,6 +216,55 @@ void UrbanSetHeatCapacityRoof(UrbanType urban, const double *values, int length,
     return;
 
   SetView1D(urban->urbanParams.cv.Roof, values, length, status);
+}
+
+// Height parameter setter functions
+void UrbanSetForcHgtT(UrbanType urban, const double *values, int length,
+                      UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  SetView1D(urban->urbanParams.heights.ForcHgtT, values, length, status);
+}
+
+void UrbanSetForcHgtU(UrbanType urban, const double *values, int length,
+                      UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  SetView1D(urban->urbanParams.heights.ForcHgtU, values, length, status);
+}
+
+void UrbanSetZDTown(UrbanType urban, const double *values, int length,
+                    UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  SetView1D(urban->urbanParams.heights.ZDTown, values, length, status);
+}
+
+void UrbanSetZ0Town(UrbanType urban, const double *values, int length,
+                    UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  SetView1D(urban->urbanParams.heights.Z0Town, values, length, status);
+}
+
+void UrbanSetHtRoof(UrbanType urban, const double *values, int length,
+                    UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  SetView1D(urban->urbanParams.heights.HtRoof, values, length, status);
+}
+
+void UrbanSetWindHgtCanyon(UrbanType urban, const double *values, int length,
+                           UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  SetView1D(urban->urbanParams.heights.WindHgtCanyon, values, length, status);
 }
 
 } // extern "C"

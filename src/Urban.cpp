@@ -3,6 +3,7 @@
 #include "private/DataTypesImpl.h"
 #include "private/UrbanLongwaveRadImpl.h"
 #include "private/UrbanShortwaveRadImpl.h"
+#include "private/UrbanSurfaceFluxesImpl.h"
 #include "private/UrbanTypeImpl.h"
 
 // Define the C struct to match the C++ class
@@ -63,6 +64,9 @@ void UrbanAdvance(UrbanType urban, UrbanErrorCode *status) {
 
     // Compute net shortwave radiation
     URBANXX::ComputeNetShortwave(*urban);
+
+    // Compute surface fluxes
+    URBANXX::ComputeSurfaceFluxes(*urban);
 
     *status = URBAN_SUCCESS;
   } catch (...) {

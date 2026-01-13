@@ -53,6 +53,71 @@ void SetFracPervRoadOfTotalRoad(UrbanType urban, int numLandunits, int mpi_rank)
   }
 }
 
+void SetHeightParameters(UrbanType urban, int numLandunits, int mpi_rank) {
+  UrbanErrorCode ierr;
+
+  // Height parameter default values (in meters)
+  const double FORC_HGT_T_DEFAULT = 144.44377627618979;
+  const double FORC_HGT_U_DEFAULT = 144.44377627618979;  // Same as T
+  const double Z_D_TOWN_DEFAULT = 113.96331622200367;
+  const double Z_0_TOWN_DEFAULT = 0.48046005418613641;
+  const double HT_ROOF_DEFAULT = 120.0;
+  const double WIND_HGT_CANYON_DEFAULT = 60.0;
+
+  double *forcHgtT = AllocateArray(numLandunits, "forcHgtT");
+  double *forcHgtU = AllocateArray(numLandunits, "forcHgtU");
+  double *zDTown = AllocateArray(numLandunits, "zDTown");
+  double *z0Town = AllocateArray(numLandunits, "z0Town");
+  double *htRoof = AllocateArray(numLandunits, "htRoof");
+  double *windHgtCanyon = AllocateArray(numLandunits, "windHgtCanyon");
+
+  for (int i = 0; i < numLandunits; ++i) {
+    forcHgtT[i] = FORC_HGT_T_DEFAULT;
+    forcHgtU[i] = FORC_HGT_U_DEFAULT;
+    zDTown[i] = Z_D_TOWN_DEFAULT;
+    z0Town[i] = Z_0_TOWN_DEFAULT;
+    htRoof[i] = HT_ROOF_DEFAULT;
+    windHgtCanyon[i] = WIND_HGT_CANYON_DEFAULT;
+  }
+
+  UrbanCall(UrbanSetForcHgtT(urban, forcHgtT, numLandunits, &ierr), &ierr);
+  UrbanCall(UrbanSetForcHgtU(urban, forcHgtU, numLandunits, &ierr), &ierr);
+  UrbanCall(UrbanSetZDTown(urban, zDTown, numLandunits, &ierr), &ierr);
+  UrbanCall(UrbanSetZ0Town(urban, z0Town, numLandunits, &ierr), &ierr);
+  UrbanCall(UrbanSetHtRoof(urban, htRoof, numLandunits, &ierr), &ierr);
+  UrbanCall(UrbanSetWindHgtCanyon(urban, windHgtCanyon, numLandunits, &ierr), &ierr);
+
+  double *heightArrays[] = {forcHgtT, forcHgtU, zDTown, z0Town, htRoof, windHgtCanyon};
+  FreeArrays(heightArrays, 6);
+
+  if (mpi_rank == 0) {
+    std::cout << "Set height parameters:" << std::endl;
+    std::cout << "  Forcing height (T): " << FORC_HGT_T_DEFAULT << " m" << std::endl;
+    std::cout << "  Forcing height (U): " << FORC_HGT_U_DEFAULT << " m" << std::endl;
+    std::cout << "  Zero displacement (town): " << Z_D_TOWN_DEFAULT << " m" << std::endl;
+    std::cout << "  Roughness length (town): " << Z_0_TOWN_DEFAULT << " m" << std::endl;
+    std::cout << "  Roof height: " << HT_ROOF_DEFAULT << " m" << std::endl;
+    std::cout << "  Wind height (canyon): " << WIND_HGT_CANYON_DEFAULT << " m" << std::endl;
+  }
+}
+
+void SetWtRoof(UrbanType urban, int numLandunits, int mpi_rank) {
+  UrbanErrorCode ierr;
+
+  const double WT_ROOF_DEFAULT = 0.69999998807907104;
+
+  double *wtRoof = AllocateArray(numLandunits, "wtRoof");
+  for (int i = 0; i < numLandunits; ++i) {
+    wtRoof[i] = WT_ROOF_DEFAULT;
+  }
+  UrbanCall(UrbanSetWtRoof(urban, wtRoof, numLandunits, &ierr), &ierr);
+  free(wtRoof);
+  
+  if (mpi_rank == 0) {
+    std::cout << "Set roof weight: " << WT_ROOF_DEFAULT << std::endl;
+  }
+}
+
 void SetAlbedo(UrbanType urban, int numLandunits, int mpi_rank) {
   UrbanErrorCode ierr;
 
@@ -271,6 +336,8 @@ void SetAtmosphericForcing(UrbanType urban, int numLandunits, int mpi_rank) {
 void SetUrbanParameters(UrbanType urban, int numLandunits, int mpi_rank) {
   SetCanyonHwr(urban, numLandunits, mpi_rank);
   SetFracPervRoadOfTotalRoad(urban, numLandunits, mpi_rank);
+  SetWtRoof(urban, numLandunits, mpi_rank);
+  SetHeightParameters(urban, numLandunits, mpi_rank);
   SetAlbedo(urban, numLandunits, mpi_rank);
   SetEmissivity(urban, numLandunits, mpi_rank);
   SetThermalConductivity(urban, numLandunits, mpi_rank);

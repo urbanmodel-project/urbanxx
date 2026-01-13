@@ -36,6 +36,12 @@ struct SurfaceDataBase {
   DECLARE_DEVICE_VIEW(1DR8, NetLongRad)  // net longwave radiation
   DECLARE_DEVICE_VIEW(1DR8, UpwardLongRad) // upward longwave radiation
 
+  // Saturation humidity variables
+  DECLARE_DEVICE_VIEW(1DR8, Es)   // saturation vapor pressure (Pa)
+  DECLARE_DEVICE_VIEW(1DR8, EsdT) // d(es)/dT (Pa/K)
+  DECLARE_DEVICE_VIEW(1DR8, Qs)   // saturation specific humidity (kg/kg)
+  DECLARE_DEVICE_VIEW(1DR8, QsdT) // d(qs)/dT (1/K)
+
   SurfaceDataBase(int numLandunits, int numRadBands, int numRadTypes) {
     ALLOCATE_DEVICE_VIEW(ReflectedShortRad, Array3DR8, numLandunits,
                          numRadBands, numRadTypes)
@@ -45,6 +51,10 @@ struct SurfaceDataBase {
     ALLOCATE_DEVICE_VIEW(Temperature, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(NetLongRad, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(UpwardLongRad, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(Es, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(EsdT, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(Qs, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(QsdT, Array1DR8, numLandunits)
   }
 };
 

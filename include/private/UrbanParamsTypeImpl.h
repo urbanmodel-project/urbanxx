@@ -76,24 +76,49 @@ struct ViewFactor {
   }
 };
 
+struct HeightParameters {
+  DECLARE_DEVICE_VIEW(1DR8,
+                      ForcHgtT) // observational height for temperature (m)
+  DECLARE_DEVICE_VIEW(1DR8, ForcHgtU) // observational height for wind (m)
+  DECLARE_DEVICE_VIEW(1DR8, ZDTown)   // displacement height (m)
+  DECLARE_DEVICE_VIEW(1DR8, Z0Town)   // momentum roughness length (m)
+  DECLARE_DEVICE_VIEW(1DR8, HtRoof)   // height of roof (m)
+  DECLARE_DEVICE_VIEW(
+      1DR8,
+      WindHgtCanyon) // height above road at which canyon wind is computed (m)
+
+  HeightParameters(int numLandunits) {
+    ALLOCATE_DEVICE_VIEW(ForcHgtT, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(ForcHgtU, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(ZDTown, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(Z0Town, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(HtRoof, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(WindHgtCanyon, Array1DR8, numLandunits)
+  }
+};
+
 struct UrbanParamsType {
   DECLARE_DEVICE_VIEW(1DR8, CanyonHwr) // canyon height-to-width ratio (-)
   DECLARE_DEVICE_VIEW(1DR8,
                       FracPervRoadOfTotalRoad) // fraction of pervious road
                                                // w.r.t. total road (-)
+  DECLARE_DEVICE_VIEW(1DR8,
+                      WtRoof) // weight of roof w.r.t. total urban area (-)
 
   ViewFactor viewFactor;
   CommonSurfaceProperties tk; // thermal conductivity (W/m/K)
   CommonSurfaceProperties cv; // heat capacity (J/m^3/K)
   Albedo albedo;              // albedo for various urban surfaces
   Emissivity emissivity;      // emissivity for various urban surfaces
+  HeightParameters heights;   // height parameters for surface flux calculations
 
   UrbanParamsType(int numLandunits, int numRadBands, int numRadTypes)
       : viewFactor(numLandunits), tk(numLandunits), cv(numLandunits),
         albedo(numLandunits, numRadBands, numRadTypes),
-        emissivity(numLandunits) {
+        emissivity(numLandunits), heights(numLandunits) {
     ALLOCATE_DEVICE_VIEW(CanyonHwr, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(FracPervRoadOfTotalRoad, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(WtRoof, Array1DR8, numLandunits)
   }
 };
 } // namespace URBANXX

@@ -2,6 +2,7 @@
 #define URBAN_TYPE_IMPL_H
 #include <private/AtmosphereTypeImpl.h>
 #include <private/DataTypesImpl.h>
+#include <private/UrbanCanyonTypeImpl.h>
 #include <private/UrbanConstants.h>
 #include <private/UrbanParamsTypeImpl.h>
 #include <private/UrbanSurfaceTypeImpl.h>
@@ -15,6 +16,7 @@ struct _p_UrbanType {
 
   AtmosphereType atmosphereData;
   UrbanParamsType urbanParams;
+  UrbanCanyonType urbanCanyon;
   RoofDataType roof;
   RoadDataType imperviousRoad;
   RoadDataType perviousRoad;
@@ -27,6 +29,7 @@ struct _p_UrbanType {
         numRadTypes(NUM_RAD_TYPES),
         atmosphereData(numLandunits_, NUM_RAD_BANDS, NUM_RAD_TYPES),
         urbanParams(numLandunits_, NUM_RAD_BANDS, NUM_RAD_TYPES),
+        urbanCanyon(numLandunits_),
         roof(numLandunits_, NUM_RAD_BANDS, NUM_RAD_TYPES),
         imperviousRoad(numLandunits_, NUM_RAD_BANDS, NUM_RAD_TYPES),
         perviousRoad(numLandunits_, NUM_RAD_BANDS, NUM_RAD_TYPES),
