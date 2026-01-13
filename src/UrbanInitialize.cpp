@@ -34,7 +34,7 @@ void UrbanInitializeTemperature(UrbanType urban, UrbanErrorCode *status) {
     const int numLandunits = urban->numLandunits;
 
     // Temperature initialization constants
-    constexpr Real TEMP_ROOF_INIT = 274.0;
+    constexpr Real TEMP_ROOF_INIT = 292.0;
     constexpr Real TEMP_WALL_INIT = 292.0;
     constexpr Real TEMP_ROAD_INIT = 274.0;
     constexpr Real TEMP_CANYON_AIR_INIT = 283.0;
