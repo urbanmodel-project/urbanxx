@@ -449,8 +449,7 @@ void ComputeNewTafAndQaf(int l, Real canyonWind, Real thm, Real rahu, Real rawu,
   Real canyonResistance = CPAIR * forcRho / (11.8 + 4.2 * canyonWind);
 
   const Real wtRoadPerv = urban.urbanParams.FracPervRoadOfTotalRoad(l);
-  // TODO: Add roof fraction to UrbanParamsType
-  const Real wtRoof = 0.69999998807907104; // Placeholder
+  const Real wtRoof = urban.urbanParams.WtRoof(l);
 
   const Real fwetRoof = 0.0;
   const Real wtusRoof = wtRoof / canyonResistance;

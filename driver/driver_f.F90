@@ -177,6 +177,30 @@ contains
     deallocate(windHgtCanyon)
   end subroutine SetHeightParameters
 
+  subroutine SetWtRoof(urban, numLandunits, mpi_rank)
+    type(UrbanType), intent(in) :: urban
+    integer(c_int), intent(in) :: numLandunits
+    integer, intent(in) :: mpi_rank
+    integer(c_int) :: status, i
+    real(c_double), allocatable, target :: wtRoof(:)
+    real(c_double), parameter :: WT_ROOF_DEFAULT = 0.69999998807907104d0
+
+    allocate(wtRoof(numLandunits))
+    do i = 1, numLandunits
+      wtRoof(i) = WT_ROOF_DEFAULT
+    end do
+
+    call UrbanSetWtRoof(urban%ptr, c_loc(wtRoof), &
+      numLandunits, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+
+    if (mpi_rank == 0) then
+      write(*,*) 'Set roof weight:', WT_ROOF_DEFAULT
+    end if
+
+    deallocate(wtRoof)
+  end subroutine SetWtRoof
+
   subroutine SetAlbedo(urban, numLandunits, mpi_rank)
     type(UrbanType), intent(in) :: urban
     integer(c_int), intent(in) :: numLandunits
@@ -499,6 +523,7 @@ contains
 
     call SetCanyonHwr(urban, numLandunits, mpi_rank)
     call SetFracPervRoadOfTotalRoad(urban, numLandunits, mpi_rank)
+    call SetWtRoof(urban, numLandunits, mpi_rank)
     call SetHeightParameters(urban, numLandunits, mpi_rank)
     call SetAlbedo(urban, numLandunits, mpi_rank)
     call SetEmissivity(urban, numLandunits, mpi_rank)

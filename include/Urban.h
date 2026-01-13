@@ -41,6 +41,8 @@ URBAN_EXTERN void UrbanSetFracPervRoadOfTotalRoad(UrbanType urban,
                                                   const double *values,
                                                   int length,
                                                   UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetWtRoof(UrbanType urban, const double *values,
+                                 int length, UrbanErrorCode *status);
 
 // Albedo setter functions
 URBAN_EXTERN void UrbanSetAlbedoPerviousRoad(UrbanType urban,

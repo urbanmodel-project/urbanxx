@@ -102,6 +102,8 @@ struct UrbanParamsType {
   DECLARE_DEVICE_VIEW(1DR8,
                       FracPervRoadOfTotalRoad) // fraction of pervious road
                                                // w.r.t. total road (-)
+  DECLARE_DEVICE_VIEW(1DR8,
+                      WtRoof) // weight of roof w.r.t. total urban area (-)
 
   ViewFactor viewFactor;
   CommonSurfaceProperties tk; // thermal conductivity (W/m/K)
@@ -116,6 +118,7 @@ struct UrbanParamsType {
         emissivity(numLandunits), heights(numLandunits) {
     ALLOCATE_DEVICE_VIEW(CanyonHwr, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(FracPervRoadOfTotalRoad, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(WtRoof, Array1DR8, numLandunits)
   }
 };
 } // namespace URBANXX

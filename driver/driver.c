@@ -101,6 +101,23 @@ void SetHeightParameters(UrbanType urban, int numLandunits, int mpi_rank) {
   }
 }
 
+void SetWtRoof(UrbanType urban, int numLandunits, int mpi_rank) {
+  UrbanErrorCode ierr;
+
+  const double WT_ROOF_DEFAULT = 0.69999998807907104;
+
+  double *wtRoof = AllocateArray(numLandunits, "wtRoof");
+  for (int i = 0; i < numLandunits; ++i) {
+    wtRoof[i] = WT_ROOF_DEFAULT;
+  }
+  UrbanCall(UrbanSetWtRoof(urban, wtRoof, numLandunits, &ierr), &ierr);
+  free(wtRoof);
+  
+  if (mpi_rank == 0) {
+    std::cout << "Set roof weight: " << WT_ROOF_DEFAULT << std::endl;
+  }
+}
+
 void SetAlbedo(UrbanType urban, int numLandunits, int mpi_rank) {
   UrbanErrorCode ierr;
 
@@ -319,6 +336,7 @@ void SetAtmosphericForcing(UrbanType urban, int numLandunits, int mpi_rank) {
 void SetUrbanParameters(UrbanType urban, int numLandunits, int mpi_rank) {
   SetCanyonHwr(urban, numLandunits, mpi_rank);
   SetFracPervRoadOfTotalRoad(urban, numLandunits, mpi_rank);
+  SetWtRoof(urban, numLandunits, mpi_rank);
   SetHeightParameters(urban, numLandunits, mpi_rank);
   SetAlbedo(urban, numLandunits, mpi_rank);
   SetEmissivity(urban, numLandunits, mpi_rank);

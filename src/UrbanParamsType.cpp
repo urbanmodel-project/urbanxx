@@ -86,6 +86,14 @@ void UrbanSetCanyonHwr(UrbanType urban, const double *values, int length,
   ComputeViewFactors(urban, status);
 }
 
+void UrbanSetWtRoof(UrbanType urban, const double *values, int length,
+                    UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  SetView1D(urban->urbanParams.WtRoof, values, length, status);
+}
+
 void UrbanSetAlbedoPerviousRoad(UrbanType urban, const double *values,
                                 const int size[3], UrbanErrorCode *status) {
   if (!ValidateInputsWithSize(urban, values, size, status))
