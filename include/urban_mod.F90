@@ -170,6 +170,55 @@ module urban_mod
       integer(c_int) :: status
     end subroutine UrbanSetHeatCapacityRoof
 
+    ! Height parameter setter functions
+    subroutine UrbanSetForcHgtT(urban, values, length, status) bind(C, name="UrbanSetForcHgtT")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetForcHgtT
+
+    subroutine UrbanSetForcHgtU(urban, values, length, status) bind(C, name="UrbanSetForcHgtU")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetForcHgtU
+
+    subroutine UrbanSetZDTown(urban, values, length, status) bind(C, name="UrbanSetZDTown")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetZDTown
+
+    subroutine UrbanSetZ0Town(urban, values, length, status) bind(C, name="UrbanSetZ0Town")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetZ0Town
+
+    subroutine UrbanSetHtRoof(urban, values, length, status) bind(C, name="UrbanSetHtRoof")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetHtRoof
+
+    subroutine UrbanSetWindHgtCanyon(urban, values, length, status) bind(C, name="UrbanSetWindHgtCanyon")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetWindHgtCanyon
+
     ! Initialization functions
     subroutine UrbanInitializeTemperature(urban, status) bind(C, name="UrbanInitializeTemperature")
       import :: c_ptr, c_int

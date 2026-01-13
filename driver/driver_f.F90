@@ -104,6 +104,79 @@ contains
     deallocate(fracPervRoadOfTotalRoad)
   end subroutine SetFracPervRoadOfTotalRoad
 
+  subroutine SetHeightParameters(urban, numLandunits, mpi_rank)
+    type(UrbanType), intent(in) :: urban
+    integer(c_int), intent(in) :: numLandunits
+    integer, intent(in) :: mpi_rank
+    integer(c_int) :: status, i
+    real(c_double), allocatable, target :: forcHgtT(:)
+    real(c_double), allocatable, target :: forcHgtU(:)
+    real(c_double), allocatable, target :: zDTown(:)
+    real(c_double), allocatable, target :: z0Town(:)
+    real(c_double), allocatable, target :: htRoof(:)
+    real(c_double), allocatable, target :: windHgtCanyon(:)
+
+    ! Height parameter default values (in meters)
+    real(c_double), parameter :: FORC_HGT_T_DEFAULT = 144.44377627618979d0
+    real(c_double), parameter :: FORC_HGT_U_DEFAULT = 144.44377627618979d0  ! Same as T
+    real(c_double), parameter :: Z_D_TOWN_DEFAULT = 113.96331622200367d0
+    real(c_double), parameter :: Z_0_TOWN_DEFAULT = 0.48046005418613641d0
+    real(c_double), parameter :: HT_ROOF_DEFAULT = 120.0d0
+    real(c_double), parameter :: WIND_HGT_CANYON_DEFAULT = 60.0d0
+
+    allocate(forcHgtT(numLandunits))
+    allocate(forcHgtU(numLandunits))
+    allocate(zDTown(numLandunits))
+    allocate(z0Town(numLandunits))
+    allocate(htRoof(numLandunits))
+    allocate(windHgtCanyon(numLandunits))
+
+    do i = 1, numLandunits
+      forcHgtT(i) = FORC_HGT_T_DEFAULT
+      forcHgtU(i) = FORC_HGT_U_DEFAULT
+      zDTown(i) = Z_D_TOWN_DEFAULT
+      z0Town(i) = Z_0_TOWN_DEFAULT
+      htRoof(i) = HT_ROOF_DEFAULT
+      windHgtCanyon(i) = WIND_HGT_CANYON_DEFAULT
+    end do
+
+    call UrbanSetForcHgtT(urban%ptr, c_loc(forcHgtT), &
+      numLandunits, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+    call UrbanSetForcHgtU(urban%ptr, c_loc(forcHgtU), &
+      numLandunits, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+    call UrbanSetZDTown(urban%ptr, c_loc(zDTown), &
+      numLandunits, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+    call UrbanSetZ0Town(urban%ptr, c_loc(z0Town), &
+      numLandunits, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+    call UrbanSetHtRoof(urban%ptr, c_loc(htRoof), &
+      numLandunits, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+    call UrbanSetWindHgtCanyon(urban%ptr, c_loc(windHgtCanyon), &
+      numLandunits, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+
+    if (mpi_rank == 0) then
+      write(*,*) 'Set height parameters:'
+      write(*,*) '  Forcing height (T):', FORC_HGT_T_DEFAULT, 'm'
+      write(*,*) '  Forcing height (U):', FORC_HGT_U_DEFAULT, 'm'
+      write(*,*) '  Zero displacement (town):', Z_D_TOWN_DEFAULT, 'm'
+      write(*,*) '  Roughness length (town):', Z_0_TOWN_DEFAULT, 'm'
+      write(*,*) '  Roof height:', HT_ROOF_DEFAULT, 'm'
+      write(*,*) '  Wind height (canyon):', WIND_HGT_CANYON_DEFAULT, 'm'
+    end if
+
+    deallocate(forcHgtT)
+    deallocate(forcHgtU)
+    deallocate(zDTown)
+    deallocate(z0Town)
+    deallocate(htRoof)
+    deallocate(windHgtCanyon)
+  end subroutine SetHeightParameters
+
   subroutine SetAlbedo(urban, numLandunits, mpi_rank)
     type(UrbanType), intent(in) :: urban
     integer(c_int), intent(in) :: numLandunits
@@ -426,6 +499,7 @@ contains
 
     call SetCanyonHwr(urban, numLandunits, mpi_rank)
     call SetFracPervRoadOfTotalRoad(urban, numLandunits, mpi_rank)
+    call SetHeightParameters(urban, numLandunits, mpi_rank)
     call SetAlbedo(urban, numLandunits, mpi_rank)
     call SetEmissivity(urban, numLandunits, mpi_rank)
     call SetThermalConductivity(urban, numLandunits, mpi_rank)

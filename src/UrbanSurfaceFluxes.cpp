@@ -511,15 +511,16 @@ void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
   auto Taf = urban.urbanCanyon.Taf;
   auto Qaf = urban.urbanCanyon.Qaf;
 
+  // Get references to height parameters
+  auto forcHgtT = urban.urbanParams.heights.ForcHgtT;
+  auto forcHgtU = urban.urbanParams.heights.ForcHgtU;
+  auto zDTown = urban.urbanParams.heights.ZDTown;
+  auto z0Town = urban.urbanParams.heights.Z0Town;
+  auto htRoof = urban.urbanParams.heights.HtRoof;
+  auto windHgtCanyon = urban.urbanParams.heights.WindHgtCanyon;
+
   // Constants
-  const Real forcHgtT = 144.44377627618979; // observational height (m)
-  const Real forcHgtU = forcHgtT;           // observational height (m)
-  const Real zDTown = 113.96331622200367;   // displacement height (m)
-  const Real z0Town = 0.48046005418613641;  // momentum roughness length (m)
-  const Real htRoof = 120.0;                // height of roof (m)
-  const Real windHgtCanyon = 60.0;          // height above road at which in
-                                            // canyon needs to be computed (m)
-  const Real lapseRate = 0.0098;            // dry adiabatic lapse rate (K/m)
+  const Real lapseRate = 0.0098; // dry adiabatic lapse rate (K/m)
 
   // Compute surface fluxes for each landunit
   Kokkos::parallel_for(
@@ -536,6 +537,14 @@ void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
 
         const Real hwrVal = hwr(l);
 
+        // Get height parameters for this landunit
+        const Real forcHgtTVal = forcHgtT(l);
+        const Real forcHgtUVal = forcHgtU(l);
+        const Real zDTownVal = zDTown(l);
+        const Real z0TownVal = z0Town(l);
+        const Real htRoofVal = htRoof(l);
+        const Real windHgtCanyonVal = windHgtCanyon(l);
+
         // Initialize Monin-Obukhov variables
         Real um, obu;
         Real thm, thv, zldis;
@@ -545,14 +554,14 @@ void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
         {
           const Real forcT = forcTemp(l);
 
-          thm = forcT + lapseRate * forcHgtT;
+          thm = forcT + lapseRate * forcHgtTVal;
           thv = forcTh * (1.0 + 0.61 * forcQ);
           const Real dth = thm - taf;
           const Real dqh = forcQ - qaf;
           const Real dthv = dth * (1.0 + 0.61 * forcQ) + 0.61 * forcTh * dqh;
-          zldis = forcHgtU - zDTown;
+          zldis = forcHgtUVal - zDTownVal;
 
-          MoninObukIni(ur, thv, dthv, zldis, z0Town, um, obu);
+          MoninObukIni(ur, thv, dthv, zldis, z0TownVal, um, obu);
         }
 
         // Get atmospheric pressure and compute saturation humidity for surfaces
@@ -561,8 +570,8 @@ void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
 
         // Compute canyon wind speed
         Real canyonUWind;
-        ComputeCanyonUWind(htRoof, zDTown, z0Town, forcHgtU, windHgtCanyon,
-                           hwrVal, ur, canyonUWind);
+        ComputeCanyonUWind(htRoofVal, zDTownVal, z0TownVal, forcHgtUVal,
+                           windHgtCanyonVal, hwrVal, ur, canyonUWind);
 
         // Iteration loop to compute friction velocity and surface fluxes
         Real fm = 0.0;
@@ -570,8 +579,8 @@ void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
           Real ustar;
           Real temp1, temp12m;
           Real temp2, temp22m;
-          FrictionVelocity(iter, forcHgtU, zDTown, z0Town, obu, ur, um, ustar,
-                           temp1, temp12m, temp2, temp22m, fm);
+          FrictionVelocity(iter, forcHgtUVal, zDTownVal, z0TownVal, obu, ur, um,
+                           ustar, temp1, temp12m, temp2, temp22m, fm);
 
           // Real ramu = 1.0 / (ustar * ustar / um);
           Real rahu = 1.0 / (temp1 * ustar);
