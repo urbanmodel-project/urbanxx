@@ -216,7 +216,7 @@ void ComputeCombinedAlbedo(const int l, const Real frac_sno,
         roof_snowAlb(l, ib, DIRECT) * frac_sno;
     roof_albWithSnow(l, ib, DIFFUSE) =
         roof_baseAlb(l, ib, DIFFUSE) * (1.0 - frac_sno) +
-        roof_snowAlb(l, ib, DIRECT) * frac_sno;
+        roof_snowAlb(l, ib, DIFFUSE) * frac_sno;
 
     // Impervious road: direct uses direct snow, diffuse uses diffuse snow
     impRoad_albWithSnow(l, ib, DIRECT) =
@@ -229,9 +229,9 @@ void ComputeCombinedAlbedo(const int l, const Real frac_sno,
     // Pervious road: direct uses direct snow, diffuse uses diffuse snow
     perRoad_albWithSnow(l, ib, DIRECT) =
         perRoad_baseAlb(l, ib, DIRECT) * (1.0 - frac_sno) +
-        perRoad_snowAlb(l, ib, DIFFUSE) * frac_sno;
+        perRoad_snowAlb(l, ib, DIRECT) * frac_sno;
     perRoad_albWithSnow(l, ib, DIFFUSE) =
-        perRoad_baseAlb(l, ib, DIRECT) * (1.0 - frac_sno) +
+        perRoad_baseAlb(l, ib, DIFFUSE) * (1.0 - frac_sno) +
         perRoad_snowAlb(l, ib, DIFFUSE) * frac_sno;
   }
 }
@@ -445,13 +445,13 @@ void ComputeNetShortwave(URBANXX::_p_UrbanType &urban) {
                         perRoad.flux.reflectedWeighted;
 
               // For sunlit wall: incoming from roads and shaded wall
-              Real StotForSunlitWall =
+              StotForSunlitWall =
                   RoadRefToSunlitWall / hwr(l) + shadedWall.ref.toOtherWall;
               sunlitWall.flux = ShortwaveFluxes(sunlitWall_baseAlb(l, ib, it),
                                                 StotForSunlitWall, 1.0);
 
               // For shaded wall: incoming from roads and sunlit wall
-              Real StotForShadedWall =
+              StotForShadedWall =
                   RoadRefToShadedWall / hwr(l) + sunlitWall.ref.toOtherWall;
               shadedWall.flux = ShortwaveFluxes(shadedWall_baseAlb(l, ib, it),
                                                 StotForShadedWall, 1.0);
