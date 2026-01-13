@@ -381,12 +381,127 @@ void ComputeCanyonUWind(Real ht_roof, Real z_d_town, Real z_0_town,
   }
 }
 
+// Helper function to compute saturation humidity for a single surface
+KOKKOS_INLINE_FUNCTION
+void ComputeSurfaceQsat(int l, Real p, const Array1DR8 &temp,
+                        const Array1DR8 &es, const Array1DR8 &esdT,
+                        const Array1DR8 &qs, const Array1DR8 &qsdT) {
+  Real T = temp(l);
+  Real es_val, esdT_val, qs_val, qsdT_val;
+  QSat(T, p, es_val, esdT_val, qs_val, qsdT_val);
+  es(l) = es_val;
+  esdT(l) = esdT_val;
+  qs(l) = qs_val;
+  qsdT(l) = qsdT_val;
+}
+
+// Compute saturation humidity for all urban surfaces
+KOKKOS_INLINE_FUNCTION
+void ComputeQsatForSurfaces(int l, Real forcP,
+                            const URBANXX::_p_UrbanType &urban) {
+  // Roof
+  ComputeSurfaceQsat(l, forcP, urban.roof.Temperature, urban.roof.Es,
+                     urban.roof.EsdT, urban.roof.Qs, urban.roof.QsdT);
+
+  // Sunlit wall
+  ComputeSurfaceQsat(l, forcP, urban.sunlitWall.Temperature,
+                     urban.sunlitWall.Es, urban.sunlitWall.EsdT,
+                     urban.sunlitWall.Qs, urban.sunlitWall.QsdT);
+
+  // Shaded wall
+  ComputeSurfaceQsat(l, forcP, urban.shadedWall.Temperature,
+                     urban.shadedWall.Es, urban.shadedWall.EsdT,
+                     urban.shadedWall.Qs, urban.shadedWall.QsdT);
+
+  // Impervious road
+  ComputeSurfaceQsat(l, forcP, urban.imperviousRoad.Temperature,
+                     urban.imperviousRoad.Es, urban.imperviousRoad.EsdT,
+                     urban.imperviousRoad.Qs, urban.imperviousRoad.QsdT);
+
+  // Pervious road
+  ComputeSurfaceQsat(l, forcP, urban.perviousRoad.Temperature,
+                     urban.perviousRoad.Es, urban.perviousRoad.EsdT,
+                     urban.perviousRoad.Qs, urban.perviousRoad.QsdT);
+}
+
 // Compute surface fluxes for all urban surfaces
 void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
   const int numLandunits = urban.numLandunits;
 
-  std::cout << "ComputeSurfaceFluxes: Processing " << numLandunits
-            << " landunits (placeholder)" << std::endl;
+  // Get references to atmospheric data
+  auto forcTemp = urban.atmosphereData.ForcTemp;
+  auto forcPotTemp = urban.atmosphereData.ForcPotTemp;
+  auto forcSpcHumd = urban.atmosphereData.ForcSpcHumd;
+  auto forcPress = urban.atmosphereData.ForcPress;
+  auto forcU = urban.atmosphereData.ForcWindU;
+  auto forcV = urban.atmosphereData.ForcWindV;
+
+  // Get references to geometric parameters
+  auto hwr = urban.urbanParams.CanyonHwr;
+
+  // Constants
+  const Real forcHgtT = 144.44377627618979; // observational height (m)
+  const Real forcHgtU = forcHgtT;           // observational height (m)
+  const Real zDTown = 113.96331622200367;   // displacement height (m)
+  const Real z0Town = 0.48046005418613641;  // momentum roughness length (m)
+  const Real htRoof = 120.0;                // height of roof (m)
+  const Real windHgtCanyon = 60.0;          // height above road at which in
+                                            // canyon needs to be computed (m)
+  const Real lapseRate = 0.0098;            // dry adiabatic lapse rate (K/m)
+
+  // Compute surface fluxes for each landunit
+  Kokkos::parallel_for(
+      "ComputeSurfaceFluxes", numLandunits, KOKKOS_LAMBDA(const int l) {
+        // Get atmospheric forcing data
+        Real taf = forcTemp(l);
+        Real qaf = forcSpcHumd(l);
+
+        const Real forcUVal = forcU(l);
+        const Real forcVVal = forcV(l);
+        const Real u2PlusV2 = std::pow(forcUVal, 2.0) + std::pow(forcVVal, 2.0);
+        const Real velocity = std::pow(u2PlusV2, 0.5);
+        const Real ur = Kokkos::max(1.0, velocity);
+
+        const Real hwrVal = hwr(l);
+
+        // Initialize Monin-Obukhov variables
+        Real um, obu;
+        Real thm, thv, zldis;
+        const Real forcQ = forcSpcHumd(l);
+        const Real forcTh = forcPotTemp(l);
+
+        {
+          const Real forcT = forcTemp(l);
+
+          thm = forcT + lapseRate * forcHgtT;
+          thv = forcTh * (1.0 + 0.61 * forcQ);
+          const Real dth = thm - taf;
+          const Real dqh = forcQ - qaf;
+          const Real dthv = dth * (1.0 + 0.61 * forcQ) + 0.61 * forcTh * dqh;
+          zldis = forcHgtU - zDTown;
+
+          MoninObukIni(ur, thv, dthv, zldis, z0Town, um, obu);
+        }
+
+        // Get atmospheric pressure and compute saturation humidity for surfaces
+        const Real forcP = forcPress(l);
+        ComputeQsatForSurfaces(l, forcP, urban);
+
+        // Compute canyon wind speed
+        Real canyonUWind;
+        ComputeCanyonUWind(htRoof, zDTown, z0Town, forcHgtU, windHgtCanyon,
+                           hwrVal, ur, canyonUWind);
+
+        // TODO: Add surface flux computations
+      });
+
+  Kokkos::fence();
+
+  // Debug output (disabled by default)
+  if (0) {
+    std::cout << "ComputeSurfaceFluxes completed for " << numLandunits
+              << " landunits" << std::endl;
+  }
 }
 
 } // namespace URBANXX
