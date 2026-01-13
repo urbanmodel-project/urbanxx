@@ -424,6 +424,73 @@ void ComputeQsatForSurfaces(int l, Real forcP,
                      urban.perviousRoad.Qs, urban.perviousRoad.QsdT);
 }
 
+// Compute new air temperature and humidity in the canyon
+KOKKOS_INLINE_FUNCTION
+void ComputeNewTafAndQaf(int l, Real canyonWind, Real thm, Real rahu, Real rawu,
+                         const URBANXX::_p_UrbanType &urban, Real qaf,
+                         Real &tafNew, Real &qafNew) {
+
+  const Real hwrVal = urban.urbanParams.CanyonHwr(l);
+
+  const Real qRoof = urban.roof.Qs(l);
+  const Real qRoadImperv = urban.imperviousRoad.Qs(l);
+  const Real qRoadPerv = urban.perviousRoad.Qs(l);
+  const Real qSunwall = 0.0;
+  const Real qShadewall = 0.0;
+
+  const Real tRoof = urban.roof.Temperature(l);
+  const Real tRoadImperv = urban.imperviousRoad.Temperature(l);
+  const Real tRoadPerv = urban.perviousRoad.Temperature(l);
+  const Real tSunwall = urban.sunlitWall.Temperature(l);
+  const Real tShadewall = urban.shadedWall.Temperature(l);
+
+  const Real forcQ = urban.atmosphereData.ForcSpcHumd(l);
+  const Real forcRho = urban.atmosphereData.ForcRho(l);
+  Real canyonResistance = CPAIR * forcRho / (11.8 + 4.2 * canyonWind);
+
+  const Real wtRoadPerv = urban.urbanParams.FracPervRoadOfTotalRoad(l);
+  // TODO: Add roof fraction to UrbanParamsType
+  const Real wtRoof = 0.5; // Placeholder
+
+  const Real fwetRoof = 0.0;
+  const Real wtusRoof = wtRoof / canyonResistance;
+  const Real wtuqRoof = fwetRoof * wtRoof / canyonResistance;
+
+  const Real wtusRoadPerv = wtRoadPerv * (1.0 - wtRoof) / canyonResistance;
+  const Real wtuqRoadPerv = wtRoadPerv * (1.0 - wtRoof) / canyonResistance;
+
+  const Real fwetRoadImperv = (qaf > qRoadImperv) ? 1.0 : 0.0;
+  const Real wtusRoadImperv =
+      (1.0 - wtRoadPerv) * (1.0 - wtRoof) / canyonResistance;
+  const Real wtuqRoadImperv =
+      fwetRoadImperv * (1.0 - wtRoadPerv) * (1.0 - wtRoof) / canyonResistance;
+
+  const Real wtusSunwall = hwrVal * (1.0 - wtRoof) / canyonResistance;
+  const Real wtuqSunwall = 0.0;
+
+  const Real wtusShadewall = hwrVal * (1.0 - wtRoof) / canyonResistance;
+  const Real wtuqShadewall = 0.0;
+
+  const Real tafNumer = thm / rahu + tRoof * wtusRoof +
+                        tRoadPerv * wtusRoadPerv +
+                        tRoadImperv * wtusRoadImperv + tSunwall * wtusSunwall +
+                        tShadewall * wtusShadewall;
+
+  const Real tafDenom = 1.0 / rahu + wtusRoof + wtusRoadPerv + wtusRoadImperv +
+                        wtusSunwall + wtusShadewall;
+
+  const Real qafNumer = forcQ / rawu + qRoof * wtuqRoof +
+                        qRoadPerv * wtuqRoadPerv +
+                        qRoadImperv * wtuqRoadImperv + qSunwall * wtuqSunwall +
+                        qShadewall * wtuqShadewall;
+
+  const Real qafDenom = 1.0 / rawu + wtuqRoof + wtuqRoadPerv + wtuqRoadImperv +
+                        wtuqSunwall + wtuqShadewall;
+
+  tafNew = tafNumer / tafDenom;
+  qafNew = qafNumer / qafDenom;
+}
+
 // Compute surface fluxes for all urban surfaces
 void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
   const int numLandunits = urban.numLandunits;
@@ -433,6 +500,7 @@ void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
   auto forcPotTemp = urban.atmosphereData.ForcPotTemp;
   auto forcSpcHumd = urban.atmosphereData.ForcSpcHumd;
   auto forcPress = urban.atmosphereData.ForcPress;
+  auto forcRho = urban.atmosphereData.ForcRho;
   auto forcU = urban.atmosphereData.ForcWindU;
   auto forcV = urban.atmosphereData.ForcWindV;
 
@@ -492,7 +560,54 @@ void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
         ComputeCanyonUWind(htRoof, zDTown, z0Town, forcHgtU, windHgtCanyon,
                            hwrVal, ur, canyonUWind);
 
-        // TODO: Add surface flux computations
+        // Iteration loop to compute friction velocity and surface fluxes
+        Real fm = 0.0;
+        for (int iter = 0; iter < 3; ++iter) {
+          Real ustar;
+          Real temp1, temp12m;
+          Real temp2, temp22m;
+          FrictionVelocity(iter, forcHgtU, zDTown, z0Town, obu, ur, um, ustar,
+                           temp1, temp12m, temp2, temp22m, fm);
+
+          // Real ramu = 1.0 / (ustar * ustar / um);
+          Real rahu = 1.0 / (temp1 * ustar);
+          Real rawu = 1.0 / (temp2 * ustar);
+
+          Real canyonWindPow2 =
+              std::pow(canyonUWind, 2.0) + std::pow(ustar, 2.0);
+          Real canyonWind = std::pow(canyonWindPow2, 0.5);
+
+          Real tafNew, qafNew;
+          ComputeNewTafAndQaf(l, canyonWind, thm, rahu, rawu, urban, qaf,
+                              tafNew, qafNew);
+          taf = tafNew;
+          qaf = qafNew;
+
+          const Real dth = thm - taf;
+          const Real dqh = forcQ - qaf;
+          const Real tstar = temp1 * dth;
+          const Real qstar = temp2 * dqh;
+          const Real thvstar =
+              tstar * (1.0 + 0.61 * forcQ) + 0.61 * forcTh * qstar;
+          Real zeta =
+              zldis * VKC * GRAVITY * thvstar / (std::pow(ustar, 2.0) * thv);
+
+          if (zeta > 0.0) {
+            zeta = Kokkos::min(2.0, Kokkos::max(zeta, 0.01));
+            um = Kokkos::max(ur, 0.1);
+          } else {
+            const Real beta = 1.0;
+            const Real zii = 1000.0;
+            const Real wc =
+                beta * std::pow(-GRAVITY * ustar * thvstar * zii / thv, 0.333);
+            um = std::pow(ur * ur + wc * wc, 0.5);
+          }
+          obu = zldis / zeta;
+        }
+
+        // TODO: Store taf and qaf back to arrays
+        // Taf(l) = taf;
+        // Qaf(l) = qaf;
       });
 
   Kokkos::fence();
