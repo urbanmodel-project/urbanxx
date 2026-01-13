@@ -507,6 +507,10 @@ void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
   // Get references to geometric parameters
   auto hwr = urban.urbanParams.CanyonHwr;
 
+  // Get references to urban canyon air properties
+  auto Taf = urban.urbanCanyon.Taf;
+  auto Qaf = urban.urbanCanyon.Qaf;
+
   // Constants
   const Real forcHgtT = 144.44377627618979; // observational height (m)
   const Real forcHgtU = forcHgtT;           // observational height (m)
@@ -521,8 +525,8 @@ void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
   Kokkos::parallel_for(
       "ComputeSurfaceFluxes", numLandunits, KOKKOS_LAMBDA(const int l) {
         // Get atmospheric forcing data
-        Real taf = forcTemp(l);
-        Real qaf = forcSpcHumd(l);
+        Real taf = Taf(l);
+        Real qaf = Qaf(l);
 
         const Real forcUVal = forcU(l);
         const Real forcVVal = forcV(l);
@@ -605,9 +609,9 @@ void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
           obu = zldis / zeta;
         }
 
-        // TODO: Store taf and qaf back to arrays
-        // Taf(l) = taf;
-        // Qaf(l) = qaf;
+        // Store taf and qaf back to arrays
+        Taf(l) = taf;
+        Qaf(l) = qaf;
       });
 
   Kokkos::fence();
