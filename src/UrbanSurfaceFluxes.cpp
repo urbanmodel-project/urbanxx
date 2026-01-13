@@ -12,13 +12,14 @@
 
 namespace URBANXX {
 
-#define GRAVITY 9.80616
-#define VKC 0.4
-#define ZETAM 1.574 // transition point of flux-gradient relation (wind profile)
-#define ZETAT                                                                  \
-  0.465 // transition point of flux-gradient relation (temperature profile)
-#define CPAIR 1004.64 // specific heat of dry air [J/kg/K]
-#define SHR_CONST_TKFRZ 273.15
+constexpr Real GRAVITY = 9.80616;
+constexpr Real VKC = 0.4;
+constexpr Real ZETAM =
+    1.574; // transition point of flux-gradient relation (wind profile)
+constexpr Real ZETAT =
+    0.465; // transition point of flux-gradient relation (temperature profile)
+constexpr Real CPAIR = 1004.64; // specific heat of dry air [J/kg/K]
+constexpr Real SHR_CONST_TKFRZ = 273.15;
 
 KOKKOS_INLINE_FUNCTION
 void QSat(Real T, Real p, Real &es, Real &esdT, Real &qs, Real &qsdT) {
@@ -169,7 +170,7 @@ void ComputeUstar(Real zldis, Real obu, Real z0m, Real um, Real &ustar) {
   const Real zeta = zldis / obu;
 
   if (zeta < -ZETAM) {
-    const Real term1 = std::log(ZETAM * obu / z0m);
+    const Real term1 = std::log(-ZETAM * obu / z0m);
     const Real term4 =
         1.14 * (std::pow(-zeta, 0.333) - std::pow(-ZETAM, 0.333));
 
@@ -263,7 +264,7 @@ void ComputeRelationForOtherScalarProfiles(Real zldis, Real obu, Real z0,
   if (zeta < -ZETAT) {
 
     const Real term1 = std::log(-zeta * obu / z0);
-    const Real term4 = 0.8 * (std::pow(-ZETAT, 0.333) - std::pow(zeta, 0.0333));
+    const Real term4 = 0.8 * (std::pow(-ZETAT, 0.333) - std::pow(-zeta, 0.333));
 
     Real term2, term3;
     StabilityFunc2(-ZETAT, term2);
@@ -308,30 +309,20 @@ void FrictionVelocity(int iter, Real forc_hgt_u, Real displa, Real z0, Real obu,
 
   const Real z0m = z0;
   const Real z0h = z0;
-  // const Real z0q = z0;
 
   ComputeUstar(zldis, obu, z0m, um, ustar);
-
-  /*
-  Real vds;
-  if (zeta < 0) {
-    vds = 2.0e-3 * ustar * (1.0 + std::pow(300.0 / (-obu), 0.666));
-  } else {
-    vds = 2.0e-3 * ustar;
-  }
-  */
 
   Real u10;
   ComputeU10m(zldis, obu, z0m, um, ustar, u10);
 
-  // Calcualte temp1 for the temperature profile
+  // Calculate temp1 for the temperature profile
   ComputeRelationForOtherScalarProfiles(zldis, obu, z0h, temp1);
 
   // Since z0q == z0h, temp2 for the humidity profile is same as
   // that for temperature profile
   temp2 = temp1;
 
-  // Calcualte temp1 at 2m for the temperature profile
+  // Calculate temp1 at 2m for the temperature profile
   ComputeRelationForOtherScalarProfiles(2.0 + z0h, obu, z0h, temp12m);
 
   // similarly, set temp2 at 2m for humidity profile to be same that
@@ -342,7 +333,7 @@ void FrictionVelocity(int iter, Real forc_hgt_u, Real displa, Real z0, Real obu,
   if (Kokkos::min(zeta, 1.0) < 0.0) {
     const Real x = std::pow((1.0 - 16.0 * Kokkos::min(zeta, 1.0)), 0.25);
     const Real tmp2 = std::log((1.0 + x * x) / 2.0);
-    const Real tmp3 = std::log((!.0 + x) / 2.0);
+    const Real tmp3 = std::log((1.0 + x) / 2.0);
     fmnew = 2.0 * tmp3 + tmp2 - std::atan(x) + M_PI / 2.0;
   } else {
     fmnew = -5.0 * Kokkos::min(zeta, 1.0);
