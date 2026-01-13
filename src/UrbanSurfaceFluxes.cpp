@@ -122,7 +122,6 @@ KOKKOS_INLINE_FUNCTION
 void MoninObukIni(Real ur, Real thv, Real dthv, Real zldis, Real z0m, Real &um,
                   Real &obu) {
 
-  // const Real ustar = 0.06;
   const Real wc = 0.5;
 
   if (dthv > 0) {
