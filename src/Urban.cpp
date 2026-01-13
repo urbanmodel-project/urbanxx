@@ -2,6 +2,7 @@
 #include "private/AtmosphereTypeImpl.h"
 #include "private/DataTypesImpl.h"
 #include "private/UrbanLongwaveRadImpl.h"
+#include "private/UrbanShortwaveRadImpl.h"
 #include "private/UrbanTypeImpl.h"
 
 // Define the C struct to match the C++ class
@@ -59,6 +60,9 @@ void UrbanAdvance(UrbanType urban, UrbanErrorCode *status) {
   try {
     // Compute net longwave radiation
     URBANXX::ComputeNetLongwave(*urban);
+
+    // Compute net shortwave radiation
+    URBANXX::ComputeNetShortwave(*urban);
 
     *status = URBAN_SUCCESS;
   } catch (...) {
