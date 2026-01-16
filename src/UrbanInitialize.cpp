@@ -20,18 +20,16 @@ void UrbanInitializeTemperature(UrbanType urban, UrbanErrorCode *status) {
   }
 
   try {
-    // Copy views for device access (not references)
-    auto roofTemp = urban->roof.Temperature;
-    auto imperviousRoadTemp = urban->imperviousRoad.Temperature;
-    auto perviousRoadTemp = urban->perviousRoad.Temperature;
-    auto sunlitWallTemp = urban->sunlitWall.Temperature;
-    auto shadedWallTemp = urban->shadedWall.Temperature;
-
-    // Copy canyon air property views
-    auto taf = urban->urbanCanyon.Taf;
-    auto qaf = urban->urbanCanyon.Qaf;
-
     const int numLandunits = urban->numLandunits;
+    
+    // Copy views for device access - capture by value
+    Array1DR8 roofTemp = urban->roof.Temperature;
+    Array1DR8 imperviousRoadTemp = urban->imperviousRoad.Temperature;
+    Array1DR8 perviousRoadTemp = urban->perviousRoad.Temperature;
+    Array1DR8 sunlitWallTemp = urban->sunlitWall.Temperature;
+    Array1DR8 shadedWallTemp = urban->shadedWall.Temperature;
+    Array1DR8 taf = urban->urbanCanyon.Taf;
+    Array1DR8 qaf = urban->urbanCanyon.Qaf;
 
     // Temperature initialization constants
     constexpr Real TEMP_ROOF_INIT = 292.0;
