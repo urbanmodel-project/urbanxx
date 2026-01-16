@@ -57,6 +57,14 @@ void UrbanInitializeTemperature(UrbanType urban, UrbanErrorCode *status) {
     Array1DR8 qaf = urban->urbanCanyon.Qaf;
     
     printf("DEBUG: All views copied successfully\n");
+    printf("DEBUG: View labels and sizes:\n");
+    printf("  roofTemp: '%s' size=%zu\n", roofTemp.label().c_str(), roofTemp.size());
+    printf("  imperviousRoadTemp: '%s' size=%zu\n", imperviousRoadTemp.label().c_str(), imperviousRoadTemp.size());
+    printf("  perviousRoadTemp: '%s' size=%zu\n", perviousRoadTemp.label().c_str(), perviousRoadTemp.size());
+    printf("  sunlitWallTemp: '%s' size=%zu\n", sunlitWallTemp.label().c_str(), sunlitWallTemp.size());
+    printf("  shadedWallTemp: '%s' size=%zu\n", shadedWallTemp.label().c_str(), shadedWallTemp.size());
+    printf("  taf: '%s' size=%zu\n", taf.label().c_str(), taf.size());
+    printf("  qaf: '%s' size=%zu\n", qaf.label().c_str(), qaf.size());
     fflush(stdout);
 
     // Temperature initialization constants
@@ -71,11 +79,42 @@ void UrbanInitializeTemperature(UrbanType urban, UrbanErrorCode *status) {
     
     // Initialize surface temperatures and canyon air properties
     using ExecSpace = Kokkos::DefaultExecutionSpace;
+    
+    // Test 1: Try just roofTemp first
+    printf("DEBUG: Testing roofTemp only...\n");
+    fflush(stdout);
+    Kokkos::parallel_for(
+        "InitRoofTemp",
+        Kokkos::RangePolicy<ExecSpace>(0, numLandunits),
+        KOKKOS_LAMBDA(int l) {
+          roofTemp(l) = TEMP_ROOF_INIT;
+        });
+    Kokkos::fence();
+    printf("DEBUG: roofTemp initialization completed\n");
+    fflush(stdout);
+    
+    // Test 2: Try imperviousRoadTemp
+    printf("DEBUG: Testing imperviousRoadTemp...\n");
+    fflush(stdout);
+    Kokkos::parallel_for(
+        "InitImperviousRoadTemp",
+        Kokkos::RangePolicy<ExecSpace>(0, numLandunits),
+        KOKKOS_LAMBDA(int l) {
+          imperviousRoadTemp(l) = TEMP_ROAD_INIT;
+        });
+    Kokkos::fence();
+    printf("DEBUG: imperviousRoadTemp initialization completed\n");
+    fflush(stdout);
+    
+    // Continue with the rest...
     Kokkos::parallel_for(
         "InitializeSurfaceTemperatures",
         Kokkos::RangePolicy<ExecSpace>(0, numLandunits),
         KOKKOS_LAMBDA(int l) {
-          // Initialize temperatures
+          // Try accessing each view one at a time to identify the problematic one
+          if (l == 0) {
+            // This printf won't work on device, but let's try simple assignment
+          }
           roofTemp(l) = TEMP_ROOF_INIT;
           imperviousRoadTemp(l) = TEMP_ROAD_INIT;
           perviousRoadTemp(l) = TEMP_ROAD_INIT;
