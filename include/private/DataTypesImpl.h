@@ -72,8 +72,8 @@ using HostMemInvLayout = MemInvLayout;
   MAKE_VIEW_DIMS(N, V, R8, ML, MS)                                             \
   MAKE_VIEW_DIMS(N, V, Real, ML, MS)
 
-// Aliases for Kokkos device arrays of various dimensions and types
-MAKE_VIEW_TYPES(Array, View, MemLayout, MemSpace)
+// Aliases for Kokkos device arrays - use DefaultExecutionSpace like toy-problems
+MAKE_VIEW_TYPES(Array, View, MemLayout, Kokkos::DefaultExecutionSpace)
 
 // Aliases for Kokkos host arrays of various dimensions and types
 MAKE_VIEW_TYPES(HostArray, View, HostMemLayout, HostMemSpace)
