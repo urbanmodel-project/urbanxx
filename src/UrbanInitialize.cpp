@@ -27,44 +27,33 @@ void UrbanInitializeTemperature(UrbanType urban, UrbanErrorCode *status) {
     printf("DEBUG: numLandunits = %d\n", numLandunits);
     fflush(stdout);
     
-    // Copy views for device access - capture by value
-    printf("DEBUG: Copying roofTemp...\n");
+    // Create Kokkos::View objects by copying, not accessing through pointer
+    printf("DEBUG: Creating local View copies...\n");
     fflush(stdout);
-    Array1DR8 roofTemp = urban->roof.Temperature;
     
-    printf("DEBUG: Copying imperviousRoadTemp...\n");
-    fflush(stdout);
-    Array1DR8 imperviousRoadTemp = urban->imperviousRoad.Temperature;
+    // Use decltype to get exact type
+    using RoofTempView = decltype(urban->roof.Temperature);
+    using RoadTempView = decltype(urban->imperviousRoad.Temperature);
+    using WallTempView = decltype(urban->sunlitWall.Temperature);
+    using CanyonView = decltype(urban->urbanCanyon.Taf);
     
-    printf("DEBUG: Copying perviousRoadTemp...\n");
-    fflush(stdout);
-    Array1DR8 perviousRoadTemp = urban->perviousRoad.Temperature;
+    RoofTempView roofTemp(urban->roof.Temperature);
+    RoadTempView imperviousRoadTemp(urban->imperviousRoad.Temperature);
+    RoadTempView perviousRoadTemp(urban->perviousRoad.Temperature);
+    WallTempView sunlitWallTemp(urban->sunlitWall.Temperature);
+    WallTempView shadedWallTemp(urban->shadedWall.Temperature);
+    CanyonView taf(urban->urbanCanyon.Taf);
+    CanyonView qaf(urban->urbanCanyon.Qaf);
     
-    printf("DEBUG: Copying sunlitWallTemp...\n");
-    fflush(stdout);
-    Array1DR8 sunlitWallTemp = urban->sunlitWall.Temperature;
-    
-    printf("DEBUG: Copying shadedWallTemp...\n");
-    fflush(stdout);
-    Array1DR8 shadedWallTemp = urban->shadedWall.Temperature;
-    
-    printf("DEBUG: Copying taf...\n");
-    fflush(stdout);
-    Array1DR8 taf = urban->urbanCanyon.Taf;
-    
-    printf("DEBUG: Copying qaf...\n");
-    fflush(stdout);
-    Array1DR8 qaf = urban->urbanCanyon.Qaf;
-    
-    printf("DEBUG: All views copied successfully\n");
+    printf("DEBUG: Local View copies created\n");
     printf("DEBUG: View labels and sizes:\n");
-    printf("  roofTemp: '%s' size=%zu\n", roofTemp.label().c_str(), roofTemp.size());
-    printf("  imperviousRoadTemp: '%s' size=%zu\n", imperviousRoadTemp.label().c_str(), imperviousRoadTemp.size());
-    printf("  perviousRoadTemp: '%s' size=%zu\n", perviousRoadTemp.label().c_str(), perviousRoadTemp.size());
-    printf("  sunlitWallTemp: '%s' size=%zu\n", sunlitWallTemp.label().c_str(), sunlitWallTemp.size());
-    printf("  shadedWallTemp: '%s' size=%zu\n", shadedWallTemp.label().c_str(), shadedWallTemp.size());
-    printf("  taf: '%s' size=%zu\n", taf.label().c_str(), taf.size());
-    printf("  qaf: '%s' size=%zu\n", qaf.label().c_str(), qaf.size());
+    printf("  roofTemp: '%s' size=%zu data=%p\n", roofTemp.label().c_str(), roofTemp.size(), roofTemp.data());
+    printf("  imperviousRoadTemp: '%s' size=%zu data=%p\n", imperviousRoadTemp.label().c_str(), imperviousRoadTemp.size(), imperviousRoadTemp.data());
+    printf("  perviousRoadTemp: '%s' size=%zu data=%p\n", perviousRoadTemp.label().c_str(), perviousRoadTemp.size(), perviousRoadTemp.data());
+    printf("  sunlitWallTemp: '%s' size=%zu data=%p\n", sunlitWallTemp.label().c_str(), sunlitWallTemp.size(), sunlitWallTemp.data());
+    printf("  shadedWallTemp: '%s' size=%zu data=%p\n", shadedWallTemp.label().c_str(), shadedWallTemp.size(), shadedWallTemp.data());
+    printf("  taf: '%s' size=%zu data=%p\n", taf.label().c_str(), taf.size(), taf.data());
+    printf("  qaf: '%s' size=%zu data=%p\n", qaf.label().c_str(), qaf.size(), qaf.data());
     fflush(stdout);
 
     // Temperature initialization constants
@@ -77,30 +66,42 @@ void UrbanInitializeTemperature(UrbanType urban, UrbanErrorCode *status) {
     printf("DEBUG: About to launch parallel_for...\n");
     fflush(stdout);
     
+    // Get raw pointers from Views - these should work in CUDA lambdas
+    Real* roofTempPtr = roofTemp.data();
+    Real* imperviousRoadTempPtr = imperviousRoadTemp.data();
+    Real* perviousRoadTempPtr = perviousRoadTemp.data();
+    Real* sunlitWallTempPtr = sunlitWallTemp.data();
+    Real* shadedWallTempPtr = shadedWallTemp.data();
+    Real* tafPtr = taf.data();
+    Real* qafPtr = qaf.data();
+    
+    printf("DEBUG: Got raw pointers\n");
+    fflush(stdout);
+    
     // Initialize surface temperatures and canyon air properties
     using ExecSpace = Kokkos::DefaultExecutionSpace;
     
-    // Test 1: Try just roofTemp first
-    printf("DEBUG: Testing roofTemp only...\n");
+    // Test 1: Try just roofTemp first using raw pointer
+    printf("DEBUG: Testing roofTemp with raw pointer...\n");
     fflush(stdout);
     Kokkos::parallel_for(
         "InitRoofTemp",
         Kokkos::RangePolicy<ExecSpace>(0, numLandunits),
         KOKKOS_LAMBDA(int l) {
-          roofTemp(l) = TEMP_ROOF_INIT;
+          roofTempPtr[l] = TEMP_ROOF_INIT;
         });
     Kokkos::fence();
     printf("DEBUG: roofTemp initialization completed\n");
     fflush(stdout);
     
     // Test 2: Try imperviousRoadTemp
-    printf("DEBUG: Testing imperviousRoadTemp...\n");
+    printf("DEBUG: Testing imperviousRoadTemp with raw pointer...\n");
     fflush(stdout);
     Kokkos::parallel_for(
         "InitImperviousRoadTemp",
         Kokkos::RangePolicy<ExecSpace>(0, numLandunits),
         KOKKOS_LAMBDA(int l) {
-          imperviousRoadTemp(l) = TEMP_ROAD_INIT;
+          imperviousRoadTempPtr[l] = TEMP_ROAD_INIT;
         });
     Kokkos::fence();
     printf("DEBUG: imperviousRoadTemp initialization completed\n");
@@ -111,19 +112,17 @@ void UrbanInitializeTemperature(UrbanType urban, UrbanErrorCode *status) {
         "InitializeSurfaceTemperatures",
         Kokkos::RangePolicy<ExecSpace>(0, numLandunits),
         KOKKOS_LAMBDA(int l) {
-          // Try accessing each view one at a time to identify the problematic one
-          if (l == 0) {
-            // This printf won't work on device, but let's try simple assignment
-          }
-          roofTemp(l) = TEMP_ROOF_INIT;
-          imperviousRoadTemp(l) = TEMP_ROAD_INIT;
-          perviousRoadTemp(l) = TEMP_ROAD_INIT;
-          sunlitWallTemp(l) = TEMP_WALL_INIT;
-          shadedWallTemp(l) = TEMP_WALL_INIT;
+          roofTempPtr[l] = TEMP_ROOF_INIT;
+          imperviousRoadTempPtr[l] = TEMP_ROAD_INIT;
+          perviousRoadTempPtr[l] = TEMP_ROAD_INIT;
+          sunlitWallTempPtr[l] = TEMP_WALL_INIT;
+          shadedWallTempPtr[l] = TEMP_WALL_INIT;
+          sunlitWallTempPtr[l] = TEMP_WALL_INIT;
+          shadedWallTempPtr[l] = TEMP_WALL_INIT;
 
           // Initialize canyon air properties
-          taf(l) = TEMP_CANYON_AIR_INIT; // Initialize to canyon air temperature
-          qaf(l) = QAF_INIT; // Initialize to reasonable humidity value (kg/kg)
+          tafPtr[l] = TEMP_CANYON_AIR_INIT; // Initialize to canyon air temperature
+          qafPtr[l] = QAF_INIT; // Initialize to reasonable humidity value (kg/kg)
         });
     
     printf("DEBUG: parallel_for launched, calling fence...\n");
