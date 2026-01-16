@@ -175,25 +175,32 @@ WallShortwaveRadiation InitializeSingleWallShortwave(const Real StotForWall,
 
 // Compute snow albedo for surfaces with snow coverage
 KOKKOS_INLINE_FUNCTION
-void ComputeSnowAlbedo(const int l, const Real coszen, Array3DR8 roof_snowAlb,
-                       Array3DR8 impRoad_snowAlb, Array3DR8 perRoad_snowAlb) {
+void ComputeSnowAlbedo(const int l, const Real coszen, Real *roof_snowAlbPtr,
+                       Real *impRoad_snowAlbPtr, Real *perRoad_snowAlbPtr,
+                       const int numLandunits, const int numRadBands) {
 
   if (coszen > 0) {
     // Set snow albedo for both VIS and NIR bands, both direct and diffuse
     for (int ib = 0; ib < NUM_RAD_BANDS; ++ib) {
       const Real snowAlb = (ib == VIS) ? SNOW_ALBEDO_VIS : SNOW_ALBEDO_NIR;
 
+      // Index calculation: l + numLandunits * (ib + numRadBands * it)
       // Roof snow albedo
-      roof_snowAlb(l, ib, DIRECT) = snowAlb;
-      roof_snowAlb(l, ib, DIFFUSE) = snowAlb;
+      roof_snowAlbPtr[l + numLandunits * (ib + numRadBands * DIRECT)] = snowAlb;
+      roof_snowAlbPtr[l + numLandunits * (ib + numRadBands * DIFFUSE)] =
+          snowAlb;
 
       // Impervious road snow albedo
-      impRoad_snowAlb(l, ib, DIRECT) = snowAlb;
-      impRoad_snowAlb(l, ib, DIFFUSE) = snowAlb;
+      impRoad_snowAlbPtr[l + numLandunits * (ib + numRadBands * DIRECT)] =
+          snowAlb;
+      impRoad_snowAlbPtr[l + numLandunits * (ib + numRadBands * DIFFUSE)] =
+          snowAlb;
 
       // Pervious road snow albedo
-      perRoad_snowAlb(l, ib, DIRECT) = snowAlb;
-      perRoad_snowAlb(l, ib, DIFFUSE) = snowAlb;
+      perRoad_snowAlbPtr[l + numLandunits * (ib + numRadBands * DIRECT)] =
+          snowAlb;
+      perRoad_snowAlbPtr[l + numLandunits * (ib + numRadBands * DIFFUSE)] =
+          snowAlb;
     }
   }
 }
@@ -201,38 +208,43 @@ void ComputeSnowAlbedo(const int l, const Real coszen, Array3DR8 roof_snowAlb,
 // Compute effective albedo combining base albedo with snow effects
 KOKKOS_INLINE_FUNCTION
 void ComputeCombinedAlbedo(const int l, const Real frac_sno,
-                           Array3DR8 roof_snowAlb, Array3DR8 roof_baseAlb,
-                           Array3DR8 roof_albWithSnow,
-                           Array3DR8 impRoad_snowAlb, Array3DR8 impRoad_baseAlb,
-                           Array3DR8 impRoad_albWithSnow,
-                           Array3DR8 perRoad_snowAlb, Array3DR8 perRoad_baseAlb,
-                           Array3DR8 perRoad_albWithSnow) {
+                           Real *roof_snowAlbPtr, Real *roof_baseAlbPtr,
+                           Real *roof_albWithSnowPtr, Real *impRoad_snowAlbPtr,
+                           Real *impRoad_baseAlbPtr,
+                           Real *impRoad_albWithSnowPtr,
+                           Real *perRoad_snowAlbPtr, Real *perRoad_baseAlbPtr,
+                           Real *perRoad_albWithSnowPtr, const int numLandunits,
+                           const int numRadBands) {
 
   for (int ib = 0; ib < NUM_RAD_BANDS; ++ib) {
+    // Index calculation: l + numLandunits * (ib + numRadBands * it)
     // Roof: direct radiation uses direct snow albedo, diffuse uses direct snow
     // albedo
-    roof_albWithSnow(l, ib, DIRECT) =
-        roof_baseAlb(l, ib, DIRECT) * (1.0 - frac_sno) +
-        roof_snowAlb(l, ib, DIRECT) * frac_sno;
-    roof_albWithSnow(l, ib, DIFFUSE) =
-        roof_baseAlb(l, ib, DIFFUSE) * (1.0 - frac_sno) +
-        roof_snowAlb(l, ib, DIFFUSE) * frac_sno;
+    int idx_direct = l + numLandunits * (ib + numRadBands * DIRECT);
+    int idx_diffuse = l + numLandunits * (ib + numRadBands * DIFFUSE);
+
+    roof_albWithSnowPtr[idx_direct] =
+        roof_baseAlbPtr[idx_direct] * (1.0 - frac_sno) +
+        roof_snowAlbPtr[idx_direct] * frac_sno;
+    roof_albWithSnowPtr[idx_diffuse] =
+        roof_baseAlbPtr[idx_diffuse] * (1.0 - frac_sno) +
+        roof_snowAlbPtr[idx_diffuse] * frac_sno;
 
     // Impervious road: direct uses direct snow, diffuse uses diffuse snow
-    impRoad_albWithSnow(l, ib, DIRECT) =
-        impRoad_baseAlb(l, ib, DIRECT) * (1.0 - frac_sno) +
-        impRoad_snowAlb(l, ib, DIRECT) * frac_sno;
-    impRoad_albWithSnow(l, ib, DIFFUSE) =
-        impRoad_baseAlb(l, ib, DIFFUSE) * (1.0 - frac_sno) +
-        impRoad_snowAlb(l, ib, DIFFUSE) * frac_sno;
+    impRoad_albWithSnowPtr[idx_direct] =
+        impRoad_baseAlbPtr[idx_direct] * (1.0 - frac_sno) +
+        impRoad_snowAlbPtr[idx_direct] * frac_sno;
+    impRoad_albWithSnowPtr[idx_diffuse] =
+        impRoad_baseAlbPtr[idx_diffuse] * (1.0 - frac_sno) +
+        impRoad_snowAlbPtr[idx_diffuse] * frac_sno;
 
     // Pervious road: direct uses direct snow, diffuse uses diffuse snow
-    perRoad_albWithSnow(l, ib, DIRECT) =
-        perRoad_baseAlb(l, ib, DIRECT) * (1.0 - frac_sno) +
-        perRoad_snowAlb(l, ib, DIRECT) * frac_sno;
-    perRoad_albWithSnow(l, ib, DIFFUSE) =
-        perRoad_baseAlb(l, ib, DIFFUSE) * (1.0 - frac_sno) +
-        perRoad_snowAlb(l, ib, DIFFUSE) * frac_sno;
+    perRoad_albWithSnowPtr[idx_direct] =
+        perRoad_baseAlbPtr[idx_direct] * (1.0 - frac_sno) +
+        perRoad_snowAlbPtr[idx_direct] * frac_sno;
+    perRoad_albWithSnowPtr[idx_diffuse] =
+        perRoad_baseAlbPtr[idx_diffuse] * (1.0 - frac_sno) +
+        perRoad_snowAlbPtr[idx_diffuse] * frac_sno;
   }
 }
 
@@ -241,9 +253,10 @@ KOKKOS_INLINE_FUNCTION
 void ComputeIncidentRadiation(const int l, const Real coszen, const Real hwr,
                               const Real vf_skyFromRoad,
                               const Real vf_skyFromWall,
-                              Array3DR8 sunlitWall_downRad,
-                              Array3DR8 shadedWall_downRad,
-                              Array3DR8 road_downRad) {
+                              Real *sunlitWall_downRadPtr,
+                              Real *shadedWall_downRadPtr,
+                              Real *road_downRadPtr, const int numLandunits,
+                              const int numRadBands) {
 
   constexpr Real rpi = M_PI;
   constexpr Real tiny = 1.0e-6;
@@ -269,22 +282,25 @@ void ComputeIncidentRadiation(const int l, const Real coszen, const Real hwr,
 
     for (int ib = 0; ib < NUM_RAD_BANDS; ++ib) {
       // Direct radiation
-      shadedWall_downRad(l, ib, DIRECT) = 0.0; // eqn. 2.15
+      // Index calculation: l + numLandunits * (ib + numRadBands * it)
+      shadedWall_downRadPtr[l + numLandunits * (ib + numRadBands * DIRECT)] =
+          0.0; // eqn. 2.15
 
-      road_downRad(l, ib, DIRECT) =
+      road_downRadPtr[l + numLandunits * (ib + numRadBands * DIRECT)] =
           sdir[ib] * (2.0 * theta0OverPi -
                       2.0 / rpi * hwr * tanzen * (1.0 - costheta0)); // eqn 2.17
 
-      sunlitWall_downRad(l, ib, DIRECT) =
+      sunlitWall_downRadPtr[l + numLandunits * (ib + numRadBands * DIRECT)] =
           2.0 * sdir[ib] *
           ((1.0 / hwr) * (0.5 - theta0OverPi) +
            (1.0 / rpi) * tanzen * (1.0 - costheta0)); // eqn. 2.16
 
       // Diffuse radiation
-      road_downRad(l, ib, DIFFUSE) = sdif[ib] * vf_skyFromRoad; // eqn 2.30
-      sunlitWall_downRad(l, ib, DIFFUSE) =
+      road_downRadPtr[l + numLandunits * (ib + numRadBands * DIFFUSE)] =
+          sdif[ib] * vf_skyFromRoad; // eqn 2.30
+      sunlitWall_downRadPtr[l + numLandunits * (ib + numRadBands * DIFFUSE)] =
           sdif[ib] * vf_skyFromWall; // eqn 2.32
-      shadedWall_downRad(l, ib, DIFFUSE) =
+      shadedWall_downRadPtr[l + numLandunits * (ib + numRadBands * DIFFUSE)] =
           sdif[ib] * vf_skyFromWall; // eqn 2.31
     }
   }
@@ -305,36 +321,43 @@ void ComputeNetShortwave(URBANXX::_p_UrbanType &urban) {
       urban.urbanParams.viewFactor.OtherWallFrmWall.data();
   Real *fracPervRoadPtr = urban.urbanParams.FracPervRoadOfTotalRoad.data();
 
-  // For 3D arrays, we need to keep them as Views for helper functions
-  // But create local copies to ensure proper capture
-  Array3DR8 sunlitWall_downRad(urban.sunlitWall.DownwellingShortRad);
-  Array3DR8 shadedWall_downRad(urban.shadedWall.DownwellingShortRad);
-  Array3DR8 road_downRad(urban.compositeRoadSurface.DownwellingShortRad);
+  // For 3D arrays, use raw pointers to avoid CUDA extended lambda issues
+  // Layout is LayoutLeft (column-major): index = l + numLandunits * (ib +
+  // numRadBands * it)
+  Real *sunlitWall_downRadPtr = urban.sunlitWall.DownwellingShortRad.data();
+  Real *shadedWall_downRadPtr = urban.shadedWall.DownwellingShortRad.data();
+  Real *road_downRadPtr = urban.compositeRoadSurface.DownwellingShortRad.data();
 
-  Array3DR8 roof_snowAlb(urban.roof.SnowAlbedo);
-  Array3DR8 impRoad_snowAlb(urban.imperviousRoad.SnowAlbedo);
-  Array3DR8 perRoad_snowAlb(urban.perviousRoad.SnowAlbedo);
+  Real *roof_snowAlbPtr = urban.roof.SnowAlbedo.data();
+  Real *impRoad_snowAlbPtr = urban.imperviousRoad.SnowAlbedo.data();
+  Real *perRoad_snowAlbPtr = urban.perviousRoad.SnowAlbedo.data();
 
-  Array3DR8 roof_baseAlb(urban.urbanParams.albedo.Roof);
-  Array3DR8 impRoad_baseAlb(urban.urbanParams.albedo.ImperviousRoad);
-  Array3DR8 perRoad_baseAlb(urban.urbanParams.albedo.PerviousRoad);
-  Array3DR8 sunlitWall_baseAlb(urban.urbanParams.albedo.SunlitWall);
-  Array3DR8 shadedWall_baseAlb(urban.urbanParams.albedo.ShadedWall);
+  Real *roof_baseAlbPtr = urban.urbanParams.albedo.Roof.data();
+  Real *impRoad_baseAlbPtr = urban.urbanParams.albedo.ImperviousRoad.data();
+  Real *perRoad_baseAlbPtr = urban.urbanParams.albedo.PerviousRoad.data();
+  Real *sunlitWall_baseAlbPtr = urban.urbanParams.albedo.SunlitWall.data();
+  Real *shadedWall_baseAlbPtr = urban.urbanParams.albedo.ShadedWall.data();
 
-  Array3DR8 roof_albWithSnow(urban.roof.AlbedoWithSnowEffects);
-  Array3DR8 impRoad_albWithSnow(urban.imperviousRoad.AlbedoWithSnowEffects);
-  Array3DR8 perRoad_albWithSnow(urban.perviousRoad.AlbedoWithSnowEffects);
+  Real *roof_albWithSnowPtr = urban.roof.AlbedoWithSnowEffects.data();
+  Real *impRoad_albWithSnowPtr =
+      urban.imperviousRoad.AlbedoWithSnowEffects.data();
+  Real *perRoad_albWithSnowPtr =
+      urban.perviousRoad.AlbedoWithSnowEffects.data();
 
   // Access absorbed and reflected shortwave radiation fields (to be updated)
-  Array3DR8 absImpRoad(urban.imperviousRoad.AbsorbedShortRad);
-  Array3DR8 absPerRoad(urban.perviousRoad.AbsorbedShortRad);
-  Array3DR8 absSunlitWall(urban.sunlitWall.AbsorbedShortRad);
-  Array3DR8 absShadedWall(urban.shadedWall.AbsorbedShortRad);
+  Real *absImpRoadPtr = urban.imperviousRoad.AbsorbedShortRad.data();
+  Real *absPerRoadPtr = urban.perviousRoad.AbsorbedShortRad.data();
+  Real *absSunlitWallPtr = urban.sunlitWall.AbsorbedShortRad.data();
+  Real *absShadedWallPtr = urban.shadedWall.AbsorbedShortRad.data();
 
-  Array3DR8 refImpRoad(urban.imperviousRoad.ReflectedShortRad);
-  Array3DR8 refPerRoad(urban.perviousRoad.ReflectedShortRad);
-  Array3DR8 refSunlitWall(urban.sunlitWall.ReflectedShortRad);
-  Array3DR8 refShadedWall(urban.shadedWall.ReflectedShortRad);
+  Real *refImpRoadPtr = urban.imperviousRoad.ReflectedShortRad.data();
+  Real *refPerRoadPtr = urban.perviousRoad.ReflectedShortRad.data();
+  Real *refSunlitWallPtr = urban.sunlitWall.ReflectedShortRad.data();
+  Real *refShadedWallPtr = urban.shadedWall.ReflectedShortRad.data();
+
+  // Get dimensions for 3D array indexing
+  const int numRadBands = urban.numRadBands;
+  const int numRadTypes = urban.numRadTypes;
 
   // Snow fraction (placeholder - will be computed from snow model later)
   constexpr Real frac_sno = 0.0;
@@ -346,43 +369,45 @@ void ComputeNetShortwave(URBANXX::_p_UrbanType &urban) {
       "ComputeShortwaveRadiation",
       Kokkos::RangePolicy<ExecSpace>(0, numLandunits),
       KOKKOS_LAMBDA(const int l) {
-        // Use pointers for scalar accesses, Views for arrays passed to helper
-        // functions
+        // Call helper functions with raw pointers
         ComputeIncidentRadiation(l, coszenPtr[l], hwrPtr[l],
                                  vf_skyFromRoadPtr[l], vf_skyFromWallPtr[l],
-                                 sunlitWall_downRad, shadedWall_downRad,
-                                 road_downRad);
-        ComputeSnowAlbedo(l, coszenPtr[l], roof_snowAlb, impRoad_snowAlb,
-                          perRoad_snowAlb);
+                                 sunlitWall_downRadPtr, shadedWall_downRadPtr,
+                                 road_downRadPtr, numLandunits, numRadBands);
+        ComputeSnowAlbedo(l, coszenPtr[l], roof_snowAlbPtr, impRoad_snowAlbPtr,
+                          perRoad_snowAlbPtr, numLandunits, numRadBands);
         ComputeCombinedAlbedo(
-            l, frac_sno, roof_snowAlb, roof_baseAlb, roof_albWithSnow,
-            impRoad_snowAlb, impRoad_baseAlb, impRoad_albWithSnow,
-            perRoad_snowAlb, perRoad_baseAlb, perRoad_albWithSnow);
+            l, frac_sno, roof_snowAlbPtr, roof_baseAlbPtr, roof_albWithSnowPtr,
+            impRoad_snowAlbPtr, impRoad_baseAlbPtr, impRoad_albWithSnowPtr,
+            perRoad_snowAlbPtr, perRoad_baseAlbPtr, perRoad_albWithSnowPtr,
+            numLandunits, numRadBands);
 
         // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         // Compute net shortwave radiation with multiple reflections
         // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         for (int ib = 0; ib < NUM_RAD_BANDS; ++ib) {
           for (int it = 0; it < NUM_RAD_TYPES; ++it) {
+            // Index calculation for 3D arrays: l + numLandunits * (ib +
+            // numRadBands * it)
+            const int idx = l + numLandunits * (ib + numRadBands * it);
 
             // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
             // Computations for roads
             // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
             // Total shortwave downwelling to road for this band and type
-            Real StotForRoad = road_downRad(l, ib, it);
+            Real StotForRoad = road_downRadPtr[idx];
 
             // Impervious road (weight = 1 - fraction of pervious road)
             const Real fracImpRoad = 1.0 - fracPervRoadPtr[l];
 
             // Initialize impervious and pervious roads
             auto impRoad = InitializeSingleRoadShortwave(
-                StotForRoad, impRoad_albWithSnow(l, ib, it),
-                vf_skyFromRoadPtr[l], vf_wallFromRoadPtr[l], fracImpRoad);
+                StotForRoad, impRoad_albWithSnowPtr[idx], vf_skyFromRoadPtr[l],
+                vf_wallFromRoadPtr[l], fracImpRoad);
             auto perRoad = InitializeSingleRoadShortwave(
-                StotForRoad, perRoad_albWithSnow(l, ib, it),
-                vf_skyFromRoadPtr[l], vf_wallFromRoadPtr[l],
-                fracPervRoadPtr[l]);
+                StotForRoad, perRoad_albWithSnowPtr[idx], vf_skyFromRoadPtr[l],
+                vf_wallFromRoadPtr[l], fracPervRoadPtr[l]);
 
             // Combine both roads
             Real RoadAbs =
@@ -402,21 +427,21 @@ void ComputeNetShortwave(URBANXX::_p_UrbanType &urban) {
 
             // Total shortwave downwelling to sunlit wall for this band and
             // type
-            Real StotForSunlitWall = sunlitWall_downRad(l, ib, it);
+            Real StotForSunlitWall = sunlitWall_downRadPtr[idx];
 
             // Initialize sunlit wall
             auto sunlitWall = InitializeSingleWallShortwave(
-                StotForSunlitWall, sunlitWall_baseAlb(l, ib, it),
+                StotForSunlitWall, sunlitWall_baseAlbPtr[idx],
                 vf_skyFromWallPtr[l], vf_roadFromWallPtr[l],
                 vf_wallFromWallPtr[l]);
 
             // Total shortwave downwelling to shaded wall for this band and
             // type
-            Real StotForShadedWall = shadedWall_downRad(l, ib, it);
+            Real StotForShadedWall = shadedWall_downRadPtr[idx];
 
             // Initialize shaded wall
             auto shadedWall = InitializeSingleWallShortwave(
-                StotForShadedWall, shadedWall_baseAlb(l, ib, it),
+                StotForShadedWall, shadedWall_baseAlbPtr[idx],
                 vf_skyFromWallPtr[l], vf_roadFromWallPtr[l],
                 vf_wallFromWallPtr[l]);
 
@@ -424,15 +449,15 @@ void ComputeNetShortwave(URBANXX::_p_UrbanType &urban) {
             // Initialize cumulative absorbed and reflected radiation for all
             // surfaces
             // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-            absImpRoad(l, ib, it) = impRoad.flux.absorbed;
-            absPerRoad(l, ib, it) = perRoad.flux.absorbed;
-            absSunlitWall(l, ib, it) = sunlitWall.flux.absorbed;
-            absShadedWall(l, ib, it) = shadedWall.flux.absorbed;
+            absImpRoadPtr[idx] = impRoad.flux.absorbed;
+            absPerRoadPtr[idx] = perRoad.flux.absorbed;
+            absSunlitWallPtr[idx] = sunlitWall.flux.absorbed;
+            absShadedWallPtr[idx] = shadedWall.flux.absorbed;
 
-            refImpRoad(l, ib, it) = impRoad.ref.toSky;
-            refPerRoad(l, ib, it) = perRoad.ref.toSky;
-            refSunlitWall(l, ib, it) = sunlitWall.ref.toSky;
-            refShadedWall(l, ib, it) = shadedWall.ref.toSky;
+            refImpRoadPtr[idx] = impRoad.ref.toSky;
+            refPerRoadPtr[idx] = perRoad.ref.toSky;
+            refSunlitWallPtr[idx] = sunlitWall.ref.toSky;
+            refShadedWallPtr[idx] = shadedWall.ref.toSky;
 
             // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
             // Iteration loop for multiple reflections between surfaces
@@ -446,9 +471,9 @@ void ComputeNetShortwave(URBANXX::_p_UrbanType &urban) {
               StotForRoad =
                   (sunlitWall.ref.toRoad + shadedWall.ref.toRoad) * hwrPtr[l];
 
-              impRoad.flux = ShortwaveFluxes(impRoad_albWithSnow(l, ib, it),
+              impRoad.flux = ShortwaveFluxes(impRoad_albWithSnowPtr[idx],
                                              StotForRoad, fracImpRoad);
-              perRoad.flux = ShortwaveFluxes(perRoad_albWithSnow(l, ib, it),
+              perRoad.flux = ShortwaveFluxes(perRoad_albWithSnowPtr[idx],
                                              StotForRoad, fracPervRoadPtr[l]);
 
               RoadAbs =
@@ -459,28 +484,28 @@ void ComputeNetShortwave(URBANXX::_p_UrbanType &urban) {
               // For sunlit wall: incoming from roads and shaded wall
               StotForSunlitWall =
                   RoadRefToSunlitWall / hwrPtr[l] + shadedWall.ref.toOtherWall;
-              sunlitWall.flux = ShortwaveFluxes(sunlitWall_baseAlb(l, ib, it),
+              sunlitWall.flux = ShortwaveFluxes(sunlitWall_baseAlbPtr[idx],
                                                 StotForSunlitWall, 1.0);
 
               // For shaded wall: incoming from roads and sunlit wall
               StotForShadedWall =
                   RoadRefToShadedWall / hwrPtr[l] + sunlitWall.ref.toOtherWall;
-              shadedWall.flux = ShortwaveFluxes(shadedWall_baseAlb(l, ib, it),
+              shadedWall.flux = ShortwaveFluxes(shadedWall_baseAlbPtr[idx],
                                                 StotForShadedWall, 1.0);
 
               // step(2): Update cumulative absorbed radiation
-              absImpRoad(l, ib, it) += impRoad.flux.absorbed;
-              absPerRoad(l, ib, it) += perRoad.flux.absorbed;
-              absSunlitWall(l, ib, it) += sunlitWall.flux.absorbed;
-              absShadedWall(l, ib, it) += shadedWall.flux.absorbed;
+              absImpRoadPtr[idx] += impRoad.flux.absorbed;
+              absPerRoadPtr[idx] += perRoad.flux.absorbed;
+              absSunlitWallPtr[idx] += sunlitWall.flux.absorbed;
+              absShadedWallPtr[idx] += shadedWall.flux.absorbed;
 
               // step(3): Compute reflected radiation components for this
               // iteration
               impRoad.ref = ReflectShortwaveRoad(
-                  StotForRoad, impRoad_albWithSnow(l, ib, it),
+                  StotForRoad, impRoad_albWithSnowPtr[idx],
                   vf_skyFromRoadPtr[l], vf_wallFromRoadPtr[l], fracImpRoad);
               perRoad.ref = ReflectShortwaveRoad(
-                  StotForRoad, perRoad_albWithSnow(l, ib, it),
+                  StotForRoad, perRoad_albWithSnowPtr[idx],
                   vf_skyFromRoadPtr[l], vf_wallFromRoadPtr[l],
                   fracPervRoadPtr[l]);
 
@@ -491,20 +516,20 @@ void ComputeNetShortwave(URBANXX::_p_UrbanType &urban) {
                   impRoad.ref.toShadedWallByWt + perRoad.ref.toShadedWallByWt;
 
               sunlitWall.ref = ReflectShortwaveWall(
-                  StotForSunlitWall, sunlitWall_baseAlb(l, ib, it),
+                  StotForSunlitWall, sunlitWall_baseAlbPtr[idx],
                   vf_skyFromWallPtr[l], vf_roadFromWallPtr[l],
                   vf_wallFromWallPtr[l]);
 
               shadedWall.ref = ReflectShortwaveWall(
-                  StotForShadedWall, shadedWall_baseAlb(l, ib, it),
+                  StotForShadedWall, shadedWall_baseAlbPtr[idx],
                   vf_skyFromWallPtr[l], vf_roadFromWallPtr[l],
                   vf_wallFromWallPtr[l]);
 
               // step(4): Update cumulative reflected radiation to sky
-              refImpRoad(l, ib, it) += impRoad.ref.toSky;
-              refPerRoad(l, ib, it) += perRoad.ref.toSky;
-              refSunlitWall(l, ib, it) += sunlitWall.ref.toSky;
-              refShadedWall(l, ib, it) += shadedWall.ref.toSky;
+              refImpRoadPtr[idx] += impRoad.ref.toSky;
+              refPerRoadPtr[idx] += perRoad.ref.toSky;
+              refSunlitWallPtr[idx] += sunlitWall.ref.toSky;
+              refShadedWallPtr[idx] += shadedWall.ref.toSky;
 
               // Check convergence
               Real convergence_criteria =
@@ -520,31 +545,8 @@ void ComputeNetShortwave(URBANXX::_p_UrbanType &urban) {
 
   Kokkos::fence();
 
-  // Debug output (disabled by default)
-  if (0) {
-    std::cout << "ShadedWall.DownwellingShortRad:" << std::endl;
-    print_view_3d(shadedWall_downRad);
-    std::cout << "SunlitWall.DownwellingShortRad:" << std::endl;
-    print_view_3d(sunlitWall_downRad);
-    std::cout << "CompositeRoad.DownwellingShortRad:" << std::endl;
-    print_view_3d(road_downRad);
-
-    std::cout << "Roof.BaseAlbedo:" << std::endl;
-    print_view_3d(urban.urbanParams.albedo.Roof, "Roof.BaseAlbedo");
-    std::cout << "ImperviousRoad.BaseAlbedo:" << std::endl;
-    print_view_3d(urban.urbanParams.albedo.ImperviousRoad,
-                  "ImperviousRoad.BaseAlbedo");
-    std::cout << "PerviousRoad.BaseAlbedo:" << std::endl;
-    print_view_3d(urban.urbanParams.albedo.PerviousRoad,
-                  "PerviousRoad.BaseAlbedo");
-
-    std::cout << "Roof.AlbedoWithSnowEffects:" << std::endl;
-    print_view_3d(urban.roof.AlbedoWithSnowEffects);
-    std::cout << "ImperviousRoad.AlbedoWithSnowEffects:" << std::endl;
-    print_view_3d(urban.imperviousRoad.AlbedoWithSnowEffects);
-    std::cout << "PerviousRoad.AlbedoWithSnowEffects:" << std::endl;
-    print_view_3d(urban.perviousRoad.AlbedoWithSnowEffects);
-  }
+  // Debug output disabled - Views have been converted to raw pointers
+  // If needed, access views directly from urban structure instead
 }
 
 } // namespace URBANXX
