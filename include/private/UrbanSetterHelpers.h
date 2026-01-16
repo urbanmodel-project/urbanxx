@@ -33,9 +33,10 @@ static void SetView3D(ViewType &view, const double *values, const int size[3],
     // Create an unmanaged host view from the input array
     // Use the same layout as the target view for compatibility
     using target_layout = typename ViewType::array_layout;
-    auto values_view = Kokkos::View<const double ***, target_layout, Kokkos::HostSpace,
-                                    Kokkos::MemoryTraits<Kokkos::Unmanaged>>(
-        values, size[0], size[1], size[2]);
+    auto values_view =
+        Kokkos::View<const double ***, target_layout, Kokkos::HostSpace,
+                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>(values, size[0],
+                                                              size[1], size[2]);
 
     // Deep copy from the temporary host view to the target view
     Kokkos::deep_copy(view, values_view);
