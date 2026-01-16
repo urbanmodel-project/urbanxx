@@ -4,6 +4,7 @@
 #include "Urban.h"
 #include "private/DataTypesImpl.h"
 #include <Kokkos_Core.hpp>
+#include <iostream>
 
 // Helper template functions for setting Kokkos views from C arrays
 // These are used by both UrbanParamsType and AtmosphereType setters
@@ -30,7 +31,9 @@ static void SetView3D(ViewType &view, const double *values, const int size[3],
     }
 
     // Create an unmanaged host view from the input array
-    auto values_view = Kokkos::View<const double ***, Kokkos::HostSpace,
+    // Use the same layout as the target view for compatibility
+    using target_layout = typename ViewType::array_layout;
+    auto values_view = Kokkos::View<const double ***, target_layout, Kokkos::HostSpace,
                                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>(
         values, size[0], size[1], size[2]);
 
@@ -63,8 +66,10 @@ static void SetView1D(ViewType &view, const double *values, int length,
     }
 
     // Create an unmanaged host view from the input array
+    // Use the same layout as the target view for compatibility
+    using target_layout = typename ViewType::array_layout;
     auto values_view =
-        Kokkos::View<const double *, Kokkos::HostSpace,
+        Kokkos::View<const double *, target_layout, Kokkos::HostSpace,
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>(values, length);
 
     // Deep copy from the temporary host view to the target view
