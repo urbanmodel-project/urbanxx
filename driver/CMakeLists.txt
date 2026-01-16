@@ -1,5 +1,5 @@
 # Driver executable
-add_executable(urbanxx_driver driver.c)
+add_executable(urbanxx_driver driver.cpp)
 
 # Link against liburban.a, Kokkos, and MPI
 target_link_libraries(urbanxx_driver 
@@ -17,7 +17,7 @@ target_include_directories(urbanxx_driver
 )
 
 # Set C++ compiler for the driver since it includes C++ headers
-set_source_files_properties(driver.c PROPERTIES LANGUAGE CXX)
+set_source_files_properties(driver.cpp PROPERTIES LANGUAGE CXX)
 
 # Installation rules (optional)
 install(TARGETS urbanxx_driver DESTINATION bin)
