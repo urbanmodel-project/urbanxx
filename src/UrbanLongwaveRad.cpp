@@ -274,8 +274,11 @@ void ComputeNetLongwave(URBANXX::_p_UrbanType &urban) {
   // View to track non-converged landunits
   Kokkos::View<int *> nonConvergedCount("nonConvergedCount", 1);
 
+  using ExecSpace = Kokkos::DefaultExecutionSpace;
   Kokkos::parallel_for(
-      "ComputeNetLongwave", numLandunits, KOKKOS_LAMBDA(const int l) {
+      "ComputeNetLongwave",
+      Kokkos::RangePolicy<ExecSpace>(0, numLandunits),
+      KOKKOS_LAMBDA(const int l) {
         // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         // Computations for roads
         // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

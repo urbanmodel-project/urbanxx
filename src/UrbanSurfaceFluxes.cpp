@@ -512,8 +512,11 @@ void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
   const Real lapseRate = 0.0098; // dry adiabatic lapse rate (K/m)
 
   // Compute surface fluxes for each landunit
+  using ExecSpace = Kokkos::DefaultExecutionSpace;
   Kokkos::parallel_for(
-      "ComputeSurfaceFluxes", numLandunits, KOKKOS_LAMBDA(const int l) {
+      "ComputeSurfaceFluxes",
+      Kokkos::RangePolicy<ExecSpace>(0, numLandunits),
+      KOKKOS_LAMBDA(const int l) {
         // Get atmospheric forcing data
         Real taf = Taf(l);
         Real qaf = Qaf(l);

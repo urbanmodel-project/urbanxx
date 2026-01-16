@@ -41,8 +41,11 @@ void UrbanInitializeTemperature(UrbanType urban, UrbanErrorCode *status) {
     constexpr Real QAF_INIT = 1.e-4; // kg/kg
 
     // Initialize surface temperatures and canyon air properties
+    using ExecSpace = Kokkos::DefaultExecutionSpace;
     Kokkos::parallel_for(
-        "InitializeSurfaceTemperatures", numLandunits, KOKKOS_LAMBDA(int l) {
+        "InitializeSurfaceTemperatures",
+        Kokkos::RangePolicy<ExecSpace>(0, numLandunits),
+        KOKKOS_LAMBDA(int l) {
           // Initialize temperatures
           roofTemp(l) = TEMP_ROOF_INIT;
           imperviousRoadTemp(l) = TEMP_ROAD_INIT;

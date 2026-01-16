@@ -338,8 +338,11 @@ void ComputeNetShortwave(URBANXX::_p_UrbanType &urban) {
 
   // Compute snow albedo, combined albedo, and incident radiation for each
   // landunit
+  using ExecSpace = Kokkos::DefaultExecutionSpace;
   Kokkos::parallel_for(
-      "ComputeShortwaveRadiation", numLandunits, KOKKOS_LAMBDA(const int l) {
+      "ComputeShortwaveRadiation",
+      Kokkos::RangePolicy<ExecSpace>(0, numLandunits),
+      KOKKOS_LAMBDA(const int l) {
         ComputeIncidentRadiation(l, coszen(l), hwr(l), vf_skyFromRoad(l),
                                  vf_skyFromWall(l), sunlitWall_downRad,
                                  shadedWall_downRad, road_downRad);

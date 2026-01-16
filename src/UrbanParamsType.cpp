@@ -28,8 +28,11 @@ static void ComputeViewFactors(UrbanType urban, UrbanErrorCode *status) {
     auto &wr = urban->urbanParams.viewFactor.WallFrmRoad;
     auto &ww = urban->urbanParams.viewFactor.OtherWallFrmWall;
 
+    using ExecSpace = Kokkos::DefaultExecutionSpace;
     Kokkos::parallel_for(
-        "ComputingViewFactor", urban->numLandunits, KOKKOS_LAMBDA(int l) {
+        "ComputingViewFactor",
+        Kokkos::RangePolicy<ExecSpace>(0, urban->numLandunits),
+        KOKKOS_LAMBDA(int l) {
           const Real hwr = CanyonHwr(l);
           const Real sqrt_term = std::sqrt(hwr * hwr + 1.0);
 
