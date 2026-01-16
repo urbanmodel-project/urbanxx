@@ -20,16 +20,16 @@ void UrbanInitializeTemperature(UrbanType urban, UrbanErrorCode *status) {
   }
 
   try {
-    // Get references to temperature views
-    auto &roofTemp = urban->roof.Temperature;
-    auto &imperviousRoadTemp = urban->imperviousRoad.Temperature;
-    auto &perviousRoadTemp = urban->perviousRoad.Temperature;
-    auto &sunlitWallTemp = urban->sunlitWall.Temperature;
-    auto &shadedWallTemp = urban->shadedWall.Temperature;
+    // Copy views for device access (not references)
+    auto roofTemp = urban->roof.Temperature;
+    auto imperviousRoadTemp = urban->imperviousRoad.Temperature;
+    auto perviousRoadTemp = urban->perviousRoad.Temperature;
+    auto sunlitWallTemp = urban->sunlitWall.Temperature;
+    auto shadedWallTemp = urban->shadedWall.Temperature;
 
-    // Get references to canyon air properties
-    auto &taf = urban->urbanCanyon.Taf;
-    auto &qaf = urban->urbanCanyon.Qaf;
+    // Copy canyon air property views
+    auto taf = urban->urbanCanyon.Taf;
+    auto qaf = urban->urbanCanyon.Qaf;
 
     const int numLandunits = urban->numLandunits;
 
