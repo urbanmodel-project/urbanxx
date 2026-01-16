@@ -364,11 +364,19 @@ int main(int argc, char *argv[]) {
     int numLandunits = 10;
     UrbanType urban = nullptr;
     UrbanErrorCode ierr;
+    
+    if (mpi_rank == 0) {
+      std::cout << "DEBUG: About to call UrbanCreate..." << std::endl;
+      std::cout.flush();
+    }
+    
     UrbanCall(UrbanCreate(numLandunits, &urban, &ierr), &ierr);
 
     if (mpi_rank == 0) {
       std::cout << "Successfully created Urban object with " << numLandunits 
                 << " landunits" << std::endl;
+      std::cout << "DEBUG: About to call UrbanInitializeTemperature..." << std::endl;
+      std::cout.flush();
     }
 
     // Initialize temperatures
