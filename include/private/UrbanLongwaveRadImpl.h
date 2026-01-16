@@ -25,7 +25,7 @@ class LongwaveRadiationComputer {
 private:
   // Atmospheric forcing
   Array1DR8 forcLRad;
-  
+
   // View factors
   Array1DR8 vf_skyFromRoad;
   Array1DR8 vf_skyFromWall;
@@ -34,32 +34,32 @@ private:
   Array1DR8 vf_otherWallFromWall;
   Array1DR8 canyonHwr;
   Array1DR8 fracPervRoad;
-  
+
   // Emissivities
   Array1DR8 emissRoof;
   Array1DR8 emissWall;
   Array1DR8 emissImpRoad;
   Array1DR8 emissPerRoad;
-  
+
   // Temperatures
   Array1DR8 tempRoof;
   Array1DR8 tempSunlitWall;
   Array1DR8 tempShadedWall;
   Array1DR8 tempImpRoad;
   Array1DR8 tempPerRoad;
-  
+
   // Output: net longwave
   Array1DR8 netLwSunlitWall;
   Array1DR8 netLwShadedWall;
   Array1DR8 netLwImpRoad;
   Array1DR8 netLwPerRoad;
-  
+
   // Output: upward longwave
   Array1DR8 upLwSunlitWall;
   Array1DR8 upLwShadedWall;
   Array1DR8 upLwImpRoad;
   Array1DR8 upLwPerRoad;
-  
+
   int numLandunits;
 
 public:
