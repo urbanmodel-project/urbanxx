@@ -13,8 +13,8 @@ option(ENABLE_SYCL "Enable SYCL backend" OFF)
 option(ENABLE_OPENMP "Enable OpenMP backend" ON)
 option(ENABLE_SERIAL "Enable Serial backend" ON)
 option(SINGLE_PRECISION "Use single precision" OFF)
-option(LAYOUT_RIGHT "Use LayoutRight" OFF)
-option(LAYOUT_LEFT "Use LayoutLeft" ON)
+option(LAYOUT_RIGHT "Use LayoutRight" ON)
+option(LAYOUT_LEFT "Use LayoutLeft" OFF)
 
 # Find MPI
 find_package(MPI REQUIRED)
