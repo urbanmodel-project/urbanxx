@@ -484,29 +484,29 @@ void ComputeNewTafAndQaf(int l, Real canyonWind, Real thm, Real rahu, Real rawu,
 void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
   const int numLandunits = urban.numLandunits;
 
-  // Get references to atmospheric data
-  auto forcTemp = urban.atmosphereData.ForcTemp;
-  auto forcPotTemp = urban.atmosphereData.ForcPotTemp;
-  auto forcSpcHumd = urban.atmosphereData.ForcSpcHumd;
-  auto forcPress = urban.atmosphereData.ForcPress;
-  auto forcRho = urban.atmosphereData.ForcRho;
-  auto forcU = urban.atmosphereData.ForcWindU;
-  auto forcV = urban.atmosphereData.ForcWindV;
+  // Get raw pointers to avoid CUDA extended lambda issues
+  Real* forcTempPtr = urban.atmosphereData.ForcTemp.data();
+  Real* forcPotTempPtr = urban.atmosphereData.ForcPotTemp.data();
+  Real* forcSpcHumdPtr = urban.atmosphereData.ForcSpcHumd.data();
+  Real* forcPressPtr = urban.atmosphereData.ForcPress.data();
+  Real* forcRhoPtr = urban.atmosphereData.ForcRho.data();
+  Real* forcUPtr = urban.atmosphereData.ForcWindU.data();
+  Real* forcVPtr = urban.atmosphereData.ForcWindV.data();
 
-  // Get references to geometric parameters
-  auto hwr = urban.urbanParams.CanyonHwr;
+  // Geometric parameters
+  Real* hwrPtr = urban.urbanParams.CanyonHwr.data();
 
-  // Get references to urban canyon air properties
-  auto Taf = urban.urbanCanyon.Taf;
-  auto Qaf = urban.urbanCanyon.Qaf;
+  // Urban canyon air properties
+  Real* TafPtr = urban.urbanCanyon.Taf.data();
+  Real* QafPtr = urban.urbanCanyon.Qaf.data();
 
-  // Get references to height parameters
-  auto forcHgtT = urban.urbanParams.heights.ForcHgtT;
-  auto forcHgtU = urban.urbanParams.heights.ForcHgtU;
-  auto zDTown = urban.urbanParams.heights.ZDTown;
-  auto z0Town = urban.urbanParams.heights.Z0Town;
-  auto htRoof = urban.urbanParams.heights.HtRoof;
-  auto windHgtCanyon = urban.urbanParams.heights.WindHgtCanyon;
+  // Height parameters
+  Real* forcHgtTPtr = urban.urbanParams.heights.ForcHgtT.data();
+  Real* forcHgtUPtr = urban.urbanParams.heights.ForcHgtU.data();
+  Real* zDTownPtr = urban.urbanParams.heights.ZDTown.data();
+  Real* z0TownPtr = urban.urbanParams.heights.Z0Town.data();
+  Real* htRoofPtr = urban.urbanParams.heights.HtRoof.data();
+  Real* windHgtCanyonPtr = urban.urbanParams.heights.WindHgtCanyon.data();
 
   // Constants
   const Real lapseRate = 0.0098; // dry adiabatic lapse rate (K/m)
@@ -518,33 +518,33 @@ void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
       Kokkos::RangePolicy<ExecSpace>(0, numLandunits),
       KOKKOS_LAMBDA(const int l) {
         // Get atmospheric forcing data
-        Real taf = Taf(l);
-        Real qaf = Qaf(l);
+        Real taf = TafPtr[l];
+        Real qaf = QafPtr[l];
 
-        const Real forcUVal = forcU(l);
-        const Real forcVVal = forcV(l);
+        const Real forcUVal = forcUPtr[l];
+        const Real forcVVal = forcVPtr[l];
         const Real u2PlusV2 = std::pow(forcUVal, 2.0) + std::pow(forcVVal, 2.0);
         const Real velocity = std::pow(u2PlusV2, 0.5);
         const Real ur = Kokkos::max(1.0, velocity);
 
-        const Real hwrVal = hwr(l);
+        const Real hwrVal = hwrPtr[l];
 
         // Get height parameters for this landunit
-        const Real forcHgtTVal = forcHgtT(l);
-        const Real forcHgtUVal = forcHgtU(l);
-        const Real zDTownVal = zDTown(l);
-        const Real z0TownVal = z0Town(l);
-        const Real htRoofVal = htRoof(l);
-        const Real windHgtCanyonVal = windHgtCanyon(l);
+        const Real forcHgtTVal = forcHgtTPtr[l];
+        const Real forcHgtUVal = forcHgtUPtr[l];
+        const Real zDTownVal = zDTownPtr[l];
+        const Real z0TownVal = z0TownPtr[l];
+        const Real htRoofVal = htRoofPtr[l];
+        const Real windHgtCanyonVal = windHgtCanyonPtr[l];
 
         // Initialize Monin-Obukhov variables
         Real um, obu;
         Real thm, thv, zldis;
-        const Real forcQ = forcSpcHumd(l);
-        const Real forcTh = forcPotTemp(l);
+        const Real forcQ = forcSpcHumdPtr[l];
+        const Real forcTh = forcPotTempPtr[l];
 
         {
-          const Real forcT = forcTemp(l);
+          const Real forcT = forcTempPtr[l];
 
           thm = forcT + lapseRate * forcHgtTVal;
           thv = forcTh * (1.0 + 0.61 * forcQ);
@@ -557,7 +557,7 @@ void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
         }
 
         // Get atmospheric pressure and compute saturation humidity for surfaces
-        const Real forcP = forcPress(l);
+        const Real forcP = forcPressPtr[l];
         ComputeQsatForSurfaces(l, forcP, urban);
 
         // Compute canyon wind speed
@@ -611,8 +611,8 @@ void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
         }
 
         // Store taf and qaf back to arrays
-        Taf(l) = taf;
-        Qaf(l) = qaf;
+        TafPtr[l] = taf;
+        QafPtr[l] = qaf;
       });
 
   Kokkos::fence();
