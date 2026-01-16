@@ -60,13 +60,25 @@ void UrbanAdvance(UrbanType urban, UrbanErrorCode *status) {
 
   try {
     // Compute net longwave radiation
+    printf("DEBUG: About to call ComputeNetLongwave...\n");
+    fflush(stdout);
     URBANXX::ComputeNetLongwave(*urban);
+    printf("DEBUG: ComputeNetLongwave completed\n");
+    fflush(stdout);
 
     // Compute net shortwave radiation
+    printf("DEBUG: About to call ComputeNetShortwave...\n");
+    fflush(stdout);
     URBANXX::ComputeNetShortwave(*urban);
+    printf("DEBUG: ComputeNetShortwave completed\n");
+    fflush(stdout);
 
     // Compute surface fluxes
+    printf("DEBUG: About to call ComputeSurfaceFluxes...\n");
+    fflush(stdout);
     URBANXX::ComputeSurfaceFluxes(*urban);
+    printf("DEBUG: ComputeSurfaceFluxes completed\n");
+    fflush(stdout);
 
     *status = URBAN_SUCCESS;
   } catch (...) {
