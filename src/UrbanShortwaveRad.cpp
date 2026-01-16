@@ -295,14 +295,15 @@ void ComputeNetShortwave(URBANXX::_p_UrbanType &urban) {
   const int numLandunits = urban.numLandunits;
 
   // Get raw pointers to avoid CUDA extended lambda issues (for 1D arrays)
-  Real* coszenPtr = urban.atmosphereData.Coszen.data();
-  Real* hwrPtr = urban.urbanParams.CanyonHwr.data();
-  Real* vf_skyFromRoadPtr = urban.urbanParams.viewFactor.SkyFrmRoad.data();
-  Real* vf_skyFromWallPtr = urban.urbanParams.viewFactor.SkyFrmWall.data();
-  Real* vf_wallFromRoadPtr = urban.urbanParams.viewFactor.WallFrmRoad.data();
-  Real* vf_roadFromWallPtr = urban.urbanParams.viewFactor.RoadFrmWall.data();
-  Real* vf_wallFromWallPtr = urban.urbanParams.viewFactor.OtherWallFrmWall.data();
-  Real* fracPervRoadPtr = urban.urbanParams.FracPervRoadOfTotalRoad.data();
+  Real *coszenPtr = urban.atmosphereData.Coszen.data();
+  Real *hwrPtr = urban.urbanParams.CanyonHwr.data();
+  Real *vf_skyFromRoadPtr = urban.urbanParams.viewFactor.SkyFrmRoad.data();
+  Real *vf_skyFromWallPtr = urban.urbanParams.viewFactor.SkyFrmWall.data();
+  Real *vf_wallFromRoadPtr = urban.urbanParams.viewFactor.WallFrmRoad.data();
+  Real *vf_roadFromWallPtr = urban.urbanParams.viewFactor.RoadFrmWall.data();
+  Real *vf_wallFromWallPtr =
+      urban.urbanParams.viewFactor.OtherWallFrmWall.data();
+  Real *fracPervRoadPtr = urban.urbanParams.FracPervRoadOfTotalRoad.data();
 
   // For 3D arrays, we need to keep them as Views for helper functions
   // But create local copies to ensure proper capture
@@ -345,10 +346,12 @@ void ComputeNetShortwave(URBANXX::_p_UrbanType &urban) {
       "ComputeShortwaveRadiation",
       Kokkos::RangePolicy<ExecSpace>(0, numLandunits),
       KOKKOS_LAMBDA(const int l) {
-        // Use pointers for scalar accesses, Views for arrays passed to helper functions
-        ComputeIncidentRadiation(l, coszenPtr[l], hwrPtr[l], vf_skyFromRoadPtr[l],
-                                 vf_skyFromWallPtr[l], sunlitWall_downRad,
-                                 shadedWall_downRad, road_downRad);
+        // Use pointers for scalar accesses, Views for arrays passed to helper
+        // functions
+        ComputeIncidentRadiation(l, coszenPtr[l], hwrPtr[l],
+                                 vf_skyFromRoadPtr[l], vf_skyFromWallPtr[l],
+                                 sunlitWall_downRad, shadedWall_downRad,
+                                 road_downRad);
         ComputeSnowAlbedo(l, coszenPtr[l], roof_snowAlb, impRoad_snowAlb,
                           perRoad_snowAlb);
         ComputeCombinedAlbedo(
@@ -374,11 +377,12 @@ void ComputeNetShortwave(URBANXX::_p_UrbanType &urban) {
 
             // Initialize impervious and pervious roads
             auto impRoad = InitializeSingleRoadShortwave(
-                StotForRoad, impRoad_albWithSnow(l, ib, it), vf_skyFromRoadPtr[l],
-                vf_wallFromRoadPtr[l], fracImpRoad);
+                StotForRoad, impRoad_albWithSnow(l, ib, it),
+                vf_skyFromRoadPtr[l], vf_wallFromRoadPtr[l], fracImpRoad);
             auto perRoad = InitializeSingleRoadShortwave(
-                StotForRoad, perRoad_albWithSnow(l, ib, it), vf_skyFromRoadPtr[l],
-                vf_wallFromRoadPtr[l], fracPervRoadPtr[l]);
+                StotForRoad, perRoad_albWithSnow(l, ib, it),
+                vf_skyFromRoadPtr[l], vf_wallFromRoadPtr[l],
+                fracPervRoadPtr[l]);
 
             // Combine both roads
             Real RoadAbs =
@@ -403,7 +407,8 @@ void ComputeNetShortwave(URBANXX::_p_UrbanType &urban) {
             // Initialize sunlit wall
             auto sunlitWall = InitializeSingleWallShortwave(
                 StotForSunlitWall, sunlitWall_baseAlb(l, ib, it),
-                vf_skyFromWallPtr[l], vf_roadFromWallPtr[l], vf_wallFromWallPtr[l]);
+                vf_skyFromWallPtr[l], vf_roadFromWallPtr[l],
+                vf_wallFromWallPtr[l]);
 
             // Total shortwave downwelling to shaded wall for this band and
             // type
@@ -412,7 +417,8 @@ void ComputeNetShortwave(URBANXX::_p_UrbanType &urban) {
             // Initialize shaded wall
             auto shadedWall = InitializeSingleWallShortwave(
                 StotForShadedWall, shadedWall_baseAlb(l, ib, it),
-                vf_skyFromWallPtr[l], vf_roadFromWallPtr[l], vf_wallFromWallPtr[l]);
+                vf_skyFromWallPtr[l], vf_roadFromWallPtr[l],
+                vf_wallFromWallPtr[l]);
 
             // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
             // Initialize cumulative absorbed and reflected radiation for all
@@ -452,13 +458,13 @@ void ComputeNetShortwave(URBANXX::_p_UrbanType &urban) {
 
               // For sunlit wall: incoming from roads and shaded wall
               StotForSunlitWall =
-                  RoadRefToSunlitWall / hwr(l) + shadedWall.ref.toOtherWall;
+                  RoadRefToSunlitWall / hwrPtr[l] + shadedWall.ref.toOtherWall;
               sunlitWall.flux = ShortwaveFluxes(sunlitWall_baseAlb(l, ib, it),
                                                 StotForSunlitWall, 1.0);
 
               // For shaded wall: incoming from roads and sunlit wall
               StotForShadedWall =
-                  RoadRefToShadedWall / hwr(l) + sunlitWall.ref.toOtherWall;
+                  RoadRefToShadedWall / hwrPtr[l] + sunlitWall.ref.toOtherWall;
               shadedWall.flux = ShortwaveFluxes(shadedWall_baseAlb(l, ib, it),
                                                 StotForShadedWall, 1.0);
 
@@ -472,10 +478,11 @@ void ComputeNetShortwave(URBANXX::_p_UrbanType &urban) {
               // iteration
               impRoad.ref = ReflectShortwaveRoad(
                   StotForRoad, impRoad_albWithSnow(l, ib, it),
-                  vf_skyFromRoad(l), vf_wallFromRoad(l), fracImpRoad);
+                  vf_skyFromRoadPtr[l], vf_wallFromRoadPtr[l], fracImpRoad);
               perRoad.ref = ReflectShortwaveRoad(
                   StotForRoad, perRoad_albWithSnow(l, ib, it),
-                  vf_skyFromRoad(l), vf_wallFromRoad(l), fracPervRoad(l));
+                  vf_skyFromRoadPtr[l], vf_wallFromRoadPtr[l],
+                  fracPervRoadPtr[l]);
 
               RoadRefToSky = impRoad.ref.toSkyByWt + perRoad.ref.toSkyByWt;
               RoadRefToSunlitWall =
@@ -485,11 +492,13 @@ void ComputeNetShortwave(URBANXX::_p_UrbanType &urban) {
 
               sunlitWall.ref = ReflectShortwaveWall(
                   StotForSunlitWall, sunlitWall_baseAlb(l, ib, it),
-                  vf_skyFromWallPtr[l], vf_roadFromWallPtr[l], vf_wallFromWallPtr[l]);
+                  vf_skyFromWallPtr[l], vf_roadFromWallPtr[l],
+                  vf_wallFromWallPtr[l]);
 
               shadedWall.ref = ReflectShortwaveWall(
                   StotForShadedWall, shadedWall_baseAlb(l, ib, it),
-                  vf_skyFromWallPtr[l], vf_roadFromWallPtr[l], vf_wallFromWallPtr[l]);
+                  vf_skyFromWallPtr[l], vf_roadFromWallPtr[l],
+                  vf_wallFromWallPtr[l]);
 
               // step(4): Update cumulative reflected radiation to sky
               refImpRoad(l, ib, it) += impRoad.ref.toSky;

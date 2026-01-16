@@ -485,28 +485,28 @@ void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
   const int numLandunits = urban.numLandunits;
 
   // Get raw pointers to avoid CUDA extended lambda issues
-  Real* forcTempPtr = urban.atmosphereData.ForcTemp.data();
-  Real* forcPotTempPtr = urban.atmosphereData.ForcPotTemp.data();
-  Real* forcSpcHumdPtr = urban.atmosphereData.ForcSpcHumd.data();
-  Real* forcPressPtr = urban.atmosphereData.ForcPress.data();
-  Real* forcRhoPtr = urban.atmosphereData.ForcRho.data();
-  Real* forcUPtr = urban.atmosphereData.ForcWindU.data();
-  Real* forcVPtr = urban.atmosphereData.ForcWindV.data();
+  Real *forcTempPtr = urban.atmosphereData.ForcTemp.data();
+  Real *forcPotTempPtr = urban.atmosphereData.ForcPotTemp.data();
+  Real *forcSpcHumdPtr = urban.atmosphereData.ForcSpcHumd.data();
+  Real *forcPressPtr = urban.atmosphereData.ForcPress.data();
+  Real *forcRhoPtr = urban.atmosphereData.ForcRho.data();
+  Real *forcUPtr = urban.atmosphereData.ForcWindU.data();
+  Real *forcVPtr = urban.atmosphereData.ForcWindV.data();
 
   // Geometric parameters
-  Real* hwrPtr = urban.urbanParams.CanyonHwr.data();
+  Real *hwrPtr = urban.urbanParams.CanyonHwr.data();
 
   // Urban canyon air properties
-  Real* TafPtr = urban.urbanCanyon.Taf.data();
-  Real* QafPtr = urban.urbanCanyon.Qaf.data();
+  Real *TafPtr = urban.urbanCanyon.Taf.data();
+  Real *QafPtr = urban.urbanCanyon.Qaf.data();
 
   // Height parameters
-  Real* forcHgtTPtr = urban.urbanParams.heights.ForcHgtT.data();
-  Real* forcHgtUPtr = urban.urbanParams.heights.ForcHgtU.data();
-  Real* zDTownPtr = urban.urbanParams.heights.ZDTown.data();
-  Real* z0TownPtr = urban.urbanParams.heights.Z0Town.data();
-  Real* htRoofPtr = urban.urbanParams.heights.HtRoof.data();
-  Real* windHgtCanyonPtr = urban.urbanParams.heights.WindHgtCanyon.data();
+  Real *forcHgtTPtr = urban.urbanParams.heights.ForcHgtT.data();
+  Real *forcHgtUPtr = urban.urbanParams.heights.ForcHgtU.data();
+  Real *zDTownPtr = urban.urbanParams.heights.ZDTown.data();
+  Real *z0TownPtr = urban.urbanParams.heights.Z0Town.data();
+  Real *htRoofPtr = urban.urbanParams.heights.HtRoof.data();
+  Real *windHgtCanyonPtr = urban.urbanParams.heights.WindHgtCanyon.data();
 
   // Constants
   const Real lapseRate = 0.0098; // dry adiabatic lapse rate (K/m)
@@ -514,8 +514,7 @@ void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
   // Compute surface fluxes for each landunit
   using ExecSpace = Kokkos::DefaultExecutionSpace;
   Kokkos::parallel_for(
-      "ComputeSurfaceFluxes",
-      Kokkos::RangePolicy<ExecSpace>(0, numLandunits),
+      "ComputeSurfaceFluxes", Kokkos::RangePolicy<ExecSpace>(0, numLandunits),
       KOKKOS_LAMBDA(const int l) {
         // Get atmospheric forcing data
         Real taf = TafPtr[l];

@@ -22,12 +22,12 @@ static void ComputeViewFactors(UrbanType urban, UrbanErrorCode *status) {
 
   try {
     // Get raw pointers from Views to avoid CUDA extended lambda issues
-    Real* CanyonHwrPtr = urban->urbanParams.CanyonHwr.data();
-    Real* srPtr = urban->urbanParams.viewFactor.SkyFrmRoad.data();
-    Real* swPtr = urban->urbanParams.viewFactor.SkyFrmWall.data();
-    Real* rwPtr = urban->urbanParams.viewFactor.RoadFrmWall.data();
-    Real* wrPtr = urban->urbanParams.viewFactor.WallFrmRoad.data();
-    Real* wwPtr = urban->urbanParams.viewFactor.OtherWallFrmWall.data();
+    Real *CanyonHwrPtr = urban->urbanParams.CanyonHwr.data();
+    Real *srPtr = urban->urbanParams.viewFactor.SkyFrmRoad.data();
+    Real *swPtr = urban->urbanParams.viewFactor.SkyFrmWall.data();
+    Real *rwPtr = urban->urbanParams.viewFactor.RoadFrmWall.data();
+    Real *wrPtr = urban->urbanParams.viewFactor.WallFrmRoad.data();
+    Real *wwPtr = urban->urbanParams.viewFactor.OtherWallFrmWall.data();
 
     using ExecSpace = Kokkos::DefaultExecutionSpace;
     Kokkos::parallel_for(
@@ -38,10 +38,10 @@ static void ComputeViewFactors(UrbanType urban, UrbanErrorCode *status) {
           const Real sqrt_term = std::sqrt(hwr * hwr + 1.0);
 
           srPtr[l] = sqrt_term - hwr;                     // eqn 2.25
-          wrPtr[l] = 0.5 * (1.0 - srPtr[l]);                 // eqn 2.27
+          wrPtr[l] = 0.5 * (1.0 - srPtr[l]);              // eqn 2.27
           swPtr[l] = 0.5 * (hwr + 1.0 - sqrt_term) / hwr; // eqn 2.24
-          rwPtr[l] = swPtr[l];                               // eqn 2.27
-          wwPtr[l] = 1.0 - swPtr[l] - rwPtr[l];                 // eqn 2.28
+          rwPtr[l] = swPtr[l];                            // eqn 2.27
+          wwPtr[l] = 1.0 - swPtr[l] - rwPtr[l];           // eqn 2.28
         });
     Kokkos::fence();
     *status = URBAN_SUCCESS;

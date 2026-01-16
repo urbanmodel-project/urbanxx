@@ -235,49 +235,48 @@ void ComputeNetLongwave(URBANXX::_p_UrbanType &urban) {
   const int numLandunits = urban.numLandunits;
 
   // Get raw pointers from Views to avoid CUDA extended lambda issues
-  Real* forcLRadPtr = urban.atmosphereData.ForcLRad.data();
-  
+  Real *forcLRadPtr = urban.atmosphereData.ForcLRad.data();
+
   // View factors and canyon parameters
-  Real* vf_srPtr = urban.urbanParams.viewFactor.SkyFrmRoad.data();
-  Real* vf_swPtr = urban.urbanParams.viewFactor.SkyFrmWall.data();
-  Real* vf_wrPtr = urban.urbanParams.viewFactor.WallFrmRoad.data();
-  Real* vf_rwPtr = urban.urbanParams.viewFactor.RoadFrmWall.data();
-  Real* vf_wwPtr = urban.urbanParams.viewFactor.OtherWallFrmWall.data();
-  Real* hwrPtr = urban.urbanParams.CanyonHwr.data();
-  Real* fracPervRoadPtr = urban.urbanParams.FracPervRoadOfTotalRoad.data();
-  
+  Real *vf_srPtr = urban.urbanParams.viewFactor.SkyFrmRoad.data();
+  Real *vf_swPtr = urban.urbanParams.viewFactor.SkyFrmWall.data();
+  Real *vf_wrPtr = urban.urbanParams.viewFactor.WallFrmRoad.data();
+  Real *vf_rwPtr = urban.urbanParams.viewFactor.RoadFrmWall.data();
+  Real *vf_wwPtr = urban.urbanParams.viewFactor.OtherWallFrmWall.data();
+  Real *hwrPtr = urban.urbanParams.CanyonHwr.data();
+  Real *fracPervRoadPtr = urban.urbanParams.FracPervRoadOfTotalRoad.data();
+
   // Emissivities
-  Real* emissRoofPtr = urban.urbanParams.emissivity.Roof.data();
-  Real* emissWallPtr = urban.urbanParams.emissivity.Wall.data();
-  Real* emissImpRoadPtr = urban.urbanParams.emissivity.ImperviousRoad.data();
-  Real* emissPerRoadPtr = urban.urbanParams.emissivity.PerviousRoad.data();
-  
+  Real *emissRoofPtr = urban.urbanParams.emissivity.Roof.data();
+  Real *emissWallPtr = urban.urbanParams.emissivity.Wall.data();
+  Real *emissImpRoadPtr = urban.urbanParams.emissivity.ImperviousRoad.data();
+  Real *emissPerRoadPtr = urban.urbanParams.emissivity.PerviousRoad.data();
+
   // Surface temperatures
-  Real* tempRoofPtr = urban.roof.Temperature.data();
-  Real* tempSunlitWallPtr = urban.sunlitWall.Temperature.data();
-  Real* tempShadedWallPtr = urban.shadedWall.Temperature.data();
-  Real* tempImpRoadPtr = urban.imperviousRoad.Temperature.data();
-  Real* tempPerRoadPtr = urban.perviousRoad.Temperature.data();
-  
+  Real *tempRoofPtr = urban.roof.Temperature.data();
+  Real *tempSunlitWallPtr = urban.sunlitWall.Temperature.data();
+  Real *tempShadedWallPtr = urban.shadedWall.Temperature.data();
+  Real *tempImpRoadPtr = urban.imperviousRoad.Temperature.data();
+  Real *tempPerRoadPtr = urban.perviousRoad.Temperature.data();
+
   // Net longwave radiation fields
-  Real* netLwSunlitWallPtr = urban.sunlitWall.NetLongRad.data();
-  Real* netLwShadedWallPtr = urban.shadedWall.NetLongRad.data();
-  Real* netLwImpRoadPtr = urban.imperviousRoad.NetLongRad.data();
-  Real* netLwPerRoadPtr = urban.perviousRoad.NetLongRad.data();
-  
+  Real *netLwSunlitWallPtr = urban.sunlitWall.NetLongRad.data();
+  Real *netLwShadedWallPtr = urban.shadedWall.NetLongRad.data();
+  Real *netLwImpRoadPtr = urban.imperviousRoad.NetLongRad.data();
+  Real *netLwPerRoadPtr = urban.perviousRoad.NetLongRad.data();
+
   // Upward longwave radiation fields
-  Real* upLwSunlitWallPtr = urban.sunlitWall.UpwardLongRad.data();
-  Real* upLwShadedWallPtr = urban.shadedWall.UpwardLongRad.data();
-  Real* upLwImpRoadPtr = urban.imperviousRoad.UpwardLongRad.data();
-  Real* upLwPerRoadPtr = urban.perviousRoad.UpwardLongRad.data();
+  Real *upLwSunlitWallPtr = urban.sunlitWall.UpwardLongRad.data();
+  Real *upLwShadedWallPtr = urban.shadedWall.UpwardLongRad.data();
+  Real *upLwImpRoadPtr = urban.imperviousRoad.UpwardLongRad.data();
+  Real *upLwPerRoadPtr = urban.perviousRoad.UpwardLongRad.data();
 
   // View to track non-converged landunits
   Kokkos::View<int *> nonConvergedCount("nonConvergedCount", 1);
 
   using ExecSpace = Kokkos::DefaultExecutionSpace;
   Kokkos::parallel_for(
-      "ComputeNetLongwave",
-      Kokkos::RangePolicy<ExecSpace>(0, numLandunits),
+      "ComputeNetLongwave", Kokkos::RangePolicy<ExecSpace>(0, numLandunits),
       KOKKOS_LAMBDA(const int l) {
         // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         // Computations for roads
@@ -293,11 +292,12 @@ void ComputeNetLongwave(URBANXX::_p_UrbanType &urban) {
         const RoadViewFactors roadVF = {vf_srPtr[l], vf_wrPtr[l]};
 
         // Initialize impervious and pervious roads
-        auto impRoad = InitializeSingleRoad(
-            LtotForRoad, emissImpRoadPtr[l], tempImpRoadPtr[l], roadVF, fracImpRoad);
+        auto impRoad =
+            InitializeSingleRoad(LtotForRoad, emissImpRoadPtr[l],
+                                 tempImpRoadPtr[l], roadVF, fracImpRoad);
         auto perRoad =
-            InitializeSingleRoad(LtotForRoad, emissPerRoadPtr[l], tempPerRoadPtr[l],
-                                 roadVF, fracPervRoadPtr[l]);
+            InitializeSingleRoad(LtotForRoad, emissPerRoadPtr[l],
+                                 tempPerRoadPtr[l], roadVF, fracPervRoadPtr[l]);
 
         // Combine both roads
         Real RoadAbs, RoadRef, RoadEmi;
@@ -329,8 +329,10 @@ void ComputeNetLongwave(URBANXX::_p_UrbanType &urban) {
         // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         netLwImpRoadPtr[l] = impRoad.flux.emitted - impRoad.flux.absorbed;
         netLwPerRoadPtr[l] = perRoad.flux.emitted - perRoad.flux.absorbed;
-        netLwSunlitWallPtr[l] = sunlitWall.flux.emitted - sunlitWall.flux.absorbed;
-        netLwShadedWallPtr[l] = shadedWall.flux.emitted - shadedWall.flux.absorbed;
+        netLwSunlitWallPtr[l] =
+            sunlitWall.flux.emitted - sunlitWall.flux.absorbed;
+        netLwShadedWallPtr[l] =
+            shadedWall.flux.emitted - shadedWall.flux.absorbed;
 
         upLwImpRoadPtr[l] = impRoad.ref.toSky + impRoad.emi.toSky;
         upLwPerRoadPtr[l] = perRoad.ref.toSky + perRoad.emi.toSky;
@@ -351,10 +353,10 @@ void ComputeNetLongwave(URBANXX::_p_UrbanType &urban) {
                          shadedWall.ref.toRoad + shadedWall.emi.toRoad) *
                         hwrPtr[l];
 
-          impRoad.flux =
-              Fluxes(emissImpRoadPtr[l], tempImpRoadPtr[l], LtotForRoad, fracImpRoad);
-          perRoad.flux = Fluxes(emissPerRoadPtr[l], tempPerRoadPtr[l], LtotForRoad,
-                                fracPervRoadPtr[l]);
+          impRoad.flux = Fluxes(emissImpRoadPtr[l], tempImpRoadPtr[l],
+                                LtotForRoad, fracImpRoad);
+          perRoad.flux = Fluxes(emissPerRoadPtr[l], tempPerRoadPtr[l],
+                                LtotForRoad, fracPervRoadPtr[l]);
 
           RoadAbs =
               impRoad.flux.absorbedWeighted + perRoad.flux.absorbedWeighted;
@@ -365,15 +367,15 @@ void ComputeNetLongwave(URBANXX::_p_UrbanType &urban) {
           Real LtotForSunWall =
               (RoadRefToSunlitWall + RoadEmiToSunlitWall) / hwrPtr[l] +
               shadedWall.ref.toOtherWall + shadedWall.emi.toOtherWall;
-          sunlitWall.flux =
-              Fluxes(emissWallPtr[l], tempSunlitWallPtr[l], LtotForSunWall, 1.0);
+          sunlitWall.flux = Fluxes(emissWallPtr[l], tempSunlitWallPtr[l],
+                                   LtotForSunWall, 1.0);
 
           // For shaded wall: incoming from roads and sunlit wall
           Real LtotForShadeWall =
               (RoadRefToShadedWall + RoadEmiToShadedWall) / hwrPtr[l] +
               sunlitWall.ref.toOtherWall + sunlitWall.emi.toOtherWall;
-          shadedWall.flux =
-              Fluxes(emissWallPtr[l], tempShadedWallPtr[l], LtotForShadeWall, 1.0);
+          shadedWall.flux = Fluxes(emissWallPtr[l], tempShadedWallPtr[l],
+                                   LtotForShadeWall, 1.0);
 
           // Set emitted values to zero so they are not counted multiple times
           sunlitWall.emi.toRoad = 0.0;
@@ -403,7 +405,8 @@ void ComputeNetLongwave(URBANXX::_p_UrbanType &urban) {
               impRoad.ref.toShadedWallByWt + perRoad.ref.toShadedWallByWt;
 
           sunlitWall.ref = ReflectWall(LtotForSunWall, emissWallPtr[l], wallVF);
-          shadedWall.ref = ReflectWall(LtotForShadeWall, emissWallPtr[l], wallVF);
+          shadedWall.ref =
+              ReflectWall(LtotForShadeWall, emissWallPtr[l], wallVF);
 
           // step(4): Update upward longwave radiation
           upLwImpRoadPtr[l] += impRoad.ref.toSky;
