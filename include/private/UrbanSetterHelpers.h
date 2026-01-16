@@ -4,7 +4,6 @@
 #include "Urban.h"
 #include "private/DataTypesImpl.h"
 #include <Kokkos_Core.hpp>
-#include <iostream>
 
 // Helper template functions for setting Kokkos views from C arrays
 // These are used by both UrbanParamsType and AtmosphereType setters
