@@ -34,24 +34,23 @@ public:
 
   // Compute view factors at a single landunit - called from device code
   KOKKOS_INLINE_FUNCTION
-  static void computeAtLandunit(const int l, const ViewFactorViews &v) {
-    const Real hwr = v.CanyonHwr(l);
+  void computeAtLandunit(const int l) const {
+    const Real hwr = views.CanyonHwr(l);
     const Real sqrt_term = Kokkos::sqrt(hwr * hwr + 1.0);
 
-    v.SkyFrmRoad(l) = sqrt_term - hwr;                                  // eqn 2.25
-    v.WallFrmRoad(l) = 0.5 * (1.0 - v.SkyFrmRoad(l));               // eqn 2.27
-    v.SkyFrmWall(l) = 0.5 * (hwr + 1.0 - sqrt_term) / hwr;              // eqn 2.24
-    v.RoadFrmWall(l) = v.SkyFrmWall(l);                             // eqn 2.27
-    v.OtherWallFrmWall(l) = 1.0 - v.SkyFrmWall(l) - v.RoadFrmWall(l); // eqn 2.28
+    views.SkyFrmRoad(l) = sqrt_term - hwr;                                  // eqn 2.25
+    views.WallFrmRoad(l) = 0.5 * (1.0 - views.SkyFrmRoad(l));               // eqn 2.27
+    views.SkyFrmWall(l) = 0.5 * (hwr + 1.0 - sqrt_term) / hwr;              // eqn 2.24
+    views.RoadFrmWall(l) = views.SkyFrmWall(l);                             // eqn 2.27
+    views.OtherWallFrmWall(l) = 1.0 - views.SkyFrmWall(l) - views.RoadFrmWall(l); // eqn 2.28
   }
 
   // Main method to run computation
   void run() {
-    // Capture POD struct by value (not *this)
-    ViewFactorViews v = views;
+    // Use KOKKOS_CLASS_LAMBDA to capture *this (which contains POD struct)
     Kokkos::parallel_for(
         "ComputingViewFactor", numLandunits,
-        KOKKOS_LAMBDA(const int l) { computeAtLandunit(l, v); });
+        KOKKOS_CLASS_LAMBDA(const int l) { computeAtLandunit(l); });
     Kokkos::fence();
   }
 };
