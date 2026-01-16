@@ -73,7 +73,10 @@ using HostMemInvLayout = MemInvLayout;
   MAKE_VIEW_DIMS(N, V, Real, ML, MS)
 
 // Aliases for Kokkos device arrays of various dimensions and types
-MAKE_VIEW_TYPES(Array, View, MemLayout, MemSpace)
+// Use DefaultExecutionSpace so the view's memory space matches the default
+// execution space selected by Kokkos (ensures correct device/host memory
+// selection and proper initialization on CUDA/HIP/SYCL backends).
+MAKE_VIEW_TYPES(Array, View, MemLayout, Kokkos::DefaultExecutionSpace)
 
 // Aliases for Kokkos host arrays of various dimensions and types
 MAKE_VIEW_TYPES(HostArray, View, HostMemLayout, HostMemSpace)
