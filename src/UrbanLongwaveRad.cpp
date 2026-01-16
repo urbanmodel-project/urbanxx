@@ -234,42 +234,42 @@ void ComputeNetLongwave(URBANXX::_p_UrbanType &urban) {
   // Get number of landunits for parallel execution
   const int numLandunits = urban.numLandunits;
 
-  // Access atmospheric forcing data
-  auto &forcLRad = urban.atmosphereData.ForcLRad;
-
-  // Access urban parameters - view factors and canyon height-to-width ratio
-  auto &vf_sr = urban.urbanParams.viewFactor.SkyFrmRoad;
-  auto &vf_sw = urban.urbanParams.viewFactor.SkyFrmWall;
-  auto &vf_wr = urban.urbanParams.viewFactor.WallFrmRoad;
-  auto &vf_rw = urban.urbanParams.viewFactor.RoadFrmWall;
-  auto &vf_ww = urban.urbanParams.viewFactor.OtherWallFrmWall;
-  auto &hwr = urban.urbanParams.CanyonHwr;
-  auto &fracPervRoad = urban.urbanParams.FracPervRoadOfTotalRoad;
-
-  // Access urban parameters - emissivities
-  auto &emissRoof = urban.urbanParams.emissivity.Roof;
-  auto &emissWall = urban.urbanParams.emissivity.Wall;
-  auto &emissImpRoad = urban.urbanParams.emissivity.ImperviousRoad;
-  auto &emissPerRoad = urban.urbanParams.emissivity.PerviousRoad;
-
-  // Access surface temperatures
-  auto &tempRoof = urban.roof.Temperature;
-  auto &tempSunlitWall = urban.sunlitWall.Temperature;
-  auto &tempShadedWall = urban.shadedWall.Temperature;
-  auto &tempImpRoad = urban.imperviousRoad.Temperature;
-  auto &tempPerRoad = urban.perviousRoad.Temperature;
-
-  // Access net longwave radiation fields (to be updated)
-  auto &netLwSunlitWall = urban.sunlitWall.NetLongRad;
-  auto &netLwShadedWall = urban.shadedWall.NetLongRad;
-  auto &netLwImpRoad = urban.imperviousRoad.NetLongRad;
-  auto &netLwPerRoad = urban.perviousRoad.NetLongRad;
-
-  // Access upward longwave radiation fields (to be updated)
-  auto &upLwSunlitWall = urban.sunlitWall.UpwardLongRad;
-  auto &upLwShadedWall = urban.shadedWall.UpwardLongRad;
-  auto &upLwImpRoad = urban.imperviousRoad.UpwardLongRad;
-  auto &upLwPerRoad = urban.perviousRoad.UpwardLongRad;
+  // Get raw pointers from Views to avoid CUDA extended lambda issues
+  Real* forcLRadPtr = urban.atmosphereData.ForcLRad.data();
+  
+  // View factors and canyon parameters
+  Real* vf_srPtr = urban.urbanParams.viewFactor.SkyFrmRoad.data();
+  Real* vf_swPtr = urban.urbanParams.viewFactor.SkyFrmWall.data();
+  Real* vf_wrPtr = urban.urbanParams.viewFactor.WallFrmRoad.data();
+  Real* vf_rwPtr = urban.urbanParams.viewFactor.RoadFrmWall.data();
+  Real* vf_wwPtr = urban.urbanParams.viewFactor.OtherWallFrmWall.data();
+  Real* hwrPtr = urban.urbanParams.CanyonHwr.data();
+  Real* fracPervRoadPtr = urban.urbanParams.FracPervRoadOfTotalRoad.data();
+  
+  // Emissivities
+  Real* emissRoofPtr = urban.urbanParams.emissivity.Roof.data();
+  Real* emissWallPtr = urban.urbanParams.emissivity.Wall.data();
+  Real* emissImpRoadPtr = urban.urbanParams.emissivity.ImperviousRoad.data();
+  Real* emissPerRoadPtr = urban.urbanParams.emissivity.PerviousRoad.data();
+  
+  // Surface temperatures
+  Real* tempRoofPtr = urban.roof.Temperature.data();
+  Real* tempSunlitWallPtr = urban.sunlitWall.Temperature.data();
+  Real* tempShadedWallPtr = urban.shadedWall.Temperature.data();
+  Real* tempImpRoadPtr = urban.imperviousRoad.Temperature.data();
+  Real* tempPerRoadPtr = urban.perviousRoad.Temperature.data();
+  
+  // Net longwave radiation fields
+  Real* netLwSunlitWallPtr = urban.sunlitWall.NetLongRad.data();
+  Real* netLwShadedWallPtr = urban.shadedWall.NetLongRad.data();
+  Real* netLwImpRoadPtr = urban.imperviousRoad.NetLongRad.data();
+  Real* netLwPerRoadPtr = urban.perviousRoad.NetLongRad.data();
+  
+  // Upward longwave radiation fields
+  Real* upLwSunlitWallPtr = urban.sunlitWall.UpwardLongRad.data();
+  Real* upLwShadedWallPtr = urban.shadedWall.UpwardLongRad.data();
+  Real* upLwImpRoadPtr = urban.imperviousRoad.UpwardLongRad.data();
+  Real* upLwPerRoadPtr = urban.perviousRoad.UpwardLongRad.data();
 
   // View to track non-converged landunits
   Kokkos::View<int *> nonConvergedCount("nonConvergedCount", 1);
@@ -284,20 +284,20 @@ void ComputeNetLongwave(URBANXX::_p_UrbanType &urban) {
         // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
         // Total longwave downwelling to road
-        Real LtotForRoad = forcLRad(l) * vf_sr(l);
+        Real LtotForRoad = forcLRadPtr[l] * vf_srPtr[l];
 
         // Impervious road (weight = 1 - fraction of pervious road)
-        const Real fracImpRoad = 1.0 - fracPervRoad(l);
+        const Real fracImpRoad = 1.0 - fracPervRoadPtr[l];
 
         // View factors for roads
-        const RoadViewFactors roadVF = {vf_sr(l), vf_wr(l)};
+        const RoadViewFactors roadVF = {vf_srPtr[l], vf_wrPtr[l]};
 
         // Initialize impervious and pervious roads
         auto impRoad = InitializeSingleRoad(
-            LtotForRoad, emissImpRoad(l), tempImpRoad(l), roadVF, fracImpRoad);
+            LtotForRoad, emissImpRoadPtr[l], tempImpRoadPtr[l], roadVF, fracImpRoad);
         auto perRoad =
-            InitializeSingleRoad(LtotForRoad, emissPerRoad(l), tempPerRoad(l),
-                                 roadVF, fracPervRoad(l));
+            InitializeSingleRoad(LtotForRoad, emissPerRoadPtr[l], tempPerRoadPtr[l],
+                                 roadVF, fracPervRoadPtr[l]);
 
         // Combine both roads
         Real RoadAbs, RoadRef, RoadEmi;
@@ -313,29 +313,29 @@ void ComputeNetLongwave(URBANXX::_p_UrbanType &urban) {
         // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
         // Total longwave downwelling to wall
-        Real LtotForWall = forcLRad(l) * vf_sw(l);
+        Real LtotForWall = forcLRadPtr[l] * vf_swPtr[l];
 
         // View factors for walls
-        const WallViewFactors wallVF = {vf_sw(l), vf_rw(l), vf_ww(l)};
+        const WallViewFactors wallVF = {vf_swPtr[l], vf_rwPtr[l], vf_wwPtr[l]};
 
         // Initialize sunlit and shaded walls
-        auto sunlitWall = InitializeSingleWall(LtotForWall, emissWall(l),
-                                               tempSunlitWall(l), wallVF);
-        auto shadedWall = InitializeSingleWall(LtotForWall, emissWall(l),
-                                               tempShadedWall(l), wallVF);
+        auto sunlitWall = InitializeSingleWall(LtotForWall, emissWallPtr[l],
+                                               tempSunlitWallPtr[l], wallVF);
+        auto shadedWall = InitializeSingleWall(LtotForWall, emissWallPtr[l],
+                                               tempShadedWallPtr[l], wallVF);
 
         // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         // initialize the net longwave radiation for each surface
         // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        netLwImpRoad(l) = impRoad.flux.emitted - impRoad.flux.absorbed;
-        netLwPerRoad(l) = perRoad.flux.emitted - perRoad.flux.absorbed;
-        netLwSunlitWall(l) = sunlitWall.flux.emitted - sunlitWall.flux.absorbed;
-        netLwShadedWall(l) = shadedWall.flux.emitted - shadedWall.flux.absorbed;
+        netLwImpRoadPtr[l] = impRoad.flux.emitted - impRoad.flux.absorbed;
+        netLwPerRoadPtr[l] = perRoad.flux.emitted - perRoad.flux.absorbed;
+        netLwSunlitWallPtr[l] = sunlitWall.flux.emitted - sunlitWall.flux.absorbed;
+        netLwShadedWallPtr[l] = shadedWall.flux.emitted - shadedWall.flux.absorbed;
 
-        upLwImpRoad(l) = impRoad.ref.toSky + impRoad.emi.toSky;
-        upLwPerRoad(l) = perRoad.ref.toSky + perRoad.emi.toSky;
-        upLwSunlitWall(l) = sunlitWall.ref.toSky + sunlitWall.emi.toSky;
-        upLwShadedWall(l) = shadedWall.ref.toSky + shadedWall.emi.toSky;
+        upLwImpRoadPtr[l] = impRoad.ref.toSky + impRoad.emi.toSky;
+        upLwPerRoadPtr[l] = perRoad.ref.toSky + perRoad.emi.toSky;
+        upLwSunlitWallPtr[l] = sunlitWall.ref.toSky + sunlitWall.emi.toSky;
+        upLwShadedWallPtr[l] = shadedWall.ref.toSky + shadedWall.emi.toSky;
 
         // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         // Iteration loop for multiple reflections between surfaces
@@ -349,12 +349,12 @@ void ComputeNetLongwave(URBANXX::_p_UrbanType &urban) {
           // For roads: incoming from walls
           LtotForRoad = (sunlitWall.ref.toRoad + sunlitWall.emi.toRoad +
                          shadedWall.ref.toRoad + shadedWall.emi.toRoad) *
-                        hwr(l);
+                        hwrPtr[l];
 
           impRoad.flux =
-              Fluxes(emissImpRoad(l), tempImpRoad(l), LtotForRoad, fracImpRoad);
-          perRoad.flux = Fluxes(emissPerRoad(l), tempPerRoad(l), LtotForRoad,
-                                fracPervRoad(l));
+              Fluxes(emissImpRoadPtr[l], tempImpRoadPtr[l], LtotForRoad, fracImpRoad);
+          perRoad.flux = Fluxes(emissPerRoadPtr[l], tempPerRoadPtr[l], LtotForRoad,
+                                fracPervRoadPtr[l]);
 
           RoadAbs =
               impRoad.flux.absorbedWeighted + perRoad.flux.absorbedWeighted;
@@ -363,17 +363,17 @@ void ComputeNetLongwave(URBANXX::_p_UrbanType &urban) {
 
           // For sunlit wall: incoming from roads and shaded wall
           Real LtotForSunWall =
-              (RoadRefToSunlitWall + RoadEmiToSunlitWall) / hwr(l) +
+              (RoadRefToSunlitWall + RoadEmiToSunlitWall) / hwrPtr[l] +
               shadedWall.ref.toOtherWall + shadedWall.emi.toOtherWall;
           sunlitWall.flux =
-              Fluxes(emissWall(l), tempSunlitWall(l), LtotForSunWall, 1.0);
+              Fluxes(emissWallPtr[l], tempSunlitWallPtr[l], LtotForSunWall, 1.0);
 
           // For shaded wall: incoming from roads and sunlit wall
           Real LtotForShadeWall =
-              (RoadRefToShadedWall + RoadEmiToShadedWall) / hwr(l) +
+              (RoadRefToShadedWall + RoadEmiToShadedWall) / hwrPtr[l] +
               sunlitWall.ref.toOtherWall + sunlitWall.emi.toOtherWall;
           shadedWall.flux =
-              Fluxes(emissWall(l), tempShadedWall(l), LtotForShadeWall, 1.0);
+              Fluxes(emissWallPtr[l], tempShadedWallPtr[l], LtotForShadeWall, 1.0);
 
           // Set emitted values to zero so they are not counted multiple times
           sunlitWall.emi.toRoad = 0.0;
@@ -385,16 +385,16 @@ void ComputeNetLongwave(URBANXX::_p_UrbanType &urban) {
 
           // step(2): Update net longwave by subtracting newly absorbed
           // radiation
-          netLwImpRoad(l) -= impRoad.flux.absorbed;
-          netLwPerRoad(l) -= perRoad.flux.absorbed;
-          netLwSunlitWall(l) -= sunlitWall.flux.absorbed;
-          netLwShadedWall(l) -= shadedWall.flux.absorbed;
+          netLwImpRoadPtr[l] -= impRoad.flux.absorbed;
+          netLwPerRoadPtr[l] -= perRoad.flux.absorbed;
+          netLwSunlitWallPtr[l] -= sunlitWall.flux.absorbed;
+          netLwShadedWallPtr[l] -= shadedWall.flux.absorbed;
 
           // step(3): Compute reflected radiation components for this iteration
           impRoad.ref =
-              ReflectRoad(LtotForRoad, emissImpRoad(l), roadVF, fracImpRoad);
-          perRoad.ref = ReflectRoad(LtotForRoad, emissPerRoad(l), roadVF,
-                                    fracPervRoad(l));
+              ReflectRoad(LtotForRoad, emissImpRoadPtr[l], roadVF, fracImpRoad);
+          perRoad.ref = ReflectRoad(LtotForRoad, emissPerRoadPtr[l], roadVF,
+                                    fracPervRoadPtr[l]);
 
           RoadRefToSky = impRoad.ref.toSkyByWt + perRoad.ref.toSkyByWt;
           RoadRefToSunlitWall =
@@ -402,14 +402,14 @@ void ComputeNetLongwave(URBANXX::_p_UrbanType &urban) {
           RoadRefToShadedWall =
               impRoad.ref.toShadedWallByWt + perRoad.ref.toShadedWallByWt;
 
-          sunlitWall.ref = ReflectWall(LtotForSunWall, emissWall(l), wallVF);
-          shadedWall.ref = ReflectWall(LtotForShadeWall, emissWall(l), wallVF);
+          sunlitWall.ref = ReflectWall(LtotForSunWall, emissWallPtr[l], wallVF);
+          shadedWall.ref = ReflectWall(LtotForShadeWall, emissWallPtr[l], wallVF);
 
           // step(4): Update upward longwave radiation
-          upLwImpRoad(l) += impRoad.ref.toSky;
-          upLwPerRoad(l) += perRoad.ref.toSky;
-          upLwSunlitWall(l) += sunlitWall.ref.toSky;
-          upLwShadedWall(l) += shadedWall.ref.toSky;
+          upLwImpRoadPtr[l] += impRoad.ref.toSky;
+          upLwPerRoadPtr[l] += perRoad.ref.toSky;
+          upLwSunlitWallPtr[l] += sunlitWall.ref.toSky;
+          upLwShadedWallPtr[l] += shadedWall.ref.toSky;
 
           // Check convergence
           Real convergence_criteria =

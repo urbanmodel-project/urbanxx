@@ -21,26 +21,27 @@ static void ComputeViewFactors(UrbanType urban, UrbanErrorCode *status) {
   }
 
   try {
-    auto CanyonHwr = urban->urbanParams.CanyonHwr;
-    auto sr = urban->urbanParams.viewFactor.SkyFrmRoad;
-    auto sw = urban->urbanParams.viewFactor.SkyFrmWall;
-    auto rw = urban->urbanParams.viewFactor.RoadFrmWall;
-    auto wr = urban->urbanParams.viewFactor.WallFrmRoad;
-    auto ww = urban->urbanParams.viewFactor.OtherWallFrmWall;
+    // Get raw pointers from Views to avoid CUDA extended lambda issues
+    Real* CanyonHwrPtr = urban->urbanParams.CanyonHwr.data();
+    Real* srPtr = urban->urbanParams.viewFactor.SkyFrmRoad.data();
+    Real* swPtr = urban->urbanParams.viewFactor.SkyFrmWall.data();
+    Real* rwPtr = urban->urbanParams.viewFactor.RoadFrmWall.data();
+    Real* wrPtr = urban->urbanParams.viewFactor.WallFrmRoad.data();
+    Real* wwPtr = urban->urbanParams.viewFactor.OtherWallFrmWall.data();
 
     using ExecSpace = Kokkos::DefaultExecutionSpace;
     Kokkos::parallel_for(
         "ComputingViewFactor",
         Kokkos::RangePolicy<ExecSpace>(0, urban->numLandunits),
         KOKKOS_LAMBDA(int l) {
-          const Real hwr = CanyonHwr(l);
+          const Real hwr = CanyonHwrPtr[l];
           const Real sqrt_term = std::sqrt(hwr * hwr + 1.0);
 
-          sr(l) = sqrt_term - hwr;                     // eqn 2.25
-          wr(l) = 0.5 * (1.0 - sr(l));                 // eqn 2.27
-          sw(l) = 0.5 * (hwr + 1.0 - sqrt_term) / hwr; // eqn 2.24
-          rw(l) = sw(l);                               // eqn 2.27
-          ww(l) = 1.0 - sw(l) - rw(l);                 // eqn 2.28
+          srPtr[l] = sqrt_term - hwr;                     // eqn 2.25
+          wrPtr[l] = 0.5 * (1.0 - srPtr[l]);                 // eqn 2.27
+          swPtr[l] = 0.5 * (hwr + 1.0 - sqrt_term) / hwr; // eqn 2.24
+          rwPtr[l] = swPtr[l];                               // eqn 2.27
+          wwPtr[l] = 1.0 - swPtr[l] - rwPtr[l];                 // eqn 2.28
         });
     Kokkos::fence();
     *status = URBAN_SUCCESS;
