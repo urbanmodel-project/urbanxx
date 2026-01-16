@@ -6,20 +6,22 @@
 
 namespace URBANXX {
 
-// Class to handle temperature initialization with KOKKOS_CLASS_LAMBDA
-class UrbanTemperatureInitializer {
-private:
-  // References to temperature views
+// POD struct to hold temperature views - trivially copyable for CUDA lambdas
+struct TemperatureViews {
   Array1DR8 roofTemp;
   Array1DR8 imperviousRoadTemp;
   Array1DR8 perviousRoadTemp;
   Array1DR8 sunlitWallTemp;
   Array1DR8 shadedWallTemp;
-
-  // References to canyon air properties
   Array1DR8 taf;
   Array1DR8 qaf;
+};
 
+// Class to handle temperature initialization with KOKKOS_CLASS_LAMBDA
+class UrbanTemperatureInitializer {
+private:
+  // POD struct containing all views
+  TemperatureViews views;
   int numLandunits;
 
   // Temperature initialization constants
@@ -31,34 +33,37 @@ private:
 
 public:
   UrbanTemperatureInitializer(_p_UrbanType *urban)
-      : roofTemp(urban->roof.Temperature),
-        imperviousRoadTemp(urban->imperviousRoad.Temperature),
-        perviousRoadTemp(urban->perviousRoad.Temperature),
-        sunlitWallTemp(urban->sunlitWall.Temperature),
-        shadedWallTemp(urban->shadedWall.Temperature),
-        taf(urban->urbanCanyon.Taf), qaf(urban->urbanCanyon.Qaf),
+      : views{urban->roof.Temperature,
+              urban->imperviousRoad.Temperature,
+              urban->perviousRoad.Temperature,
+              urban->sunlitWall.Temperature,
+              urban->shadedWall.Temperature,
+              urban->urbanCanyon.Taf,
+              urban->urbanCanyon.Qaf},
         numLandunits(urban->numLandunits) {}
 
   // Method to initialize temperatures - called from device code
   KOKKOS_INLINE_FUNCTION
-  void initializeAtLandunit(const int l) const {
+  static void initializeAtLandunit(const int l, const TemperatureViews &v) {
     // Initialize temperatures
-    roofTemp(l) = TEMP_ROOF_INIT;
-    imperviousRoadTemp(l) = TEMP_ROAD_INIT;
-    perviousRoadTemp(l) = TEMP_ROAD_INIT;
-    sunlitWallTemp(l) = TEMP_WALL_INIT;
-    shadedWallTemp(l) = TEMP_WALL_INIT;
+    v.roofTemp(l) = TEMP_ROOF_INIT;
+    v.imperviousRoadTemp(l) = TEMP_ROAD_INIT;
+    v.perviousRoadTemp(l) = TEMP_ROAD_INIT;
+    v.sunlitWallTemp(l) = TEMP_WALL_INIT;
+    v.shadedWallTemp(l) = TEMP_WALL_INIT;
 
     // Initialize canyon air properties
-    taf(l) = TEMP_CANYON_AIR_INIT;
-    qaf(l) = QAF_INIT;
+    v.taf(l) = TEMP_CANYON_AIR_INIT;
+    v.qaf(l) = QAF_INIT;
   }
 
   // Main method to run initialization
   void run() {
+    // Capture POD struct by value (not *this)
+    TemperatureViews v = views;
     Kokkos::parallel_for(
         "InitializeSurfaceTemperatures", numLandunits,
-        KOKKOS_CLASS_LAMBDA(const int l) { initializeAtLandunit(l); });
+        KOKKOS_LAMBDA(const int l) { initializeAtLandunit(l, v); });
     Kokkos::fence();
   }
 };
@@ -66,3 +71,4 @@ public:
 } // namespace URBANXX
 
 #endif // URBAN_INITIALIZE_IMPL_H
+
