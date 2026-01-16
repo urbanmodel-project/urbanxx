@@ -372,13 +372,23 @@ int main(int argc, char *argv[]) {
     }
 
     // Initialize temperatures
+    if (mpi_rank == 0) {
+      std::cout << "DEBUG: About to call UrbanInitializeTemperature..." << std::endl;
+    }
     UrbanCall(UrbanInitializeTemperature(urban, &ierr), &ierr);
     if (mpi_rank == 0) {
+      std::cout << "DEBUG: UrbanInitializeTemperature completed" << std::endl;
       std::cout << "Initialized surface temperatures" << std::endl;
     }
 
     // Set all urban parameters
+    if (mpi_rank == 0) {
+      std::cout << "DEBUG: About to call SetUrbanParameters..." << std::endl;
+    }
     SetUrbanParameters(urban, numLandunits, mpi_rank);
+    if (mpi_rank == 0) {
+      std::cout << "DEBUG: SetUrbanParameters completed" << std::endl;
+    }
 
     // Advance the model one time step
     UrbanCall(UrbanAdvance(urban, &ierr), &ierr);
