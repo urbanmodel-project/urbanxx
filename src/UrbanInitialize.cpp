@@ -22,17 +22,12 @@ void UrbanInitializeTemperature(UrbanType urban, UrbanErrorCode *status) {
   }
 
   try {
-    std::cout << "DEBUG: Creating UrbanTemperatureInitializer..." << std::endl;
     // Create initializer object and run
     UrbanTemperatureInitializer initializer(urban);
-    std::cout << "DEBUG: Calling initializer.run()..." << std::endl;
     initializer.run();
-    std::cout << "DEBUG: initializer.run() completed" << std::endl;
 
     *status = URBAN_SUCCESS;
   } catch (...) {
-    std::cout << "DEBUG: Exception caught in UrbanInitializeTemperature"
-              << std::endl;
     *status = URBAN_ERR_INTERNAL;
   }
 }
