@@ -207,9 +207,6 @@ TEST_F(ParameterSetterTest, MultipleSetters_Sequential) {
 
   UrbanSetHtRoof(urban, heights, numLandunits, &status);
   ASSERT_EQ(status, URBAN_SUCCESS);
-
-  // All setters should have succeeded
-  SUCCEED() << "Multiple setters executed successfully in sequence";
 }
 
 // Main function to initialize Kokkos

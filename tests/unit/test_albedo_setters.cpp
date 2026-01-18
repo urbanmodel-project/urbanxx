@@ -206,8 +206,6 @@ TEST_F(AlbedoSetterTest, AllAlbedoSetters_Sequential) {
 
   UrbanSetAlbedoRoof(urban, roof, size, &status);
   ASSERT_EQ(status, URBAN_SUCCESS);
-
-  SUCCEED() << "All albedo setters executed successfully in sequence";
 }
 
 // Main function to initialize Kokkos

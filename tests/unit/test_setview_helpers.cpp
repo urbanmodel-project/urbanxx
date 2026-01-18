@@ -83,8 +83,6 @@ TEST_F(SetViewTest, SetView1D_NullStatus) {
 
   // Should not crash with null status
   SetView1D(view, input_data, length, nullptr);
-  // If we get here, it didn't crash
-  SUCCEED();
 }
 
 // Test: SetView3D with valid data
@@ -227,7 +225,6 @@ TEST_F(SetViewTest, SetView3D_NullStatus) {
 
   // Should not crash with null status
   SetView3D(view, input_data, size, nullptr);
-  SUCCEED();
 }
 
 // Main function to initialize Kokkos

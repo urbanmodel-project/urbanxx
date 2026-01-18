@@ -1,9 +1,6 @@
 # Test configuration for urbanxx
 cmake_minimum_required(VERSION 3.16)
 
-# Enable testing
-enable_testing()
-
 # Google Test is included with Kokkos
 include_directories(${CMAKE_SOURCE_DIR}/externals/kokkos/tpls/gtest)
 

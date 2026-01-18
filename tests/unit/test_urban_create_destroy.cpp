@@ -48,7 +48,8 @@ TEST_F(UrbanBasicTest, CreateWithInvalidArguments) {
 
   // Test with null status pointer
   UrbanCreate(10, &urban, nullptr);
-  // Should not crash, just checking it handles null status gracefully
+  // Should not crash and should not create the object
+  EXPECT_EQ(urban, nullptr) << "Urban object should remain null when status is nullptr";
 }
 
 // Test: Destroy with invalid arguments

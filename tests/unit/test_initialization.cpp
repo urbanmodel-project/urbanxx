@@ -155,8 +155,6 @@ TEST_F(InitializationTest, InitializeTemperature_NullStatus) {
   
   // Should not crash with null status
   UrbanInitializeTemperature(urban, nullptr);
-  
-  SUCCEED() << "UrbanInitializeTemperature should handle null status gracefully";
 }
 
 // Test: Initialize temperature multiple times (should work)
@@ -186,9 +184,6 @@ TEST_F(InitializationTest, FullWorkflow_CreateSetInitialize) {
   // Initialize
   UrbanInitializeTemperature(urban, &status);
   EXPECT_EQ(status, URBAN_SUCCESS);
-  
-  // This represents a complete setup workflow
-  SUCCEED() << "Full workflow (Create → Set Parameters → Initialize) completed successfully";
 }
 
 // Test: Initialize immediately after create (without setting parameters)

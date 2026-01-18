@@ -2,12 +2,18 @@
 include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR}/externals/kokkos/tpls/gtest/gtest)
 
+# Find threading library for gtest
+find_package(Threads REQUIRED)
+
 # Build gtest from source (included with Kokkos)
 add_library(gtest STATIC
     ${CMAKE_SOURCE_DIR}/externals/kokkos/tpls/gtest/gtest/gtest-all.cc
 )
 target_include_directories(gtest PUBLIC
     ${CMAKE_SOURCE_DIR}/externals/kokkos/tpls/gtest
+)
+target_link_libraries(gtest PUBLIC
+    Threads::Threads
 )
 
 # Test executable for basic functionality

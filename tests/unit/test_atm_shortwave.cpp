@@ -209,8 +209,6 @@ TEST_F(AtmShortwaveTest, SetAtmShortwaveDown_NullStatus) {
 
   // Should not crash with null status
   UrbanSetAtmShortwaveDown(urban, values, size, nullptr);
-  
-  SUCCEED() << "UrbanSetAtmShortwaveDown should handle null status gracefully";
 }
 
 // Test: Set shortwave multiple times (overwrite behavior)
