@@ -65,3 +65,31 @@ target_link_libraries(test_albedo_setters
 
 # Register the test with CTest
 add_test(NAME AlbedoSetterTests COMMAND test_albedo_setters)
+
+# Test executable for initialization functions
+add_executable(test_initialization
+    test_initialization.cpp
+)
+
+target_link_libraries(test_initialization
+    urban
+    kokkoscore
+    gtest
+)
+
+# Register the test with CTest
+add_test(NAME InitializationTests COMMAND test_initialization)
+
+# Test executable for atmospheric shortwave setter
+add_executable(test_atm_shortwave
+    test_atm_shortwave.cpp
+)
+
+target_link_libraries(test_atm_shortwave
+    urban
+    kokkoscore
+    gtest
+)
+
+# Register the test with CTest
+add_test(NAME AtmShortwaveTests COMMAND test_atm_shortwave)
