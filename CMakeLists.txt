@@ -68,3 +68,10 @@ add_subdirectory(src)
 
 # Add driver subdirectory
 add_subdirectory(driver)
+
+# Add tests (optional, controlled by BUILD_TESTING)
+option(BUILD_TESTING "Build tests" ON)
+if(BUILD_TESTING)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
