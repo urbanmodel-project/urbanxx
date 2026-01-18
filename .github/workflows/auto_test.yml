@@ -35,6 +35,11 @@ jobs:
     - name: Build
       run: cmake --build build --verbose
     
+    - name: Run unit tests
+      run: |
+        cd build
+        ctest --output-on-failure --verbose
+    
     - name: Test C driver
       run: ./build/driver/urbanxx_driver
     
