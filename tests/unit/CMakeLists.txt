@@ -23,3 +23,18 @@ target_link_libraries(test_urban_basic
 
 # Register the test with CTest
 add_test(NAME UrbanBasicTests COMMAND test_urban_basic)
+
+# Test executable for SetView helper functions
+add_executable(test_setview_helpers
+    test_setview_helpers.cpp
+)
+
+target_link_libraries(test_setview_helpers
+    urban
+    kokkoscore
+    gtest
+)
+
+# Register the test with CTest
+add_test(NAME SetViewHelperTests COMMAND test_setview_helpers)
+
