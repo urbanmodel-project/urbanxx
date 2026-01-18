@@ -38,3 +38,30 @@ target_link_libraries(test_setview_helpers
 # Register the test with CTest
 add_test(NAME SetViewHelperTests COMMAND test_setview_helpers)
 
+# Test executable for parameter setters
+add_executable(test_parameter_setters
+    test_parameter_setters.cpp
+)
+
+target_link_libraries(test_parameter_setters
+    urban
+    kokkoscore
+    gtest
+)
+
+# Register the test with CTest
+add_test(NAME ParameterSetterTests COMMAND test_parameter_setters)
+
+# Test executable for albedo setters
+add_executable(test_albedo_setters
+    test_albedo_setters.cpp
+)
+
+target_link_libraries(test_albedo_setters
+    urban
+    kokkoscore
+    gtest
+)
+
+# Register the test with CTest
+add_test(NAME AlbedoSetterTests COMMAND test_albedo_setters)
