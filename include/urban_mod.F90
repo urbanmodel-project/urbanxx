@@ -241,6 +241,25 @@ module urban_mod
       integer(c_int) :: status
     end subroutine UrbanAdvance_C
 
+    ! Physics computation functions
+    subroutine UrbanComputeNetLongwave_C(urban, status) bind(C, name="UrbanComputeNetLongwave")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      integer(c_int) :: status
+    end subroutine UrbanComputeNetLongwave_C
+
+    subroutine UrbanComputeNetShortwave_C(urban, status) bind(C, name="UrbanComputeNetShortwave")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      integer(c_int) :: status
+    end subroutine UrbanComputeNetShortwave_C
+
+    subroutine UrbanComputeSurfaceFluxes_C(urban, status) bind(C, name="UrbanComputeSurfaceFluxes")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      integer(c_int) :: status
+    end subroutine UrbanComputeSurfaceFluxes_C
+
     ! Atmospheric forcing setter functions
     subroutine UrbanSetAtmTemp_C(urban, values, length, status) bind(C, name="UrbanSetAtmTemp")
       import :: c_ptr, c_int
@@ -551,6 +570,24 @@ module urban_mod
     integer(c_int), intent(out) :: status
     call UrbanAdvance_C(urban%ptr, status)
   end subroutine UrbanAdvance
+
+  subroutine UrbanComputeNetLongwave(urban, status)
+    type(UrbanType), intent(in) :: urban
+    integer(c_int), intent(out) :: status
+    call UrbanComputeNetLongwave_C(urban%ptr, status)
+  end subroutine UrbanComputeNetLongwave
+
+  subroutine UrbanComputeNetShortwave(urban, status)
+    type(UrbanType), intent(in) :: urban
+    integer(c_int), intent(out) :: status
+    call UrbanComputeNetShortwave_C(urban%ptr, status)
+  end subroutine UrbanComputeNetShortwave
+
+  subroutine UrbanComputeSurfaceFluxes(urban, status)
+    type(UrbanType), intent(in) :: urban
+    integer(c_int), intent(out) :: status
+    call UrbanComputeSurfaceFluxes_C(urban%ptr, status)
+  end subroutine UrbanComputeSurfaceFluxes
 
   subroutine UrbanSetAtmTemp(urban, values, length, status)
     type(UrbanType), intent(in) :: urban
