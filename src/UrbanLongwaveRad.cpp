@@ -295,6 +295,8 @@ void ComputeNetLongwave(URBANXX::_p_UrbanType &urban) {
         auto perRoad =
             InitializeSingleRoad(LtotForRoad, emissPerRoad(l), tempPerRoad(l),
                                  roadVF, fracPervRoad(l));
+        printf("Urbanxx: l = %d; tempImpRoad = %f, tempPerRoad = %f \n", l,
+               tempImpRoad(l), tempPerRoad(l));
 
         // Combine both roads
         Real RoadAbs, RoadRef, RoadEmi;

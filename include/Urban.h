@@ -103,6 +103,26 @@ URBAN_EXTERN void UrbanSetHeatCapacityRoof(UrbanType urban,
                                            const double *values, int length,
                                            UrbanErrorCode *status);
 
+// Temperature setter functions
+URBAN_EXTERN void UrbanSetTemperatureRoof(UrbanType urban, const double *values,
+                                          int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetTemperatureImperviousRoad(UrbanType urban,
+                                                    const double *values,
+                                                    int length,
+                                                    UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetTemperaturePerviousRoad(UrbanType urban,
+                                                  const double *values,
+                                                  int length,
+                                                  UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetTemperatureSunlitWall(UrbanType urban,
+                                                const double *values,
+                                                int length,
+                                                UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetTemperatureShadedWall(UrbanType urban,
+                                                const double *values,
+                                                int length,
+                                                UrbanErrorCode *status);
+
 // Height parameter setter functions
 URBAN_EXTERN void UrbanSetForcHgtT(UrbanType urban, const double *values,
                                    int length, UrbanErrorCode *status);
