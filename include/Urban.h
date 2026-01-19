@@ -152,6 +152,10 @@ URBAN_EXTERN void UrbanComputeNetShortwave(UrbanType urban,
 URBAN_EXTERN void UrbanComputeSurfaceFluxes(UrbanType urban,
                                             UrbanErrorCode *status);
 
+// Kokkos utility functions
+URBAN_EXTERN bool UrbanKokkosIsLayoutRight(void);
+URBAN_EXTERN bool UrbanKokkosIsLayoutLeft(void);
+
 // Atmospheric forcing setter functions
 URBAN_EXTERN void UrbanSetAtmTemp(UrbanType urban, const double *values,
                                   int length, UrbanErrorCode *status);
