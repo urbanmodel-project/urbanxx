@@ -13,7 +13,7 @@ namespace URBANXX {
 
 // Convergence parameters for longwave radiation iteration
 constexpr int LONGWAVE_MAX_ITERATIONS = 50;
-constexpr Real LONGWAVE_CONVERGENCE_THRESHOLD = 0.0001;
+constexpr Real LONGWAVE_CONVERGENCE_THRESHOLD = 0.001;
 
 // Structure to hold longwave radiation components for a surface
 struct SurfaceLongwaveFluxes {
