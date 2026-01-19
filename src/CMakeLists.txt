@@ -3,6 +3,7 @@ set(URBAN_SOURCES
     Urban.cpp
     UrbanParamsType.cpp
     UrbanInitialize.cpp
+    UrbanTemperature.cpp
     AtmosphereType.cpp
     UrbanLongwaveRad.cpp
     UrbanShortwaveRad.cpp

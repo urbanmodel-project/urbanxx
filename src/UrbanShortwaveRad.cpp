@@ -340,163 +340,165 @@ void ComputeNetShortwave(URBANXX::_p_UrbanType &urban) {
   // landunit
   Kokkos::parallel_for(
       "ComputeShortwaveRadiation", numLandunits, KOKKOS_LAMBDA(const int l) {
-        ComputeIncidentRadiation(l, coszen(l), hwr(l), vf_skyFromRoad(l),
-                                 vf_skyFromWall(l), sunlitWall_downRad,
-                                 shadedWall_downRad, road_downRad);
-        ComputeSnowAlbedo(l, coszen(l), roof_snowAlb, impRoad_snowAlb,
-                          perRoad_snowAlb);
-        ComputeCombinedAlbedo(
-            l, frac_sno, roof_snowAlb, roof_baseAlb, roof_albWithSnow,
-            impRoad_snowAlb, impRoad_baseAlb, impRoad_albWithSnow,
-            perRoad_snowAlb, perRoad_baseAlb, perRoad_albWithSnow);
+        if (coszen(l) > 0.0) {
+          ComputeIncidentRadiation(l, coszen(l), hwr(l), vf_skyFromRoad(l),
+                                   vf_skyFromWall(l), sunlitWall_downRad,
+                                   shadedWall_downRad, road_downRad);
+          ComputeSnowAlbedo(l, coszen(l), roof_snowAlb, impRoad_snowAlb,
+                            perRoad_snowAlb);
+          ComputeCombinedAlbedo(
+              l, frac_sno, roof_snowAlb, roof_baseAlb, roof_albWithSnow,
+              impRoad_snowAlb, impRoad_baseAlb, impRoad_albWithSnow,
+              perRoad_snowAlb, perRoad_baseAlb, perRoad_albWithSnow);
 
-        // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        // Compute net shortwave radiation with multiple reflections
-        // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        for (int ib = 0; ib < NUM_RAD_BANDS; ++ib) {
-          for (int it = 0; it < NUM_RAD_TYPES; ++it) {
+          // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+          // Compute net shortwave radiation with multiple reflections
+          // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+          for (int ib = 0; ib < NUM_RAD_BANDS; ++ib) {
+            for (int it = 0; it < NUM_RAD_TYPES; ++it) {
 
-            // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-            // Computations for roads
-            // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+              // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+              // Computations for roads
+              // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-            // Total shortwave downwelling to road for this band and type
-            Real StotForRoad = road_downRad(l, ib, it);
+              // Total shortwave downwelling to road for this band and type
+              Real StotForRoad = road_downRad(l, ib, it);
 
-            // Impervious road (weight = 1 - fraction of pervious road)
-            const Real fracImpRoad = 1.0 - fracPervRoad(l);
+              // Impervious road (weight = 1 - fraction of pervious road)
+              const Real fracImpRoad = 1.0 - fracPervRoad(l);
 
-            // Initialize impervious and pervious roads
-            auto impRoad = InitializeSingleRoadShortwave(
-                StotForRoad, impRoad_albWithSnow(l, ib, it), vf_skyFromRoad(l),
-                vf_wallFromRoad(l), fracImpRoad);
-            auto perRoad = InitializeSingleRoadShortwave(
-                StotForRoad, perRoad_albWithSnow(l, ib, it), vf_skyFromRoad(l),
-                vf_wallFromRoad(l), fracPervRoad(l));
-
-            // Combine both roads
-            Real RoadAbs =
-                impRoad.flux.absorbedWeighted + perRoad.flux.absorbedWeighted;
-            Real RoadRef =
-                impRoad.flux.reflectedWeighted + perRoad.flux.reflectedWeighted;
-
-            Real RoadRefToSky = impRoad.ref.toSkyByWt + perRoad.ref.toSkyByWt;
-            Real RoadRefToSunlitWall =
-                impRoad.ref.toSunlitWallByWt + perRoad.ref.toSunlitWallByWt;
-            Real RoadRefToShadedWall =
-                impRoad.ref.toShadedWallByWt + perRoad.ref.toShadedWallByWt;
-
-            // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-            // Computations for walls
-            // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-            // Total shortwave downwelling to sunlit wall for this band and
-            // type
-            Real StotForSunlitWall = sunlitWall_downRad(l, ib, it);
-
-            // Initialize sunlit wall
-            auto sunlitWall = InitializeSingleWallShortwave(
-                StotForSunlitWall, sunlitWall_baseAlb(l, ib, it),
-                vf_skyFromWall(l), vf_roadFromWall(l), vf_wallFromWall(l));
-
-            // Total shortwave downwelling to shaded wall for this band and
-            // type
-            Real StotForShadedWall = shadedWall_downRad(l, ib, it);
-
-            // Initialize shaded wall
-            auto shadedWall = InitializeSingleWallShortwave(
-                StotForShadedWall, shadedWall_baseAlb(l, ib, it),
-                vf_skyFromWall(l), vf_roadFromWall(l), vf_wallFromWall(l));
-
-            // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-            // Initialize cumulative absorbed and reflected radiation for all
-            // surfaces
-            // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-            absImpRoad(l, ib, it) = impRoad.flux.absorbed;
-            absPerRoad(l, ib, it) = perRoad.flux.absorbed;
-            absSunlitWall(l, ib, it) = sunlitWall.flux.absorbed;
-            absShadedWall(l, ib, it) = shadedWall.flux.absorbed;
-
-            refImpRoad(l, ib, it) = impRoad.ref.toSky;
-            refPerRoad(l, ib, it) = perRoad.ref.toSky;
-            refSunlitWall(l, ib, it) = sunlitWall.ref.toSky;
-            refShadedWall(l, ib, it) = shadedWall.ref.toSky;
-
-            // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-            // Iteration loop for multiple reflections between surfaces
-            // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-            for (int iter = 0; iter < SHORTWAVE_MAX_ITERATIONS; ++iter) {
-
-              // step(1): Compute incoming radiation from wall-to-road and
-              // wall-to-wall reflections
-
-              // For roads: incoming from walls
-              StotForRoad =
-                  (sunlitWall.ref.toRoad + shadedWall.ref.toRoad) * hwr(l);
-
-              impRoad.flux = ShortwaveFluxes(impRoad_albWithSnow(l, ib, it),
-                                             StotForRoad, fracImpRoad);
-              perRoad.flux = ShortwaveFluxes(perRoad_albWithSnow(l, ib, it),
-                                             StotForRoad, fracPervRoad(l));
-
-              RoadAbs =
-                  impRoad.flux.absorbedWeighted + perRoad.flux.absorbedWeighted;
-              RoadRef = impRoad.flux.reflectedWeighted +
-                        perRoad.flux.reflectedWeighted;
-
-              // For sunlit wall: incoming from roads and shaded wall
-              StotForSunlitWall =
-                  RoadRefToSunlitWall / hwr(l) + shadedWall.ref.toOtherWall;
-              sunlitWall.flux = ShortwaveFluxes(sunlitWall_baseAlb(l, ib, it),
-                                                StotForSunlitWall, 1.0);
-
-              // For shaded wall: incoming from roads and sunlit wall
-              StotForShadedWall =
-                  RoadRefToShadedWall / hwr(l) + sunlitWall.ref.toOtherWall;
-              shadedWall.flux = ShortwaveFluxes(shadedWall_baseAlb(l, ib, it),
-                                                StotForShadedWall, 1.0);
-
-              // step(2): Update cumulative absorbed radiation
-              absImpRoad(l, ib, it) += impRoad.flux.absorbed;
-              absPerRoad(l, ib, it) += perRoad.flux.absorbed;
-              absSunlitWall(l, ib, it) += sunlitWall.flux.absorbed;
-              absShadedWall(l, ib, it) += shadedWall.flux.absorbed;
-
-              // step(3): Compute reflected radiation components for this
-              // iteration
-              impRoad.ref = ReflectShortwaveRoad(
+              // Initialize impervious and pervious roads
+              auto impRoad = InitializeSingleRoadShortwave(
                   StotForRoad, impRoad_albWithSnow(l, ib, it),
                   vf_skyFromRoad(l), vf_wallFromRoad(l), fracImpRoad);
-              perRoad.ref = ReflectShortwaveRoad(
+              auto perRoad = InitializeSingleRoadShortwave(
                   StotForRoad, perRoad_albWithSnow(l, ib, it),
                   vf_skyFromRoad(l), vf_wallFromRoad(l), fracPervRoad(l));
 
-              RoadRefToSky = impRoad.ref.toSkyByWt + perRoad.ref.toSkyByWt;
-              RoadRefToSunlitWall =
+              // Combine both roads
+              Real RoadAbs =
+                  impRoad.flux.absorbedWeighted + perRoad.flux.absorbedWeighted;
+              Real RoadRef = impRoad.flux.reflectedWeighted +
+                             perRoad.flux.reflectedWeighted;
+
+              Real RoadRefToSky = impRoad.ref.toSkyByWt + perRoad.ref.toSkyByWt;
+              Real RoadRefToSunlitWall =
                   impRoad.ref.toSunlitWallByWt + perRoad.ref.toSunlitWallByWt;
-              RoadRefToShadedWall =
+              Real RoadRefToShadedWall =
                   impRoad.ref.toShadedWallByWt + perRoad.ref.toShadedWallByWt;
 
-              sunlitWall.ref = ReflectShortwaveWall(
+              // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+              // Computations for walls
+              // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+              // Total shortwave downwelling to sunlit wall for this band and
+              // type
+              Real StotForSunlitWall = sunlitWall_downRad(l, ib, it);
+
+              // Initialize sunlit wall
+              auto sunlitWall = InitializeSingleWallShortwave(
                   StotForSunlitWall, sunlitWall_baseAlb(l, ib, it),
                   vf_skyFromWall(l), vf_roadFromWall(l), vf_wallFromWall(l));
 
-              shadedWall.ref = ReflectShortwaveWall(
+              // Total shortwave downwelling to shaded wall for this band and
+              // type
+              Real StotForShadedWall = shadedWall_downRad(l, ib, it);
+
+              // Initialize shaded wall
+              auto shadedWall = InitializeSingleWallShortwave(
                   StotForShadedWall, shadedWall_baseAlb(l, ib, it),
                   vf_skyFromWall(l), vf_roadFromWall(l), vf_wallFromWall(l));
 
-              // step(4): Update cumulative reflected radiation to sky
-              refImpRoad(l, ib, it) += impRoad.ref.toSky;
-              refPerRoad(l, ib, it) += perRoad.ref.toSky;
-              refSunlitWall(l, ib, it) += sunlitWall.ref.toSky;
-              refShadedWall(l, ib, it) += shadedWall.ref.toSky;
+              // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+              // Initialize cumulative absorbed and reflected radiation for all
+              // surfaces
+              // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+              absImpRoad(l, ib, it) = impRoad.flux.absorbed;
+              absPerRoad(l, ib, it) = perRoad.flux.absorbed;
+              absSunlitWall(l, ib, it) = sunlitWall.flux.absorbed;
+              absShadedWall(l, ib, it) = shadedWall.flux.absorbed;
 
-              // Check convergence
-              Real convergence_criteria =
-                  Kokkos::max(RoadAbs, Kokkos::max(sunlitWall.flux.absorbed,
-                                                   shadedWall.flux.absorbed));
-              if (convergence_criteria < SHORTWAVE_CONVERGENCE_THRESHOLD) {
-                break;
+              refImpRoad(l, ib, it) = impRoad.ref.toSky;
+              refPerRoad(l, ib, it) = perRoad.ref.toSky;
+              refSunlitWall(l, ib, it) = sunlitWall.ref.toSky;
+              refShadedWall(l, ib, it) = shadedWall.ref.toSky;
+
+              // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+              // Iteration loop for multiple reflections between surfaces
+              // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+              for (int iter = 0; iter < SHORTWAVE_MAX_ITERATIONS; ++iter) {
+
+                // step(1): Compute incoming radiation from wall-to-road and
+                // wall-to-wall reflections
+
+                // For roads: incoming from walls
+                StotForRoad =
+                    (sunlitWall.ref.toRoad + shadedWall.ref.toRoad) * hwr(l);
+
+                impRoad.flux = ShortwaveFluxes(impRoad_albWithSnow(l, ib, it),
+                                               StotForRoad, fracImpRoad);
+                perRoad.flux = ShortwaveFluxes(perRoad_albWithSnow(l, ib, it),
+                                               StotForRoad, fracPervRoad(l));
+
+                RoadAbs = impRoad.flux.absorbedWeighted +
+                          perRoad.flux.absorbedWeighted;
+                RoadRef = impRoad.flux.reflectedWeighted +
+                          perRoad.flux.reflectedWeighted;
+
+                // For sunlit wall: incoming from roads and shaded wall
+                StotForSunlitWall =
+                    RoadRefToSunlitWall / hwr(l) + shadedWall.ref.toOtherWall;
+                sunlitWall.flux = ShortwaveFluxes(sunlitWall_baseAlb(l, ib, it),
+                                                  StotForSunlitWall, 1.0);
+
+                // For shaded wall: incoming from roads and sunlit wall
+                StotForShadedWall =
+                    RoadRefToShadedWall / hwr(l) + sunlitWall.ref.toOtherWall;
+                shadedWall.flux = ShortwaveFluxes(shadedWall_baseAlb(l, ib, it),
+                                                  StotForShadedWall, 1.0);
+
+                // step(2): Update cumulative absorbed radiation
+                absImpRoad(l, ib, it) += impRoad.flux.absorbed;
+                absPerRoad(l, ib, it) += perRoad.flux.absorbed;
+                absSunlitWall(l, ib, it) += sunlitWall.flux.absorbed;
+                absShadedWall(l, ib, it) += shadedWall.flux.absorbed;
+
+                // step(3): Compute reflected radiation components for this
+                // iteration
+                impRoad.ref = ReflectShortwaveRoad(
+                    StotForRoad, impRoad_albWithSnow(l, ib, it),
+                    vf_skyFromRoad(l), vf_wallFromRoad(l), fracImpRoad);
+                perRoad.ref = ReflectShortwaveRoad(
+                    StotForRoad, perRoad_albWithSnow(l, ib, it),
+                    vf_skyFromRoad(l), vf_wallFromRoad(l), fracPervRoad(l));
+
+                RoadRefToSky = impRoad.ref.toSkyByWt + perRoad.ref.toSkyByWt;
+                RoadRefToSunlitWall =
+                    impRoad.ref.toSunlitWallByWt + perRoad.ref.toSunlitWallByWt;
+                RoadRefToShadedWall =
+                    impRoad.ref.toShadedWallByWt + perRoad.ref.toShadedWallByWt;
+
+                sunlitWall.ref = ReflectShortwaveWall(
+                    StotForSunlitWall, sunlitWall_baseAlb(l, ib, it),
+                    vf_skyFromWall(l), vf_roadFromWall(l), vf_wallFromWall(l));
+
+                shadedWall.ref = ReflectShortwaveWall(
+                    StotForShadedWall, shadedWall_baseAlb(l, ib, it),
+                    vf_skyFromWall(l), vf_roadFromWall(l), vf_wallFromWall(l));
+
+                // step(4): Update cumulative reflected radiation to sky
+                refImpRoad(l, ib, it) += impRoad.ref.toSky;
+                refPerRoad(l, ib, it) += perRoad.ref.toSky;
+                refSunlitWall(l, ib, it) += sunlitWall.ref.toSky;
+                refShadedWall(l, ib, it) += shadedWall.ref.toSky;
+
+                // Check convergence
+                Real convergence_criteria =
+                    Kokkos::max(RoadAbs, Kokkos::max(sunlitWall.flux.absorbed,
+                                                     shadedWall.flux.absorbed));
+                if (convergence_criteria < SHORTWAVE_CONVERGENCE_THRESHOLD) {
+                  break;
+                }
               }
             }
           }

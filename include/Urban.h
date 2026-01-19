@@ -103,6 +103,26 @@ URBAN_EXTERN void UrbanSetHeatCapacityRoof(UrbanType urban,
                                            const double *values, int length,
                                            UrbanErrorCode *status);
 
+// Temperature setter functions
+URBAN_EXTERN void UrbanSetTemperatureRoof(UrbanType urban, const double *values,
+                                          int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetTemperatureImperviousRoad(UrbanType urban,
+                                                    const double *values,
+                                                    int length,
+                                                    UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetTemperaturePerviousRoad(UrbanType urban,
+                                                  const double *values,
+                                                  int length,
+                                                  UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetTemperatureSunlitWall(UrbanType urban,
+                                                const double *values,
+                                                int length,
+                                                UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetTemperatureShadedWall(UrbanType urban,
+                                                const double *values,
+                                                int length,
+                                                UrbanErrorCode *status);
+
 // Height parameter setter functions
 URBAN_EXTERN void UrbanSetForcHgtT(UrbanType urban, const double *values,
                                    int length, UrbanErrorCode *status);
@@ -123,6 +143,18 @@ URBAN_EXTERN void UrbanInitializeTemperature(UrbanType urban,
 
 // Time-stepping functions
 URBAN_EXTERN void UrbanAdvance(UrbanType urban, UrbanErrorCode *status);
+
+// Physics computation functions
+URBAN_EXTERN void UrbanComputeNetLongwave(UrbanType urban,
+                                          UrbanErrorCode *status);
+URBAN_EXTERN void UrbanComputeNetShortwave(UrbanType urban,
+                                           UrbanErrorCode *status);
+URBAN_EXTERN void UrbanComputeSurfaceFluxes(UrbanType urban,
+                                            UrbanErrorCode *status);
+
+// Kokkos utility functions
+URBAN_EXTERN bool UrbanKokkosIsLayoutRight(void);
+URBAN_EXTERN bool UrbanKokkosIsLayoutLeft(void);
 
 // Atmospheric forcing setter functions
 URBAN_EXTERN void UrbanSetAtmTemp(UrbanType urban, const double *values,

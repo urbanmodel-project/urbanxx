@@ -26,14 +26,14 @@ program urbanxx_driver_f
 
   ! Create Urban object
   numLandunits = 10
-  CallA(UrbanCreate(numLandunits, urban%ptr, status))
+  CallA(UrbanCreate(numLandunits, urban, status))
 
   if (mpi_rank == 0) then
     write(*,*) 'Successfully created Urban object with ', numLandunits, ' landunits'
   end if
 
   ! Initialize temperatures
-  call UrbanInitializeTemperature(urban%ptr, status)
+  call UrbanInitializeTemperature(urban, status)
   if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
   if (mpi_rank == 0) then
     write(*,*) 'Initialized surface temperatures'
@@ -43,14 +43,14 @@ program urbanxx_driver_f
   call SetUrbanParameters(urban, numLandunits, mpi_rank)
 
   ! Advance the model one time step
-  call UrbanAdvance(urban%ptr, status)
+  call UrbanAdvance(urban, status)
   if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
   if (mpi_rank == 0) then
     write(*,*) 'Advanced model one time step'
   end if
 
   ! Destroy Urban object
-  CallA(UrbanDestroy(urban%ptr, status))
+  CallA(UrbanDestroy(urban, status))
 
   ! Finalize Kokkos
   call UrbanKokkosFinalize()
@@ -71,7 +71,7 @@ contains
     do i = 1, numLandunits
       canyonHwr(i) = 4.80000019073486d0
     end do
-    call UrbanSetCanyonHwr(urban%ptr, c_loc(canyonHwr), &
+    call UrbanSetCanyonHwr(urban, c_loc(canyonHwr), &
       numLandunits, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
 
@@ -93,7 +93,7 @@ contains
     do i = 1, numLandunits
       fracPervRoadOfTotalRoad(i) = 0.16666667163372040d0
     end do
-    call UrbanSetFracPervRoadOfTotalRoad(urban%ptr, c_loc(fracPervRoadOfTotalRoad), &
+    call UrbanSetFracPervRoadOfTotalRoad(urban, c_loc(fracPervRoadOfTotalRoad), &
       numLandunits, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
 
@@ -140,22 +140,22 @@ contains
       windHgtCanyon(i) = WIND_HGT_CANYON_DEFAULT
     end do
 
-    call UrbanSetForcHgtT(urban%ptr, c_loc(forcHgtT), &
+    call UrbanSetForcHgtT(urban, c_loc(forcHgtT), &
       numLandunits, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
-    call UrbanSetForcHgtU(urban%ptr, c_loc(forcHgtU), &
+    call UrbanSetForcHgtU(urban, c_loc(forcHgtU), &
       numLandunits, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
-    call UrbanSetZDTown(urban%ptr, c_loc(zDTown), &
+    call UrbanSetZDTown(urban, c_loc(zDTown), &
       numLandunits, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
-    call UrbanSetZ0Town(urban%ptr, c_loc(z0Town), &
+    call UrbanSetZ0Town(urban, c_loc(z0Town), &
       numLandunits, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
-    call UrbanSetHtRoof(urban%ptr, c_loc(htRoof), &
+    call UrbanSetHtRoof(urban, c_loc(htRoof), &
       numLandunits, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
-    call UrbanSetWindHgtCanyon(urban%ptr, c_loc(windHgtCanyon), &
+    call UrbanSetWindHgtCanyon(urban, c_loc(windHgtCanyon), &
       numLandunits, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
 
@@ -190,7 +190,7 @@ contains
       wtRoof(i) = WT_ROOF_DEFAULT
     end do
 
-    call UrbanSetWtRoof(urban%ptr, c_loc(wtRoof), &
+    call UrbanSetWtRoof(urban, c_loc(wtRoof), &
       numLandunits, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
 
@@ -244,19 +244,19 @@ contains
       end do
     end do
 
-    call UrbanSetAlbedoPerviousRoad(urban%ptr, &
+    call UrbanSetAlbedoPerviousRoad(urban, &
       c_loc(albedoPerviousRoad), size3D, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
-    call UrbanSetAlbedoImperviousRoad(urban%ptr, &
+    call UrbanSetAlbedoImperviousRoad(urban, &
       c_loc(albedoImperviousRoad), size3D, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
-    call UrbanSetAlbedoSunlitWall(urban%ptr, &
+    call UrbanSetAlbedoSunlitWall(urban, &
       c_loc(albedoSunlitWall), size3D, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
-    call UrbanSetAlbedoShadedWall(urban%ptr, &
+    call UrbanSetAlbedoShadedWall(urban, &
       c_loc(albedoShadedWall), size3D, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
-    call UrbanSetAlbedoRoof(urban%ptr, c_loc(albedoRoof), &
+    call UrbanSetAlbedoRoof(urban, c_loc(albedoRoof), &
       size3D, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
 
@@ -297,16 +297,16 @@ contains
       emissivityRoof(i) = EMISS_ROOF
     end do
 
-    call UrbanSetEmissivityPerviousRoad(urban%ptr, &
+    call UrbanSetEmissivityPerviousRoad(urban, &
       c_loc(emissivityPerviousRoad), numLandunits, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
-    call UrbanSetEmissivityImperviousRoad(urban%ptr, &
+    call UrbanSetEmissivityImperviousRoad(urban, &
       c_loc(emissivityImperviousRoad), numLandunits, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
-    call UrbanSetEmissivityWall(urban%ptr, &
+    call UrbanSetEmissivityWall(urban, &
       c_loc(emissivityWall), numLandunits, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
-    call UrbanSetEmissivityRoof(urban%ptr, &
+    call UrbanSetEmissivityRoof(urban, &
       c_loc(emissivityRoof), numLandunits, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
 
@@ -339,13 +339,13 @@ contains
       tkRoof(i) = 0.9d0
     end do
 
-    call UrbanSetThermalConductivityRoad(urban%ptr, &
+    call UrbanSetThermalConductivityRoad(urban, &
       c_loc(tkRoad), numLandunits, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
-    call UrbanSetThermalConductivityWall(urban%ptr, &
+    call UrbanSetThermalConductivityWall(urban, &
       c_loc(tkWall), numLandunits, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
-    call UrbanSetThermalConductivityRoof(urban%ptr, &
+    call UrbanSetThermalConductivityRoof(urban, &
       c_loc(tkRoof), numLandunits, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
 
@@ -377,13 +377,13 @@ contains
       cvRoof(i) = 1.9d6
     end do
 
-    call UrbanSetHeatCapacityRoad(urban%ptr, &
+    call UrbanSetHeatCapacityRoad(urban, &
       c_loc(cvRoad), numLandunits, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
-    call UrbanSetHeatCapacityWall(urban%ptr, &
+    call UrbanSetHeatCapacityWall(urban, &
       c_loc(cvWall), numLandunits, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
-    call UrbanSetHeatCapacityRoof(urban%ptr, &
+    call UrbanSetHeatCapacityRoof(urban, &
       c_loc(cvRoof), numLandunits, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
 
@@ -465,27 +465,27 @@ contains
     end do
 
     ! Set atmospheric forcing
-    call UrbanSetAtmTemp(urban%ptr, c_loc(atmTemp), numLandunits, status)
+    call UrbanSetAtmTemp(urban, c_loc(atmTemp), numLandunits, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
-    call UrbanSetAtmPotTemp(urban%ptr, c_loc(atmPotTemp), numLandunits, status)
+    call UrbanSetAtmPotTemp(urban, c_loc(atmPotTemp), numLandunits, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
-    call UrbanSetAtmRho(urban%ptr, c_loc(atmRho), numLandunits, status)
+    call UrbanSetAtmRho(urban, c_loc(atmRho), numLandunits, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
-    call UrbanSetAtmSpcHumd(urban%ptr, c_loc(atmSpcHumd), numLandunits, status)
+    call UrbanSetAtmSpcHumd(urban, c_loc(atmSpcHumd), numLandunits, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
-    call UrbanSetAtmPress(urban%ptr, c_loc(atmPress), numLandunits, status)
+    call UrbanSetAtmPress(urban, c_loc(atmPress), numLandunits, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
-    call UrbanSetAtmWindU(urban%ptr, c_loc(atmWindU), numLandunits, status)
+    call UrbanSetAtmWindU(urban, c_loc(atmWindU), numLandunits, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
-    call UrbanSetAtmWindV(urban%ptr, c_loc(atmWindV), numLandunits, status)
+    call UrbanSetAtmWindV(urban, c_loc(atmWindV), numLandunits, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
-    call UrbanSetAtmCoszen(urban%ptr, c_loc(atmCoszen), numLandunits, status)
+    call UrbanSetAtmCoszen(urban, c_loc(atmCoszen), numLandunits, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
-    call UrbanSetAtmFracSnow(urban%ptr, c_loc(atmFracSnow), numLandunits, status)
+    call UrbanSetAtmFracSnow(urban, c_loc(atmFracSnow), numLandunits, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
-    call UrbanSetAtmLongwaveDown(urban%ptr, c_loc(atmLongwave), numLandunits, status)
+    call UrbanSetAtmLongwaveDown(urban, c_loc(atmLongwave), numLandunits, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
-    call UrbanSetAtmShortwaveDown(urban%ptr, c_loc(atmShortwave), size3D, status)
+    call UrbanSetAtmShortwaveDown(urban, c_loc(atmShortwave), size3D, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
 
     if (mpi_rank == 0) then

@@ -74,4 +74,49 @@ void UrbanAdvance(UrbanType urban, UrbanErrorCode *status) {
   }
 }
 
+void UrbanComputeNetLongwave(UrbanType urban, UrbanErrorCode *status) {
+  if (urban == nullptr || status == nullptr) {
+    if (status)
+      *status = URBAN_ERR_INVALID_ARGUMENT;
+    return;
+  }
+
+  try {
+    URBANXX::ComputeNetLongwave(*urban);
+    *status = URBAN_SUCCESS;
+  } catch (...) {
+    *status = URBAN_ERR_INTERNAL;
+  }
+}
+
+void UrbanComputeNetShortwave(UrbanType urban, UrbanErrorCode *status) {
+  if (urban == nullptr || status == nullptr) {
+    if (status)
+      *status = URBAN_ERR_INVALID_ARGUMENT;
+    return;
+  }
+
+  try {
+    URBANXX::ComputeNetShortwave(*urban);
+    *status = URBAN_SUCCESS;
+  } catch (...) {
+    *status = URBAN_ERR_INTERNAL;
+  }
+}
+
+void UrbanComputeSurfaceFluxes(UrbanType urban, UrbanErrorCode *status) {
+  if (urban == nullptr || status == nullptr) {
+    if (status)
+      *status = URBAN_ERR_INVALID_ARGUMENT;
+    return;
+  }
+
+  try {
+    URBANXX::ComputeSurfaceFluxes(*urban);
+    *status = URBAN_SUCCESS;
+  } catch (...) {
+    *status = URBAN_ERR_INTERNAL;
+  }
+}
+
 } // extern "C"
