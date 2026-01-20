@@ -327,11 +327,13 @@ void ComputeNetShortwave(URBANXX::_p_UrbanType &urban) {
   auto absPerRoad = urban.perviousRoad.AbsorbedShortRad;
   auto absSunlitWall = urban.sunlitWall.AbsorbedShortRad;
   auto absShadedWall = urban.shadedWall.AbsorbedShortRad;
+  auto absRoof = urban.roof.AbsorbedShortRad;
 
   auto refImpRoad = urban.imperviousRoad.ReflectedShortRad;
   auto refPerRoad = urban.perviousRoad.ReflectedShortRad;
   auto refSunlitWall = urban.sunlitWall.ReflectedShortRad;
   auto refShadedWall = urban.shadedWall.ReflectedShortRad;
+  auto refRoof = urban.roof.ReflectedShortRad;
 
   // Snow fraction (placeholder - will be computed from snow model later)
   constexpr Real frac_sno = 0.0;
@@ -350,6 +352,16 @@ void ComputeNetShortwave(URBANXX::_p_UrbanType &urban) {
               l, frac_sno, roof_snowAlb, roof_baseAlb, roof_albWithSnow,
               impRoad_snowAlb, impRoad_baseAlb, impRoad_albWithSnow,
               perRoad_snowAlb, perRoad_baseAlb, perRoad_albWithSnow);
+
+          // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+          // For roof
+          // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+          for (int ib = 0; ib < NUM_RAD_BANDS; ++ib) {
+            for (int it = 0; it < NUM_RAD_TYPES; ++it) {
+              refRoof(l, ib, it) = roof_albWithSnow(l, ib, it);
+              absRoof(l, ib, it) = 1.0 - refRoof(l, ib, it);
+            }
+          }
 
           // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
           // Compute net shortwave radiation with multiple reflections
