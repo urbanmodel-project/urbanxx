@@ -155,15 +155,18 @@ TEST_F(CanyonAirGetterTest, GetCanyonAirTemperature_LengthMismatch) {
 
 TEST_F(CanyonAirGetterTest, GetCanyonAirTemperature_NullPointer) {
   UrbanErrorCode status;
+  double values[5];
 
   // Null values pointer
   UrbanGetCanyonAirTemperature(urban, nullptr, numLandunits, &status);
   EXPECT_EQ(status, URBAN_ERR_INVALID_ARGUMENT);
 
   // Null urban object
-  double values[5];
   UrbanGetCanyonAirTemperature(nullptr, values, numLandunits, &status);
   EXPECT_EQ(status, URBAN_ERR_INVALID_ARGUMENT);
+
+  // Null status pointer - should not crash
+  UrbanGetCanyonAirTemperature(urban, values, numLandunits, nullptr);
 }
 
 // ============================================================================
@@ -196,15 +199,18 @@ TEST_F(CanyonAirGetterTest, GetCanyonAirHumidity_LengthMismatch) {
 
 TEST_F(CanyonAirGetterTest, GetCanyonAirHumidity_NullPointer) {
   UrbanErrorCode status;
+  double values[5];
 
   // Null values pointer
   UrbanGetCanyonAirHumidity(urban, nullptr, numLandunits, &status);
   EXPECT_EQ(status, URBAN_ERR_INVALID_ARGUMENT);
 
   // Null urban object
-  double values[5];
   UrbanGetCanyonAirHumidity(nullptr, values, numLandunits, &status);
   EXPECT_EQ(status, URBAN_ERR_INVALID_ARGUMENT);
+
+  // Null status pointer - should not crash
+  UrbanGetCanyonAirHumidity(urban, values, numLandunits, nullptr);
 }
 
 // ============================================================================

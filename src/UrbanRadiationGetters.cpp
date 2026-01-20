@@ -16,7 +16,7 @@ using namespace URBANXX;
 // Absorbed shortwave radiation getter functions
 void UrbanGetAbsorbedShortwaveRoof(UrbanType urban, double *values,
                                    const int size[3], UrbanErrorCode *status) {
-  if (!ValidateInputsWithData(urban, values, status))
+  if (!ValidateInputsWithSize(urban, values, size, status))
     return;
 
   GetView3D(urban->roof.AbsorbedShortRad, values, size, status);
@@ -25,7 +25,7 @@ void UrbanGetAbsorbedShortwaveRoof(UrbanType urban, double *values,
 void UrbanGetAbsorbedShortwaveImperviousRoad(UrbanType urban, double *values,
                                              const int size[3],
                                              UrbanErrorCode *status) {
-  if (!ValidateInputsWithData(urban, values, status))
+  if (!ValidateInputsWithSize(urban, values, size, status))
     return;
 
   GetView3D(urban->imperviousRoad.AbsorbedShortRad, values, size, status);
@@ -34,7 +34,7 @@ void UrbanGetAbsorbedShortwaveImperviousRoad(UrbanType urban, double *values,
 void UrbanGetAbsorbedShortwavePerviousRoad(UrbanType urban, double *values,
                                            const int size[3],
                                            UrbanErrorCode *status) {
-  if (!ValidateInputsWithData(urban, values, status))
+  if (!ValidateInputsWithSize(urban, values, size, status))
     return;
 
   GetView3D(urban->perviousRoad.AbsorbedShortRad, values, size, status);
@@ -43,7 +43,7 @@ void UrbanGetAbsorbedShortwavePerviousRoad(UrbanType urban, double *values,
 void UrbanGetAbsorbedShortwaveSunlitWall(UrbanType urban, double *values,
                                          const int size[3],
                                          UrbanErrorCode *status) {
-  if (!ValidateInputsWithData(urban, values, status))
+  if (!ValidateInputsWithSize(urban, values, size, status))
     return;
 
   GetView3D(urban->sunlitWall.AbsorbedShortRad, values, size, status);
@@ -52,7 +52,7 @@ void UrbanGetAbsorbedShortwaveSunlitWall(UrbanType urban, double *values,
 void UrbanGetAbsorbedShortwaveShadedWall(UrbanType urban, double *values,
                                          const int size[3],
                                          UrbanErrorCode *status) {
-  if (!ValidateInputsWithData(urban, values, status))
+  if (!ValidateInputsWithSize(urban, values, size, status))
     return;
 
   GetView3D(urban->shadedWall.AbsorbedShortRad, values, size, status);
@@ -61,7 +61,7 @@ void UrbanGetAbsorbedShortwaveShadedWall(UrbanType urban, double *values,
 // Reflected shortwave radiation getter functions
 void UrbanGetReflectedShortwaveRoof(UrbanType urban, double *values,
                                     const int size[3], UrbanErrorCode *status) {
-  if (!ValidateInputsWithData(urban, values, status))
+  if (!ValidateInputsWithSize(urban, values, size, status))
     return;
 
   GetView3D(urban->roof.ReflectedShortRad, values, size, status);
@@ -70,7 +70,7 @@ void UrbanGetReflectedShortwaveRoof(UrbanType urban, double *values,
 void UrbanGetReflectedShortwaveImperviousRoad(UrbanType urban, double *values,
                                               const int size[3],
                                               UrbanErrorCode *status) {
-  if (!ValidateInputsWithData(urban, values, status))
+  if (!ValidateInputsWithSize(urban, values, size, status))
     return;
 
   GetView3D(urban->imperviousRoad.ReflectedShortRad, values, size, status);
@@ -79,7 +79,7 @@ void UrbanGetReflectedShortwaveImperviousRoad(UrbanType urban, double *values,
 void UrbanGetReflectedShortwavePerviousRoad(UrbanType urban, double *values,
                                             const int size[3],
                                             UrbanErrorCode *status) {
-  if (!ValidateInputsWithData(urban, values, status))
+  if (!ValidateInputsWithSize(urban, values, size, status))
     return;
 
   GetView3D(urban->perviousRoad.ReflectedShortRad, values, size, status);
@@ -88,7 +88,7 @@ void UrbanGetReflectedShortwavePerviousRoad(UrbanType urban, double *values,
 void UrbanGetReflectedShortwaveSunlitWall(UrbanType urban, double *values,
                                           const int size[3],
                                           UrbanErrorCode *status) {
-  if (!ValidateInputsWithData(urban, values, status))
+  if (!ValidateInputsWithSize(urban, values, size, status))
     return;
 
   GetView3D(urban->sunlitWall.ReflectedShortRad, values, size, status);
@@ -97,7 +97,7 @@ void UrbanGetReflectedShortwaveSunlitWall(UrbanType urban, double *values,
 void UrbanGetReflectedShortwaveShadedWall(UrbanType urban, double *values,
                                           const int size[3],
                                           UrbanErrorCode *status) {
-  if (!ValidateInputsWithData(urban, values, status))
+  if (!ValidateInputsWithSize(urban, values, size, status))
     return;
 
   GetView3D(urban->shadedWall.ReflectedShortRad, values, size, status);

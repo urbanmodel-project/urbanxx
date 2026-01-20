@@ -164,13 +164,22 @@ TEST_F(RadiationGetterTest, GetAbsorbedShortwaveRoof_SizeMismatch) {
 
 TEST_F(RadiationGetterTest, GetAbsorbedShortwaveRoof_NullPointer) {
   UrbanErrorCode status;
+  double values[20];
 
+  // Null values pointer
   UrbanGetAbsorbedShortwaveRoof(urban, nullptr, size, &status);
   EXPECT_EQ(status, URBAN_ERR_INVALID_ARGUMENT);
 
-  double values[20];
+  // Null urban object
   UrbanGetAbsorbedShortwaveRoof(nullptr, values, size, &status);
   EXPECT_EQ(status, URBAN_ERR_INVALID_ARGUMENT);
+
+  // Null size pointer
+  UrbanGetAbsorbedShortwaveRoof(urban, values, nullptr, &status);
+  EXPECT_EQ(status, URBAN_ERR_INVALID_ARGUMENT);
+
+  // Null status pointer - should not crash
+  UrbanGetAbsorbedShortwaveRoof(urban, values, size, nullptr);
 }
 
 TEST_F(RadiationGetterTest, GetAbsorbedShortwaveImperviousRoad_ValidData) {
@@ -254,9 +263,18 @@ TEST_F(RadiationGetterTest, GetReflectedShortwaveRoof_ValidData) {
 
 TEST_F(RadiationGetterTest, GetReflectedShortwaveRoof_NullPointer) {
   UrbanErrorCode status;
+  double values[20];
 
+  // Null values pointer
   UrbanGetReflectedShortwaveRoof(urban, nullptr, size, &status);
   EXPECT_EQ(status, URBAN_ERR_INVALID_ARGUMENT);
+
+  // Null size pointer
+  UrbanGetReflectedShortwaveRoof(urban, values, nullptr, &status);
+  EXPECT_EQ(status, URBAN_ERR_INVALID_ARGUMENT);
+
+  // Null status pointer - should not crash
+  UrbanGetReflectedShortwaveRoof(urban, values, size, nullptr);
 }
 
 TEST_F(RadiationGetterTest, GetReflectedShortwaveImperviousRoad_ValidData) {
@@ -347,13 +365,18 @@ TEST_F(RadiationGetterTest, GetNetLongwaveRoof_LengthMismatch) {
 
 TEST_F(RadiationGetterTest, GetNetLongwaveRoof_NullPointer) {
   UrbanErrorCode status;
+  double values[5];
 
+  // Null values pointer
   UrbanGetNetLongwaveRoof(urban, nullptr, numLandunits, &status);
   EXPECT_EQ(status, URBAN_ERR_INVALID_ARGUMENT);
 
-  double values[5];
+  // Null urban object
   UrbanGetNetLongwaveRoof(nullptr, values, numLandunits, &status);
   EXPECT_EQ(status, URBAN_ERR_INVALID_ARGUMENT);
+
+  // Null status pointer - should not crash
+  UrbanGetNetLongwaveRoof(urban, values, numLandunits, nullptr);
 }
 
 TEST_F(RadiationGetterTest, GetNetLongwaveImperviousRoad_ValidData) {
@@ -433,6 +456,22 @@ TEST_F(RadiationGetterTest, GetUpwardLongwaveRoof_LengthMismatch) {
   UrbanGetUpwardLongwaveRoof(urban, values, 10, &status);
 
   EXPECT_EQ(status, URBAN_ERR_SIZE_MISMATCH);
+}
+
+TEST_F(RadiationGetterTest, GetUpwardLongwaveRoof_NullPointer) {
+  UrbanErrorCode status;
+  double values[5];
+
+  // Null values pointer
+  UrbanGetUpwardLongwaveRoof(urban, nullptr, numLandunits, &status);
+  EXPECT_EQ(status, URBAN_ERR_INVALID_ARGUMENT);
+
+  // Null urban object
+  UrbanGetUpwardLongwaveRoof(nullptr, values, numLandunits, &status);
+  EXPECT_EQ(status, URBAN_ERR_INVALID_ARGUMENT);
+
+  // Null status pointer - should not crash
+  UrbanGetUpwardLongwaveRoof(urban, values, numLandunits, nullptr);
 }
 
 TEST_F(RadiationGetterTest, GetUpwardLongwaveImperviousRoad_ValidData) {
