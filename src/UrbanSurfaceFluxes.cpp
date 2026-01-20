@@ -485,28 +485,28 @@ void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
   const int numLandunits = urban.numLandunits;
 
   // Get references to atmospheric data
-  auto& forcTemp = urban.atmosphereData.ForcTemp;
-  auto& forcPotTemp = urban.atmosphereData.ForcPotTemp;
-  auto& forcSpcHumd = urban.atmosphereData.ForcSpcHumd;
-  auto& forcPress = urban.atmosphereData.ForcPress;
-  auto& forcRho = urban.atmosphereData.ForcRho;
-  auto& forcU = urban.atmosphereData.ForcWindU;
-  auto& forcV = urban.atmosphereData.ForcWindV;
+  auto &forcTemp = urban.atmosphereData.ForcTemp;
+  auto &forcPotTemp = urban.atmosphereData.ForcPotTemp;
+  auto &forcSpcHumd = urban.atmosphereData.ForcSpcHumd;
+  auto &forcPress = urban.atmosphereData.ForcPress;
+  auto &forcRho = urban.atmosphereData.ForcRho;
+  auto &forcU = urban.atmosphereData.ForcWindU;
+  auto &forcV = urban.atmosphereData.ForcWindV;
 
   // Get references to geometric parameters
-  auto& hwr = urban.urbanParams.CanyonHwr;
+  auto &hwr = urban.urbanParams.CanyonHwr;
 
   // Get references to urban canyon air properties
-  auto& Taf = urban.urbanCanyon.Taf;
-  auto& Qaf = urban.urbanCanyon.Qaf;
+  auto &Taf = urban.urbanCanyon.Taf;
+  auto &Qaf = urban.urbanCanyon.Qaf;
 
   // Get references to height parameters
-  auto& forcHgtT = urban.urbanParams.heights.ForcHgtT;
-  auto& forcHgtU = urban.urbanParams.heights.ForcHgtU;
-  auto& zDTown = urban.urbanParams.heights.ZDTown;
-  auto& z0Town = urban.urbanParams.heights.Z0Town;
-  auto& htRoof = urban.urbanParams.heights.HtRoof;
-  auto& windHgtCanyon = urban.urbanParams.heights.WindHgtCanyon;
+  auto &forcHgtT = urban.urbanParams.heights.ForcHgtT;
+  auto &forcHgtU = urban.urbanParams.heights.ForcHgtU;
+  auto &zDTown = urban.urbanParams.heights.ZDTown;
+  auto &z0Town = urban.urbanParams.heights.Z0Town;
+  auto &htRoof = urban.urbanParams.heights.HtRoof;
+  auto &windHgtCanyon = urban.urbanParams.heights.WindHgtCanyon;
 
   // Constants
   const Real lapseRate = 0.0098; // dry adiabatic lapse rate (K/m)

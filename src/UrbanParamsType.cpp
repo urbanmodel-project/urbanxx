@@ -21,12 +21,12 @@ static void ComputeViewFactors(UrbanType urban, UrbanErrorCode *status) {
   }
 
   try {
-    auto& CanyonHwr = urban->urbanParams.CanyonHwr;
-    auto& sr = urban->urbanParams.viewFactor.SkyFrmRoad;
-    auto& sw = urban->urbanParams.viewFactor.SkyFrmWall;
-    auto& rw = urban->urbanParams.viewFactor.RoadFrmWall;
-    auto& wr = urban->urbanParams.viewFactor.WallFrmRoad;
-    auto& ww = urban->urbanParams.viewFactor.OtherWallFrmWall;
+    auto &CanyonHwr = urban->urbanParams.CanyonHwr;
+    auto &sr = urban->urbanParams.viewFactor.SkyFrmRoad;
+    auto &sw = urban->urbanParams.viewFactor.SkyFrmWall;
+    auto &rw = urban->urbanParams.viewFactor.RoadFrmWall;
+    auto &wr = urban->urbanParams.viewFactor.WallFrmRoad;
+    auto &ww = urban->urbanParams.viewFactor.OtherWallFrmWall;
 
     Kokkos::parallel_for(
         "ComputingViewFactor", urban->numLandunits, KOKKOS_LAMBDA(int l) {

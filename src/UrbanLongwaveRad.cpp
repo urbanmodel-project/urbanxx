@@ -235,43 +235,43 @@ void ComputeNetLongwave(URBANXX::_p_UrbanType &urban) {
   const int numLandunits = urban.numLandunits;
 
   // Access atmospheric forcing data
-  auto& forcLRad = urban.atmosphereData.ForcLRad;
+  auto &forcLRad = urban.atmosphereData.ForcLRad;
 
   // Access urban parameters - view factors and canyon height-to-width ratio
-  auto& vf_sr = urban.urbanParams.viewFactor.SkyFrmRoad;
-  auto& vf_sw = urban.urbanParams.viewFactor.SkyFrmWall;
-  auto& vf_wr = urban.urbanParams.viewFactor.WallFrmRoad;
-  auto& vf_rw = urban.urbanParams.viewFactor.RoadFrmWall;
-  auto& vf_ww = urban.urbanParams.viewFactor.OtherWallFrmWall;
-  auto& hwr = urban.urbanParams.CanyonHwr;
-  auto& fracPervRoad = urban.urbanParams.FracPervRoadOfTotalRoad;
+  auto &vf_sr = urban.urbanParams.viewFactor.SkyFrmRoad;
+  auto &vf_sw = urban.urbanParams.viewFactor.SkyFrmWall;
+  auto &vf_wr = urban.urbanParams.viewFactor.WallFrmRoad;
+  auto &vf_rw = urban.urbanParams.viewFactor.RoadFrmWall;
+  auto &vf_ww = urban.urbanParams.viewFactor.OtherWallFrmWall;
+  auto &hwr = urban.urbanParams.CanyonHwr;
+  auto &fracPervRoad = urban.urbanParams.FracPervRoadOfTotalRoad;
 
   // Access urban parameters - emissivities
-  auto& emissRoof = urban.urbanParams.emissivity.Roof;
-  auto& emissWall = urban.urbanParams.emissivity.Wall;
-  auto& emissImpRoad = urban.urbanParams.emissivity.ImperviousRoad;
-  auto& emissPerRoad = urban.urbanParams.emissivity.PerviousRoad;
+  auto &emissRoof = urban.urbanParams.emissivity.Roof;
+  auto &emissWall = urban.urbanParams.emissivity.Wall;
+  auto &emissImpRoad = urban.urbanParams.emissivity.ImperviousRoad;
+  auto &emissPerRoad = urban.urbanParams.emissivity.PerviousRoad;
 
   // Access surface temperatures
-  auto& tempRoof = urban.roof.Temperature;
-  auto& tempSunlitWall = urban.sunlitWall.Temperature;
-  auto& tempShadedWall = urban.shadedWall.Temperature;
-  auto& tempImpRoad = urban.imperviousRoad.Temperature;
-  auto& tempPerRoad = urban.perviousRoad.Temperature;
+  auto &tempRoof = urban.roof.Temperature;
+  auto &tempSunlitWall = urban.sunlitWall.Temperature;
+  auto &tempShadedWall = urban.shadedWall.Temperature;
+  auto &tempImpRoad = urban.imperviousRoad.Temperature;
+  auto &tempPerRoad = urban.perviousRoad.Temperature;
 
   // Access net longwave radiation fields (to be updated)
-  auto& netLwSunlitWall = urban.sunlitWall.NetLongRad;
-  auto& netLwShadedWall = urban.shadedWall.NetLongRad;
-  auto& netLwImpRoad = urban.imperviousRoad.NetLongRad;
-  auto& netLwPerRoad = urban.perviousRoad.NetLongRad;
-  auto& netLwRoof = urban.roof.NetLongRad;
+  auto &netLwSunlitWall = urban.sunlitWall.NetLongRad;
+  auto &netLwShadedWall = urban.shadedWall.NetLongRad;
+  auto &netLwImpRoad = urban.imperviousRoad.NetLongRad;
+  auto &netLwPerRoad = urban.perviousRoad.NetLongRad;
+  auto &netLwRoof = urban.roof.NetLongRad;
 
   // Access upward longwave radiation fields (to be updated)
-  auto& upLwSunlitWall = urban.sunlitWall.UpwardLongRad;
-  auto& upLwShadedWall = urban.shadedWall.UpwardLongRad;
-  auto& upLwImpRoad = urban.imperviousRoad.UpwardLongRad;
-  auto& upLwPerRoad = urban.perviousRoad.UpwardLongRad;
-  auto& upLwRoof = urban.roof.UpwardLongRad;
+  auto &upLwSunlitWall = urban.sunlitWall.UpwardLongRad;
+  auto &upLwShadedWall = urban.shadedWall.UpwardLongRad;
+  auto &upLwImpRoad = urban.imperviousRoad.UpwardLongRad;
+  auto &upLwPerRoad = urban.perviousRoad.UpwardLongRad;
+  auto &upLwRoof = urban.roof.UpwardLongRad;
 
   // View to track non-converged landunits
   Kokkos::View<int *> nonConvergedCount("nonConvergedCount", 1);
