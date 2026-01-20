@@ -99,3 +99,31 @@ target_link_libraries(test_atm_shortwave
 
 # Register the test with CTest
 add_test(NAME AtmShortwaveTests COMMAND test_atm_shortwave)
+
+# Test executable for radiation getters
+add_executable(test_radiation_getters
+    test_radiation_getters.cpp
+)
+
+target_link_libraries(test_radiation_getters
+    urban
+    kokkoscore
+    gtest
+)
+
+# Register the test with CTest
+add_test(NAME RadiationGetterTests COMMAND test_radiation_getters)
+
+# Test executable for canyon air getters
+add_executable(test_canyon_air_getters
+    test_canyon_air_getters.cpp
+)
+
+target_link_libraries(test_canyon_air_getters
+    urban
+    kokkoscore
+    gtest
+)
+
+# Register the test with CTest
+add_test(NAME CanyonAirGetterTests COMMAND test_canyon_air_getters)
