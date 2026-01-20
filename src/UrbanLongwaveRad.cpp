@@ -264,18 +264,27 @@ void ComputeNetLongwave(URBANXX::_p_UrbanType &urban) {
   auto &netLwShadedWall = urban.shadedWall.NetLongRad;
   auto &netLwImpRoad = urban.imperviousRoad.NetLongRad;
   auto &netLwPerRoad = urban.perviousRoad.NetLongRad;
+  auto &netLwRoof = urban.roof.NetLongRad;
 
   // Access upward longwave radiation fields (to be updated)
   auto &upLwSunlitWall = urban.sunlitWall.UpwardLongRad;
   auto &upLwShadedWall = urban.shadedWall.UpwardLongRad;
   auto &upLwImpRoad = urban.imperviousRoad.UpwardLongRad;
   auto &upLwPerRoad = urban.perviousRoad.UpwardLongRad;
+  auto &upLwRoof = urban.roof.UpwardLongRad;
 
   // View to track non-converged landunits
   Kokkos::View<int *> nonConvergedCount("nonConvergedCount", 1);
 
   Kokkos::parallel_for(
       "ComputeNetLongwave", numLandunits, KOKKOS_LAMBDA(const int l) {
+        // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        // Computations for roof
+        // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        upLwRoof(l) = emissRoof(l) * STEBOL * Kokkos::pow(tempRoof(l), 4.0) +
+                      (1.0 - emissRoof(l)) * forcLRad(l);
+        netLwRoof(l) = upLwRoof(l) - forcLRad(l);
+
         // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         // Computations for roads
         // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
