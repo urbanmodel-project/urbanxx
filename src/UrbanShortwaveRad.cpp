@@ -295,45 +295,45 @@ void ComputeNetShortwave(URBANXX::_p_UrbanType &urban) {
   const int numLandunits = urban.numLandunits;
 
   // Get references to data
-  auto coszen = urban.atmosphereData.Coszen;
-  auto hwr = urban.urbanParams.CanyonHwr;
-  auto vf_skyFromRoad = urban.urbanParams.viewFactor.SkyFrmRoad;
-  auto vf_skyFromWall = urban.urbanParams.viewFactor.SkyFrmWall;
-  auto vf_wallFromRoad = urban.urbanParams.viewFactor.WallFrmRoad;
-  auto vf_roadFromWall = urban.urbanParams.viewFactor.RoadFrmWall;
-  auto vf_wallFromWall = urban.urbanParams.viewFactor.OtherWallFrmWall;
-  auto fracPervRoad = urban.urbanParams.FracPervRoadOfTotalRoad;
+  auto& coszen = urban.atmosphereData.Coszen;
+  auto& hwr = urban.urbanParams.CanyonHwr;
+  auto& vf_skyFromRoad = urban.urbanParams.viewFactor.SkyFrmRoad;
+  auto& vf_skyFromWall = urban.urbanParams.viewFactor.SkyFrmWall;
+  auto& vf_wallFromRoad = urban.urbanParams.viewFactor.WallFrmRoad;
+  auto& vf_roadFromWall = urban.urbanParams.viewFactor.RoadFrmWall;
+  auto& vf_wallFromWall = urban.urbanParams.viewFactor.OtherWallFrmWall;
+  auto& fracPervRoad = urban.urbanParams.FracPervRoadOfTotalRoad;
 
-  auto sunlitWall_downRad = urban.sunlitWall.DownwellingShortRad;
-  auto shadedWall_downRad = urban.shadedWall.DownwellingShortRad;
-  auto road_downRad = urban.compositeRoadSurface.DownwellingShortRad;
+  auto& sunlitWall_downRad = urban.sunlitWall.DownwellingShortRad;
+  auto& shadedWall_downRad = urban.shadedWall.DownwellingShortRad;
+  auto& road_downRad = urban.compositeRoadSurface.DownwellingShortRad;
 
-  auto roof_snowAlb = urban.roof.SnowAlbedo;
-  auto impRoad_snowAlb = urban.imperviousRoad.SnowAlbedo;
-  auto perRoad_snowAlb = urban.perviousRoad.SnowAlbedo;
+  auto& roof_snowAlb = urban.roof.SnowAlbedo;
+  auto& impRoad_snowAlb = urban.imperviousRoad.SnowAlbedo;
+  auto& perRoad_snowAlb = urban.perviousRoad.SnowAlbedo;
 
-  auto roof_baseAlb = urban.urbanParams.albedo.Roof;
-  auto impRoad_baseAlb = urban.urbanParams.albedo.ImperviousRoad;
-  auto perRoad_baseAlb = urban.urbanParams.albedo.PerviousRoad;
-  auto sunlitWall_baseAlb = urban.urbanParams.albedo.SunlitWall;
-  auto shadedWall_baseAlb = urban.urbanParams.albedo.ShadedWall;
+  auto& roof_baseAlb = urban.urbanParams.albedo.Roof;
+  auto& impRoad_baseAlb = urban.urbanParams.albedo.ImperviousRoad;
+  auto& perRoad_baseAlb = urban.urbanParams.albedo.PerviousRoad;
+  auto& sunlitWall_baseAlb = urban.urbanParams.albedo.SunlitWall;
+  auto& shadedWall_baseAlb = urban.urbanParams.albedo.ShadedWall;
 
-  auto roof_albWithSnow = urban.roof.AlbedoWithSnowEffects;
-  auto impRoad_albWithSnow = urban.imperviousRoad.AlbedoWithSnowEffects;
-  auto perRoad_albWithSnow = urban.perviousRoad.AlbedoWithSnowEffects;
+  auto& roof_albWithSnow = urban.roof.AlbedoWithSnowEffects;
+  auto& impRoad_albWithSnow = urban.imperviousRoad.AlbedoWithSnowEffects;
+  auto& perRoad_albWithSnow = urban.perviousRoad.AlbedoWithSnowEffects;
 
   // Access absorbed and reflected shortwave radiation fields (to be updated)
-  auto absImpRoad = urban.imperviousRoad.AbsorbedShortRad;
-  auto absPerRoad = urban.perviousRoad.AbsorbedShortRad;
-  auto absSunlitWall = urban.sunlitWall.AbsorbedShortRad;
-  auto absShadedWall = urban.shadedWall.AbsorbedShortRad;
-  auto absRoof = urban.roof.AbsorbedShortRad;
+  auto& absImpRoad = urban.imperviousRoad.AbsorbedShortRad;
+  auto& absPerRoad = urban.perviousRoad.AbsorbedShortRad;
+  auto& absSunlitWall = urban.sunlitWall.AbsorbedShortRad;
+  auto& absShadedWall = urban.shadedWall.AbsorbedShortRad;
+  auto& absRoof = urban.roof.AbsorbedShortRad;
 
-  auto refImpRoad = urban.imperviousRoad.ReflectedShortRad;
-  auto refPerRoad = urban.perviousRoad.ReflectedShortRad;
-  auto refSunlitWall = urban.sunlitWall.ReflectedShortRad;
-  auto refShadedWall = urban.shadedWall.ReflectedShortRad;
-  auto refRoof = urban.roof.ReflectedShortRad;
+  auto& refImpRoad = urban.imperviousRoad.ReflectedShortRad;
+  auto& refPerRoad = urban.perviousRoad.ReflectedShortRad;
+  auto& refSunlitWall = urban.sunlitWall.ReflectedShortRad;
+  auto& refShadedWall = urban.shadedWall.ReflectedShortRad;
+  auto& refRoof = urban.roof.ReflectedShortRad;
 
   // Snow fraction (placeholder - will be computed from snow model later)
   constexpr Real frac_sno = 0.0;
