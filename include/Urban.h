@@ -253,6 +253,13 @@ URBAN_EXTERN void UrbanGetUpwardLongwaveShadedWall(UrbanType urban,
                                                    double *values, int length,
                                                    UrbanErrorCode *status);
 
+// Urban canyon air properties getter functions
+URBAN_EXTERN void UrbanGetCanyonAirTemperature(UrbanType urban, double *values,
+                                               int length,
+                                               UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetCanyonAirHumidity(UrbanType urban, double *values,
+                                            int length, UrbanErrorCode *status);
+
 #ifdef __cplusplus
 } // extern "C"
 #endif

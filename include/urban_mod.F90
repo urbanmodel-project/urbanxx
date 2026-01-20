@@ -572,6 +572,25 @@ module urban_mod
       integer(c_int), value :: length
       integer(c_int) :: status
     end subroutine UrbanGetUpwardLongwaveShadedWall_C
+
+    ! Urban canyon air properties getter functions
+    subroutine UrbanGetCanyonAirTemperature_C(urban, values, length, status) &
+      bind(C, name="UrbanGetCanyonAirTemperature")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetCanyonAirTemperature_C
+
+    subroutine UrbanGetCanyonAirHumidity_C(urban, values, length, status) &
+      bind(C, name="UrbanGetCanyonAirHumidity")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetCanyonAirHumidity_C
   end interface
 
   contains
@@ -1104,6 +1123,23 @@ module urban_mod
     integer(c_int), intent(out) :: status
     call UrbanGetUpwardLongwaveShadedWall_C(urban%ptr, values, length, status)
   end subroutine UrbanGetUpwardLongwaveShadedWall
+
+  ! Urban canyon air properties getter subroutines
+  subroutine UrbanGetCanyonAirTemperature(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetCanyonAirTemperature_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetCanyonAirTemperature
+
+  subroutine UrbanGetCanyonAirHumidity(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetCanyonAirHumidity_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetCanyonAirHumidity
 
   ! Error handling subroutine
   subroutine UrbanError(rank, line, status)

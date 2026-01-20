@@ -185,4 +185,21 @@ void UrbanGetUpwardLongwaveShadedWall(UrbanType urban, double *values,
   GetView1D(urban->shadedWall.UpwardLongRad, values, length, status);
 }
 
+// Urban canyon air properties getter functions
+void UrbanGetCanyonAirTemperature(UrbanType urban, double *values, int length,
+                                  UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  GetView1D(urban->urbanCanyon.Taf, values, length, status);
+}
+
+void UrbanGetCanyonAirHumidity(UrbanType urban, double *values, int length,
+                               UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  GetView1D(urban->urbanCanyon.Qaf, values, length, status);
+}
+
 } // extern "C"
