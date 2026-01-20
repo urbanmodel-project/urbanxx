@@ -103,4 +103,86 @@ void UrbanGetReflectedShortwaveShadedWall(UrbanType urban, double *values,
   GetView3D(urban->shadedWall.ReflectedShortRad, values, size, status);
 }
 
+// Net longwave radiation getter functions
+void UrbanGetNetLongwaveRoof(UrbanType urban, double *values, int length,
+                             UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  GetView1D(urban->roof.NetLongRad, values, length, status);
+}
+
+void UrbanGetNetLongwaveImperviousRoad(UrbanType urban, double *values,
+                                       int length, UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  GetView1D(urban->imperviousRoad.NetLongRad, values, length, status);
+}
+
+void UrbanGetNetLongwavePerviousRoad(UrbanType urban, double *values,
+                                     int length, UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  GetView1D(urban->perviousRoad.NetLongRad, values, length, status);
+}
+
+void UrbanGetNetLongwaveSunlitWall(UrbanType urban, double *values, int length,
+                                   UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  GetView1D(urban->sunlitWall.NetLongRad, values, length, status);
+}
+
+void UrbanGetNetLongwaveShadedWall(UrbanType urban, double *values, int length,
+                                   UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  GetView1D(urban->shadedWall.NetLongRad, values, length, status);
+}
+
+// Upward longwave radiation getter functions
+void UrbanGetUpwardLongwaveRoof(UrbanType urban, double *values, int length,
+                                UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  GetView1D(urban->roof.UpwardLongRad, values, length, status);
+}
+
+void UrbanGetUpwardLongwaveImperviousRoad(UrbanType urban, double *values,
+                                          int length, UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  GetView1D(urban->imperviousRoad.UpwardLongRad, values, length, status);
+}
+
+void UrbanGetUpwardLongwavePerviousRoad(UrbanType urban, double *values,
+                                        int length, UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  GetView1D(urban->perviousRoad.UpwardLongRad, values, length, status);
+}
+
+void UrbanGetUpwardLongwaveSunlitWall(UrbanType urban, double *values,
+                                      int length, UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  GetView1D(urban->sunlitWall.UpwardLongRad, values, length, status);
+}
+
+void UrbanGetUpwardLongwaveShadedWall(UrbanType urban, double *values,
+                                      int length, UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  GetView1D(urban->shadedWall.UpwardLongRad, values, length, status);
+}
+
 } // extern "C"

@@ -480,6 +480,98 @@ module urban_mod
       integer(c_int), dimension(3) :: size
       integer(c_int) :: status
     end subroutine UrbanGetReflectedShortwaveShadedWall_C
+
+    ! Net longwave radiation getter functions
+    subroutine UrbanGetNetLongwaveRoof_C(urban, values, length, status) &
+      bind(C, name="UrbanGetNetLongwaveRoof")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetNetLongwaveRoof_C
+
+    subroutine UrbanGetNetLongwaveImperviousRoad_C(urban, values, length, &
+      status) bind(C, name="UrbanGetNetLongwaveImperviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetNetLongwaveImperviousRoad_C
+
+    subroutine UrbanGetNetLongwavePerviousRoad_C(urban, values, length, status) &
+      bind(C, name="UrbanGetNetLongwavePerviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetNetLongwavePerviousRoad_C
+
+    subroutine UrbanGetNetLongwaveSunlitWall_C(urban, values, length, status) &
+      bind(C, name="UrbanGetNetLongwaveSunlitWall")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetNetLongwaveSunlitWall_C
+
+    subroutine UrbanGetNetLongwaveShadedWall_C(urban, values, length, status) &
+      bind(C, name="UrbanGetNetLongwaveShadedWall")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetNetLongwaveShadedWall_C
+
+    ! Upward longwave radiation getter functions
+    subroutine UrbanGetUpwardLongwaveRoof_C(urban, values, length, status) &
+      bind(C, name="UrbanGetUpwardLongwaveRoof")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetUpwardLongwaveRoof_C
+
+    subroutine UrbanGetUpwardLongwaveImperviousRoad_C(urban, values, length, &
+      status) bind(C, name="UrbanGetUpwardLongwaveImperviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetUpwardLongwaveImperviousRoad_C
+
+    subroutine UrbanGetUpwardLongwavePerviousRoad_C(urban, values, length, &
+      status) bind(C, name="UrbanGetUpwardLongwavePerviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetUpwardLongwavePerviousRoad_C
+
+    subroutine UrbanGetUpwardLongwaveSunlitWall_C(urban, values, length, &
+      status) bind(C, name="UrbanGetUpwardLongwaveSunlitWall")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetUpwardLongwaveSunlitWall_C
+
+    subroutine UrbanGetUpwardLongwaveShadedWall_C(urban, values, length, &
+      status) bind(C, name="UrbanGetUpwardLongwaveShadedWall")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetUpwardLongwaveShadedWall_C
   end interface
 
   contains
@@ -930,6 +1022,88 @@ module urban_mod
     integer(c_int), intent(out) :: status
     call UrbanGetReflectedShortwaveShadedWall_C(urban%ptr, values, size, status)
   end subroutine UrbanGetReflectedShortwaveShadedWall
+
+  ! Net longwave radiation getter subroutines
+  subroutine UrbanGetNetLongwaveRoof(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetNetLongwaveRoof_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetNetLongwaveRoof
+
+  subroutine UrbanGetNetLongwaveImperviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetNetLongwaveImperviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetNetLongwaveImperviousRoad
+
+  subroutine UrbanGetNetLongwavePerviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetNetLongwavePerviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetNetLongwavePerviousRoad
+
+  subroutine UrbanGetNetLongwaveSunlitWall(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetNetLongwaveSunlitWall_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetNetLongwaveSunlitWall
+
+  subroutine UrbanGetNetLongwaveShadedWall(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetNetLongwaveShadedWall_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetNetLongwaveShadedWall
+
+  ! Upward longwave radiation getter subroutines
+  subroutine UrbanGetUpwardLongwaveRoof(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetUpwardLongwaveRoof_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetUpwardLongwaveRoof
+
+  subroutine UrbanGetUpwardLongwaveImperviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetUpwardLongwaveImperviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetUpwardLongwaveImperviousRoad
+
+  subroutine UrbanGetUpwardLongwavePerviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetUpwardLongwavePerviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetUpwardLongwavePerviousRoad
+
+  subroutine UrbanGetUpwardLongwaveSunlitWall(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetUpwardLongwaveSunlitWall_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetUpwardLongwaveSunlitWall
+
+  subroutine UrbanGetUpwardLongwaveShadedWall(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetUpwardLongwaveShadedWall_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetUpwardLongwaveShadedWall
 
   ! Error handling subroutine
   subroutine UrbanError(rank, line, status)
