@@ -182,6 +182,43 @@ URBAN_EXTERN void UrbanSetAtmShortwaveDown(UrbanType urban,
                                            const int size[3],
                                            UrbanErrorCode *status);
 
+// Shortwave radiation getter functions - Absorbed
+URBAN_EXTERN void UrbanGetAbsorbedShortwaveRoof(UrbanType urban, double *values,
+                                                const int size[3],
+                                                UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetAbsorbedShortwaveImperviousRoad(
+    UrbanType urban, double *values, const int size[3], UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetAbsorbedShortwavePerviousRoad(UrbanType urban,
+                                                        double *values,
+                                                        const int size[3],
+                                                        UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetAbsorbedShortwaveSunlitWall(UrbanType urban,
+                                                      double *values,
+                                                      const int size[3],
+                                                      UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetAbsorbedShortwaveShadedWall(UrbanType urban,
+                                                      double *values,
+                                                      const int size[3],
+                                                      UrbanErrorCode *status);
+
+// Shortwave radiation getter functions - Reflected
+URBAN_EXTERN void UrbanGetReflectedShortwaveRoof(UrbanType urban,
+                                                 double *values,
+                                                 const int size[3],
+                                                 UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetReflectedShortwaveImperviousRoad(
+    UrbanType urban, double *values, const int size[3], UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetReflectedShortwavePerviousRoad(
+    UrbanType urban, double *values, const int size[3], UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetReflectedShortwaveSunlitWall(UrbanType urban,
+                                                       double *values,
+                                                       const int size[3],
+                                                       UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetReflectedShortwaveShadedWall(UrbanType urban,
+                                                       double *values,
+                                                       const int size[3],
+                                                       UrbanErrorCode *status);
+
 #ifdef __cplusplus
 } // extern "C"
 #endif
