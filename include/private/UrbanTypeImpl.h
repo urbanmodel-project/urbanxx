@@ -13,6 +13,7 @@ struct _p_UrbanType {
   int numLandunits;
   int numRadBands;
   int numRadTypes;
+  int numLevels;
 
   AtmosphereType atmosphereData;
   UrbanParamsType urbanParams;
@@ -26,7 +27,7 @@ struct _p_UrbanType {
 
   _p_UrbanType(int numLandunits_)
       : numLandunits(numLandunits_), numRadBands(NUM_RAD_BANDS),
-        numRadTypes(NUM_RAD_TYPES),
+        numRadTypes(NUM_RAD_TYPES), numLevels(NUM_VERTICAL_LEVELS),
         atmosphereData(numLandunits_, NUM_RAD_BANDS, NUM_RAD_TYPES),
         urbanParams(numLandunits_, NUM_RAD_BANDS, NUM_RAD_TYPES),
         urbanCanyon(numLandunits_),
