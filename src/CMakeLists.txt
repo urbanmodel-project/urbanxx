@@ -9,6 +9,7 @@ set(URBAN_SOURCES
     UrbanLongwaveRad.cpp
     UrbanShortwaveRad.cpp
     UrbanSurfaceFluxes.cpp
+    UrbanHeatDiffusion.cpp
     KokkosWrappers.cpp
 )
 
