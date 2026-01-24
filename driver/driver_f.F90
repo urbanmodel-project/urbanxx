@@ -184,8 +184,12 @@ contains
     integer(c_int) :: status, i
     real(c_double), allocatable, target :: minTemp(:)
     real(c_double), allocatable, target :: maxTemp(:)
+    real(c_double), allocatable, target :: wallThickness(:)
+    real(c_double), allocatable, target :: roofThickness(:)
     real(c_double), parameter :: MIN_TEMP = 285.0d0  ! K
     real(c_double), parameter :: MAX_TEMP = 310.0d0  ! K
+    real(c_double), parameter :: THICK_WALL = 0.286199986934662d0  ! m
+    real(c_double), parameter :: THICK_ROOF = 0.217099994421005d0  ! m
 
     allocate(minTemp(numLandunits))
     allocate(maxTemp(numLandunits))
@@ -210,6 +214,31 @@ contains
 
     deallocate(minTemp)
     deallocate(maxTemp)
+
+    ! Set building thickness parameters
+    allocate(wallThickness(numLandunits))
+    allocate(roofThickness(numLandunits))
+
+    do i = 1, numLandunits
+      wallThickness(i) = THICK_WALL
+      roofThickness(i) = THICK_ROOF
+    end do
+
+    call UrbanSetBuildingWallThickness(urban%ptr, c_loc(wallThickness), &
+      numLandunits, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+    call UrbanSetBuildingRoofThickness(urban%ptr, c_loc(roofThickness), &
+      numLandunits, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+
+    if (mpi_rank == 0) then
+      write(*,*) 'Set building thickness parameters:'
+      write(*,*) '  Wall thickness:', THICK_WALL, 'm'
+      write(*,*) '  Roof thickness:', THICK_ROOF, 'm'
+    end if
+
+    deallocate(wallThickness)
+    deallocate(roofThickness)
   end subroutine SetBuildingTemperature
 
   subroutine SetWtRoof(urban, numLandunits, mpi_rank)

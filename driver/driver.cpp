@@ -414,6 +414,30 @@ void SetBuildingTemperature(UrbanType urban, int numLandunits, int mpi_rank) {
     std::cout << "  Min temperature: " << MIN_TEMP << " K" << std::endl;
     std::cout << "  Max temperature: " << MAX_TEMP << " K" << std::endl;
   }
+
+  // Set building thickness parameters
+  const double THICK_WALL = 0.286199986934662;  // m
+  const double THICK_ROOF = 0.217099994421005;  // m
+
+  double *wallThickness = AllocateArray(numLandunits, "wallThickness");
+  double *roofThickness = AllocateArray(numLandunits, "roofThickness");
+
+  for (int i = 0; i < numLandunits; ++i) {
+    wallThickness[i] = THICK_WALL;
+    roofThickness[i] = THICK_ROOF;
+  }
+
+  UrbanCall(UrbanSetBuildingWallThickness(urban, wallThickness, numLandunits, &ierr), &ierr);
+  UrbanCall(UrbanSetBuildingRoofThickness(urban, roofThickness, numLandunits, &ierr), &ierr);
+
+  double *thicknessArrays[] = {wallThickness, roofThickness};
+  FreeArrays(thicknessArrays, 2);
+
+  if (mpi_rank == 0) {
+    std::cout << "Set building thickness parameters:" << std::endl;
+    std::cout << "  Wall thickness: " << THICK_WALL << " m" << std::endl;
+    std::cout << "  Roof thickness: " << THICK_ROOF << " m" << std::endl;
+  }
 }
 
 void SetUrbanParameters(UrbanType urban, int numLandunits, int mpi_rank) {

@@ -105,10 +105,14 @@ struct BuildingParameters {
       1DR8, MaxTemperature) // maximum allowable interior temperature (K)
   DECLARE_DEVICE_VIEW(
       1DR8, MinTemperature) // minimum allowable interior temperature (K)
+  DECLARE_DEVICE_VIEW(1DR8, WallThickness) // wall thickness (m)
+  DECLARE_DEVICE_VIEW(1DR8, RoofThickness) // roof thickness (m)
 
   BuildingParameters(int numLandunits) {
     ALLOCATE_DEVICE_VIEW(MaxTemperature, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(MinTemperature, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(WallThickness, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(RoofThickness, Array1DR8, numLandunits)
   }
 };
 

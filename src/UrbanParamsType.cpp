@@ -287,4 +287,20 @@ void UrbanSetBuildingMinTemperature(UrbanType urban, const double *values,
   SetView1D(urban->urbanParams.building.MinTemperature, values, length, status);
 }
 
+void UrbanSetBuildingWallThickness(UrbanType urban, const double *values,
+                                   int length, UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  SetView1D(urban->urbanParams.building.WallThickness, values, length, status);
+}
+
+void UrbanSetBuildingRoofThickness(UrbanType urban, const double *values,
+                                   int length, UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  SetView1D(urban->urbanParams.building.RoofThickness, values, length, status);
+}
+
 } // extern "C"
