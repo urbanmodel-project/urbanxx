@@ -267,4 +267,21 @@ void UrbanSetWindHgtCanyon(UrbanType urban, const double *values, int length,
   SetView1D(urban->urbanParams.heights.WindHgtCanyon, values, length, status);
 }
 
+// Building parameter setter functions
+void UrbanSetBuildingMaxTemperature(UrbanType urban, const double *values,
+                                    int length, UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  SetView1D(urban->urbanParams.building.MaxTemperature, values, length, status);
+}
+
+void UrbanSetBuildingMinTemperature(UrbanType urban, const double *values,
+                                    int length, UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  SetView1D(urban->urbanParams.building.MinTemperature, values, length, status);
+}
+
 } // extern "C"

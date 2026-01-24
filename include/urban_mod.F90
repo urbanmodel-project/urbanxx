@@ -268,6 +268,23 @@ module urban_mod
       integer(c_int) :: status
     end subroutine UrbanSetWindHgtCanyon_C
 
+    ! Building parameter setter functions
+    subroutine UrbanSetBuildingMaxTemperature(urban, values, length, status) bind(C, name="UrbanSetBuildingMaxTemperature")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetBuildingMaxTemperature
+
+    subroutine UrbanSetBuildingMinTemperature(urban, values, length, status) bind(C, name="UrbanSetBuildingMinTemperature")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetBuildingMinTemperature
+
     ! Initialization functions
     subroutine UrbanInitializeTemperature_C(urban, status) bind(C, name="UrbanInitializeTemperature")
       import :: c_ptr, c_int

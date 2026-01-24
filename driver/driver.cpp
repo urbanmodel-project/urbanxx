@@ -333,11 +333,39 @@ void SetAtmosphericForcing(UrbanType urban, int numLandunits, int mpi_rank) {
   }
 }
 
+void SetBuildingTemperature(UrbanType urban, int numLandunits, int mpi_rank) {
+  UrbanErrorCode ierr;
+
+  const double MIN_TEMP = 285.0;  // K
+  const double MAX_TEMP = 310.0;  // K
+
+  double *minTemp = AllocateArray(numLandunits, "minTemp");
+  double *maxTemp = AllocateArray(numLandunits, "maxTemp");
+
+  for (int i = 0; i < numLandunits; ++i) {
+    minTemp[i] = MIN_TEMP;
+    maxTemp[i] = MAX_TEMP;
+  }
+
+  UrbanCall(UrbanSetBuildingMinTemperature(urban, minTemp, numLandunits, &ierr), &ierr);
+  UrbanCall(UrbanSetBuildingMaxTemperature(urban, maxTemp, numLandunits, &ierr), &ierr);
+
+  double *tempArrays[] = {minTemp, maxTemp};
+  FreeArrays(tempArrays, 2);
+
+  if (mpi_rank == 0) {
+    std::cout << "Set building temperature limits:" << std::endl;
+    std::cout << "  Min temperature: " << MIN_TEMP << " K" << std::endl;
+    std::cout << "  Max temperature: " << MAX_TEMP << " K" << std::endl;
+  }
+}
+
 void SetUrbanParameters(UrbanType urban, int numLandunits, int mpi_rank) {
   SetCanyonHwr(urban, numLandunits, mpi_rank);
   SetFracPervRoadOfTotalRoad(urban, numLandunits, mpi_rank);
   SetWtRoof(urban, numLandunits, mpi_rank);
   SetHeightParameters(urban, numLandunits, mpi_rank);
+  SetBuildingTemperature(urban, numLandunits, mpi_rank);
   SetAlbedo(urban, numLandunits, mpi_rank);
   SetEmissivity(urban, numLandunits, mpi_rank);
   SetThermalConductivity(urban, numLandunits, mpi_rank);
