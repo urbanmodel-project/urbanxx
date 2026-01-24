@@ -170,52 +170,55 @@ void UrbanSetEmissivityRoof(UrbanType urban, const double *values, int length,
 
 // Thermal conductivity setter functions
 void UrbanSetThermalConductivityRoad(UrbanType urban, const double *values,
-                                     int length, UrbanErrorCode *status) {
-  if (!ValidateInputsWithData(urban, values, status))
+                                     const int size[2],
+                                     UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
     return;
 
-  SetView1D(urban->urbanParams.tk.Road, values, length, status);
+  SetView2D(urban->urbanParams.tk.Road, values, size, status);
 }
 
 void UrbanSetThermalConductivityWall(UrbanType urban, const double *values,
-                                     int length, UrbanErrorCode *status) {
-  if (!ValidateInputsWithData(urban, values, status))
+                                     const int size[2],
+                                     UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
     return;
 
-  SetView1D(urban->urbanParams.tk.Wall, values, length, status);
+  SetView2D(urban->urbanParams.tk.Wall, values, size, status);
 }
 
 void UrbanSetThermalConductivityRoof(UrbanType urban, const double *values,
-                                     int length, UrbanErrorCode *status) {
-  if (!ValidateInputsWithData(urban, values, status))
+                                     const int size[2],
+                                     UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
     return;
 
-  SetView1D(urban->urbanParams.tk.Roof, values, length, status);
+  SetView2D(urban->urbanParams.tk.Roof, values, size, status);
 }
 
 // Heat capacity setter functions
-void UrbanSetHeatCapacityRoad(UrbanType urban, const double *values, int length,
-                              UrbanErrorCode *status) {
-  if (!ValidateInputsWithData(urban, values, status))
+void UrbanSetHeatCapacityRoad(UrbanType urban, const double *values,
+                              const int size[2], UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
     return;
 
-  SetView1D(urban->urbanParams.cv.Road, values, length, status);
+  SetView2D(urban->urbanParams.cv.Road, values, size, status);
 }
 
-void UrbanSetHeatCapacityWall(UrbanType urban, const double *values, int length,
-                              UrbanErrorCode *status) {
-  if (!ValidateInputsWithData(urban, values, status))
+void UrbanSetHeatCapacityWall(UrbanType urban, const double *values,
+                              const int size[2], UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
     return;
 
-  SetView1D(urban->urbanParams.cv.Wall, values, length, status);
+  SetView2D(urban->urbanParams.cv.Wall, values, size, status);
 }
 
-void UrbanSetHeatCapacityRoof(UrbanType urban, const double *values, int length,
-                              UrbanErrorCode *status) {
-  if (!ValidateInputsWithData(urban, values, status))
+void UrbanSetHeatCapacityRoof(UrbanType urban, const double *values,
+                              const int size[2], UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
     return;
 
-  SetView1D(urban->urbanParams.cv.Roof, values, length, status);
+  SetView2D(urban->urbanParams.cv.Roof, values, size, status);
 }
 
 // Height parameter setter functions

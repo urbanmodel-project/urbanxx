@@ -200,19 +200,26 @@ void SetEmissivity(UrbanType urban, int numLandunits, int mpi_rank) {
 void SetThermalConductivity(UrbanType urban, int numLandunits, int mpi_rank) {
   UrbanErrorCode ierr;
 
-  double *tkRoad = AllocateArray(numLandunits, "tkRoad");
-  double *tkWall = AllocateArray(numLandunits, "tkWall");
-  double *tkRoof = AllocateArray(numLandunits, "tkRoof");
+  const int NUM_LEVELS = 15;
+  int size2D[2] = {numLandunits, NUM_LEVELS};
+  int totalSize = numLandunits * NUM_LEVELS;
+
+  double *tkRoad = AllocateArray(totalSize, "tkRoad");
+  double *tkWall = AllocateArray(totalSize, "tkWall");
+  double *tkRoof = AllocateArray(totalSize, "tkRoof");
 
   for (int i = 0; i < numLandunits; ++i) {
-    tkRoad[i] = 1.0;
-    tkWall[i] = 0.8;
-    tkRoof[i] = 0.9;
+    for (int k = 0; k < NUM_LEVELS; ++k) {
+      int idx = i * NUM_LEVELS + k;
+      tkRoad[idx] = 1.0;
+      tkWall[idx] = 0.8;
+      tkRoof[idx] = 0.9;
+    }
   }
 
-  UrbanCall(UrbanSetThermalConductivityRoad(urban, tkRoad, numLandunits, &ierr), &ierr);
-  UrbanCall(UrbanSetThermalConductivityWall(urban, tkWall, numLandunits, &ierr), &ierr);
-  UrbanCall(UrbanSetThermalConductivityRoof(urban, tkRoof, numLandunits, &ierr), &ierr);
+  UrbanCall(UrbanSetThermalConductivityRoad(urban, tkRoad, size2D, &ierr), &ierr);
+  UrbanCall(UrbanSetThermalConductivityWall(urban, tkWall, size2D, &ierr), &ierr);
+  UrbanCall(UrbanSetThermalConductivityRoof(urban, tkRoof, size2D, &ierr), &ierr);
 
   double *tkArrays[] = {tkRoad, tkWall, tkRoof};
   FreeArrays(tkArrays, 3);
@@ -225,19 +232,26 @@ void SetThermalConductivity(UrbanType urban, int numLandunits, int mpi_rank) {
 void SetHeatCapacity(UrbanType urban, int numLandunits, int mpi_rank) {
   UrbanErrorCode ierr;
 
-  double *cvRoad = AllocateArray(numLandunits, "cvRoad");
-  double *cvWall = AllocateArray(numLandunits, "cvWall");
-  double *cvRoof = AllocateArray(numLandunits, "cvRoof");
+  const int NUM_LEVELS = 15;
+  int size2D[2] = {numLandunits, NUM_LEVELS};
+  int totalSize = numLandunits * NUM_LEVELS;
+
+  double *cvRoad = AllocateArray(totalSize, "cvRoad");
+  double *cvWall = AllocateArray(totalSize, "cvWall");
+  double *cvRoof = AllocateArray(totalSize, "cvRoof");
 
   for (int i = 0; i < numLandunits; ++i) {
-    cvRoad[i] = 2.0e6;
-    cvWall[i] = 1.8e6;
-    cvRoof[i] = 1.9e6;
+    for (int k = 0; k < NUM_LEVELS; ++k) {
+      int idx = i * NUM_LEVELS + k;
+      cvRoad[idx] = 2.0e6;
+      cvWall[idx] = 1.8e6;
+      cvRoof[idx] = 1.9e6;
+    }
   }
 
-  UrbanCall(UrbanSetHeatCapacityRoad(urban, cvRoad, numLandunits, &ierr), &ierr);
-  UrbanCall(UrbanSetHeatCapacityWall(urban, cvWall, numLandunits, &ierr), &ierr);
-  UrbanCall(UrbanSetHeatCapacityRoof(urban, cvRoof, numLandunits, &ierr), &ierr);
+  UrbanCall(UrbanSetHeatCapacityRoad(urban, cvRoad, size2D, &ierr), &ierr);
+  UrbanCall(UrbanSetHeatCapacityWall(urban, cvWall, size2D, &ierr), &ierr);
+  UrbanCall(UrbanSetHeatCapacityRoof(urban, cvRoof, size2D, &ierr), &ierr);
 
   double *cvArrays[] = {cvRoad, cvWall, cvRoof};
   FreeArrays(cvArrays, 3);
