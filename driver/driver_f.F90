@@ -366,6 +366,29 @@ contains
     real(c_double), allocatable, target :: tkRoad(:)
     real(c_double), allocatable, target :: tkWall(:)
     real(c_double), allocatable, target :: tkRoof(:)
+    real(c_double), dimension(15) :: tkRoadLevels
+    real(c_double), dimension(15) :: tkWallLevels
+    real(c_double), dimension(15) :: tkRoofLevels
+
+    ! Thermal conductivity values for 15 levels
+    tkRoadLevels = (/ &
+      1.89999997615814d0, 1.66999995708466d0, 1.66999995708466d0, &
+      0.560000002384186d0, 0.560000002384186d0, 0.560000002384186d0, &
+      0.360000014305115d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0 /)
+    
+    tkWallLevels = (/ &
+      1.44716906547546d0, 1.06582415103912d0, 0.970157384872437d0, &
+      1.44716906547546d0, 1.06582415103912d0, 0.970157384872437d0, &
+      1.44716906547546d0, 1.06582415103912d0, 0.970157384872437d0, &
+      1.44716906547546d0, 1.06582415103912d0, 0.970157384872437d0, &
+      1.44716906547546d0, 1.06582415103912d0, 0.970157384872437d0 /)
+    
+    tkRoofLevels = (/ &
+      0.503093481063843d0, 0.094768725335598d0, 0.127733826637268d0, &
+      0.503093481063843d0, 0.094768725335598d0, 0.127733826637268d0, &
+      0.503093481063843d0, 0.094768725335598d0, 0.127733826637268d0, &
+      0.503093481063843d0, 0.094768725335598d0, 0.127733826637268d0, &
+      0.503093481063843d0, 0.094768725335598d0, 0.127733826637268d0 /)
 
     totalSize = numLandunits * NUM_LEVELS
     size2D(1) = numLandunits
@@ -377,9 +400,9 @@ contains
 
     do i = 1, numLandunits
       do k = 1, NUM_LEVELS
-        tkRoad((i-1) * NUM_LEVELS + k) = 1.0d0
-        tkWall((i-1) * NUM_LEVELS + k) = 0.8d0
-        tkRoof((i-1) * NUM_LEVELS + k) = 0.9d0
+        tkRoad((i-1) * NUM_LEVELS + k) = tkRoadLevels(k)
+        tkWall((i-1) * NUM_LEVELS + k) = tkWallLevels(k)
+        tkRoof((i-1) * NUM_LEVELS + k) = tkRoofLevels(k)
       end do
     end do
 
@@ -413,6 +436,29 @@ contains
     real(c_double), allocatable, target :: cvRoad(:)
     real(c_double), allocatable, target :: cvWall(:)
     real(c_double), allocatable, target :: cvRoof(:)
+    real(c_double), dimension(15) :: cvRoadLevels
+    real(c_double), dimension(15) :: cvWallLevels
+    real(c_double), dimension(15) :: cvRoofLevels
+
+    ! Heat capacity values for 15 levels
+    cvRoadLevels = (/ &
+      2100000.0d0, 2060470.625d0, 2060470.625d0, &
+      1773000.0d0, 1712294.75d0, 1712294.75d0, &
+      1545600.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0 /)
+    
+    cvWallLevels = (/ &
+      1079394.75d0, 957632.8125d0, 899827.1875d0, &
+      1079394.75d0, 957632.8125d0, 899827.1875d0, &
+      1079394.75d0, 957632.8125d0, 899827.1875d0, &
+      1079394.75d0, 957632.8125d0, 899827.1875d0, &
+      1079394.75d0, 957632.8125d0, 899827.1875d0 /)
+    
+    cvRoofLevels = (/ &
+      570998.0d0, 646213.375d0, 862451.375d0, &
+      570998.0d0, 646213.375d0, 862451.375d0, &
+      570998.0d0, 646213.375d0, 862451.375d0, &
+      570998.0d0, 646213.375d0, 862451.375d0, &
+      570998.0d0, 646213.375d0, 862451.375d0 /)
 
     totalSize = numLandunits * NUM_LEVELS
     size2D(1) = numLandunits
@@ -424,9 +470,9 @@ contains
 
     do i = 1, numLandunits
       do k = 1, NUM_LEVELS
-        cvRoad((i-1) * NUM_LEVELS + k) = 2.0d6
-        cvWall((i-1) * NUM_LEVELS + k) = 1.8d6
-        cvRoof((i-1) * NUM_LEVELS + k) = 1.9d6
+        cvRoad((i-1) * NUM_LEVELS + k) = cvRoadLevels(k)
+        cvWall((i-1) * NUM_LEVELS + k) = cvWallLevels(k)
+        cvRoof((i-1) * NUM_LEVELS + k) = cvRoofLevels(k)
       end do
     end do
 
