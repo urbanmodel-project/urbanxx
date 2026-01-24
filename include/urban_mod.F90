@@ -244,6 +244,22 @@ module urban_mod
       integer(c_int) :: status
     end subroutine UrbanSetBuildingMinTemperature
 
+    subroutine UrbanSetBuildingWallThickness(urban, values, length, status) bind(C, name="UrbanSetBuildingWallThickness")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetBuildingWallThickness
+
+    subroutine UrbanSetBuildingRoofThickness(urban, values, length, status) bind(C, name="UrbanSetBuildingRoofThickness")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetBuildingRoofThickness
+
     ! Initialization functions
     subroutine UrbanInitializeTemperature(urban, status) bind(C, name="UrbanInitializeTemperature")
       import :: c_ptr, c_int
