@@ -24,6 +24,7 @@ struct _p_UrbanType {
   CompositeRoadSurfaceData compositeRoadSurface;
   WallDataType sunlitWall;
   WallDataType shadedWall;
+  BuildingDataType building;
 
   _p_UrbanType(int numLandunits_)
       : numLandunits(numLandunits_), numRadBands(NUM_RAD_BANDS),
@@ -36,7 +37,8 @@ struct _p_UrbanType {
         perviousRoad(numLandunits_, NUM_RAD_BANDS, NUM_RAD_TYPES),
         compositeRoadSurface(numLandunits_, NUM_RAD_BANDS, NUM_RAD_TYPES),
         sunlitWall(numLandunits_, NUM_RAD_BANDS, NUM_RAD_TYPES),
-        shadedWall(numLandunits_, NUM_RAD_BANDS, NUM_RAD_TYPES) {}
+        shadedWall(numLandunits_, NUM_RAD_BANDS, NUM_RAD_TYPES),
+        building(numLandunits_) {}
 };
 
 } // namespace URBANXX
