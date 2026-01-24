@@ -129,52 +129,52 @@ module urban_mod
     end subroutine UrbanSetEmissivityRoof
 
     ! Thermal conductivity setter functions
-    subroutine UrbanSetThermalConductivityRoad(urban, values, length, status) bind(C, name="UrbanSetThermalConductivityRoad")
+    subroutine UrbanSetThermalConductivityRoad(urban, values, size, status) bind(C, name="UrbanSetThermalConductivityRoad")
       import :: c_ptr, c_int
       type(c_ptr), value :: urban
       type(c_ptr), value :: values
-      integer(c_int), value :: length
+      integer(c_int), dimension(2) :: size
       integer(c_int) :: status
     end subroutine UrbanSetThermalConductivityRoad
 
-    subroutine UrbanSetThermalConductivityWall(urban, values, length, status) bind(C, name="UrbanSetThermalConductivityWall")
+    subroutine UrbanSetThermalConductivityWall(urban, values, size, status) bind(C, name="UrbanSetThermalConductivityWall")
       import :: c_ptr, c_int
       type(c_ptr), value :: urban
       type(c_ptr), value :: values
-      integer(c_int), value :: length
+      integer(c_int), dimension(2) :: size
       integer(c_int) :: status
     end subroutine UrbanSetThermalConductivityWall
 
-    subroutine UrbanSetThermalConductivityRoof(urban, values, length, status) bind(C, name="UrbanSetThermalConductivityRoof")
+    subroutine UrbanSetThermalConductivityRoof(urban, values, size, status) bind(C, name="UrbanSetThermalConductivityRoof")
       import :: c_ptr, c_int
       type(c_ptr), value :: urban
       type(c_ptr), value :: values
-      integer(c_int), value :: length
+      integer(c_int), dimension(2) :: size
       integer(c_int) :: status
     end subroutine UrbanSetThermalConductivityRoof
 
     ! Heat capacity setter functions
-    subroutine UrbanSetHeatCapacityRoad(urban, values, length, status) bind(C, name="UrbanSetHeatCapacityRoad")
+    subroutine UrbanSetHeatCapacityRoad(urban, values, size, status) bind(C, name="UrbanSetHeatCapacityRoad")
       import :: c_ptr, c_int
       type(c_ptr), value :: urban
       type(c_ptr), value :: values
-      integer(c_int), value :: length
+      integer(c_int), dimension(2) :: size
       integer(c_int) :: status
     end subroutine UrbanSetHeatCapacityRoad
 
-    subroutine UrbanSetHeatCapacityWall(urban, values, length, status) bind(C, name="UrbanSetHeatCapacityWall")
+    subroutine UrbanSetHeatCapacityWall(urban, values, size, status) bind(C, name="UrbanSetHeatCapacityWall")
       import :: c_ptr, c_int
       type(c_ptr), value :: urban
       type(c_ptr), value :: values
-      integer(c_int), value :: length
+      integer(c_int), dimension(2) :: size
       integer(c_int) :: status
     end subroutine UrbanSetHeatCapacityWall
 
-    subroutine UrbanSetHeatCapacityRoof(urban, values, length, status) bind(C, name="UrbanSetHeatCapacityRoof")
+    subroutine UrbanSetHeatCapacityRoof(urban, values, size, status) bind(C, name="UrbanSetHeatCapacityRoof")
       import :: c_ptr, c_int
       type(c_ptr), value :: urban
       type(c_ptr), value :: values
-      integer(c_int), value :: length
+      integer(c_int), dimension(2) :: size
       integer(c_int) :: status
     end subroutine UrbanSetHeatCapacityRoof
 

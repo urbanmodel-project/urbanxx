@@ -359,29 +359,38 @@ contains
     type(UrbanType), intent(in) :: urban
     integer(c_int), intent(in) :: numLandunits
     integer, intent(in) :: mpi_rank
-    integer(c_int) :: status, i
+    integer(c_int) :: status, i, k
+    integer(c_int), parameter :: NUM_LEVELS = 15
+    integer(c_int) :: totalSize
+    integer(c_int), dimension(2) :: size2D
     real(c_double), allocatable, target :: tkRoad(:)
     real(c_double), allocatable, target :: tkWall(:)
     real(c_double), allocatable, target :: tkRoof(:)
 
-    allocate(tkRoad(numLandunits))
-    allocate(tkWall(numLandunits))
-    allocate(tkRoof(numLandunits))
+    totalSize = numLandunits * NUM_LEVELS
+    size2D(1) = numLandunits
+    size2D(2) = NUM_LEVELS
+
+    allocate(tkRoad(totalSize))
+    allocate(tkWall(totalSize))
+    allocate(tkRoof(totalSize))
 
     do i = 1, numLandunits
-      tkRoad(i) = 1.0d0
-      tkWall(i) = 0.8d0
-      tkRoof(i) = 0.9d0
+      do k = 1, NUM_LEVELS
+        tkRoad((i-1) * NUM_LEVELS + k) = 1.0d0
+        tkWall((i-1) * NUM_LEVELS + k) = 0.8d0
+        tkRoof((i-1) * NUM_LEVELS + k) = 0.9d0
+      end do
     end do
 
     call UrbanSetThermalConductivityRoad(urban%ptr, &
-      c_loc(tkRoad), numLandunits, status)
+      c_loc(tkRoad), size2D, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
     call UrbanSetThermalConductivityWall(urban%ptr, &
-      c_loc(tkWall), numLandunits, status)
+      c_loc(tkWall), size2D, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
     call UrbanSetThermalConductivityRoof(urban%ptr, &
-      c_loc(tkRoof), numLandunits, status)
+      c_loc(tkRoof), size2D, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
 
     if (mpi_rank == 0) then
@@ -397,29 +406,38 @@ contains
     type(UrbanType), intent(in) :: urban
     integer(c_int), intent(in) :: numLandunits
     integer, intent(in) :: mpi_rank
-    integer(c_int) :: status, i
+    integer(c_int) :: status, i, k
+    integer(c_int), parameter :: NUM_LEVELS = 15
+    integer(c_int) :: totalSize
+    integer(c_int), dimension(2) :: size2D
     real(c_double), allocatable, target :: cvRoad(:)
     real(c_double), allocatable, target :: cvWall(:)
     real(c_double), allocatable, target :: cvRoof(:)
 
-    allocate(cvRoad(numLandunits))
-    allocate(cvWall(numLandunits))
-    allocate(cvRoof(numLandunits))
+    totalSize = numLandunits * NUM_LEVELS
+    size2D(1) = numLandunits
+    size2D(2) = NUM_LEVELS
+
+    allocate(cvRoad(totalSize))
+    allocate(cvWall(totalSize))
+    allocate(cvRoof(totalSize))
 
     do i = 1, numLandunits
-      cvRoad(i) = 2.0d6
-      cvWall(i) = 1.8d6
-      cvRoof(i) = 1.9d6
+      do k = 1, NUM_LEVELS
+        cvRoad((i-1) * NUM_LEVELS + k) = 2.0d6
+        cvWall((i-1) * NUM_LEVELS + k) = 1.8d6
+        cvRoof((i-1) * NUM_LEVELS + k) = 1.9d6
+      end do
     end do
 
     call UrbanSetHeatCapacityRoad(urban%ptr, &
-      c_loc(cvRoad), numLandunits, status)
+      c_loc(cvRoad), size2D, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
     call UrbanSetHeatCapacityWall(urban%ptr, &
-      c_loc(cvWall), numLandunits, status)
+      c_loc(cvWall), size2D, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
     call UrbanSetHeatCapacityRoof(urban%ptr, &
-      c_loc(cvRoof), numLandunits, status)
+      c_loc(cvRoof), size2D, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
 
     if (mpi_rank == 0) then

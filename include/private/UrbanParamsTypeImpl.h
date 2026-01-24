@@ -47,14 +47,17 @@ struct Emissivity {
 };
 
 struct CommonSurfaceProperties {
-  DECLARE_DEVICE_VIEW(1DR8, Road) // property value for road material
-  DECLARE_DEVICE_VIEW(1DR8, Wall) // property value for wall material
-  DECLARE_DEVICE_VIEW(1DR8, Roof) // property value for roof material
+  DECLARE_DEVICE_VIEW(
+      2DR8, Road) // property value for road material (landunit, level)
+  DECLARE_DEVICE_VIEW(
+      2DR8, Wall) // property value for wall material (landunit, level)
+  DECLARE_DEVICE_VIEW(
+      2DR8, Roof) // property value for roof material (landunit, level)
 
-  CommonSurfaceProperties(int numLandunits) {
-    ALLOCATE_DEVICE_VIEW(Road, Array1DR8, numLandunits)
-    ALLOCATE_DEVICE_VIEW(Wall, Array1DR8, numLandunits)
-    ALLOCATE_DEVICE_VIEW(Roof, Array1DR8, numLandunits)
+  CommonSurfaceProperties(int numLandunits, int numLevels) {
+    ALLOCATE_DEVICE_VIEW(Road, Array2DR8, numLandunits, numLevels)
+    ALLOCATE_DEVICE_VIEW(Wall, Array2DR8, numLandunits, numLevels)
+    ALLOCATE_DEVICE_VIEW(Roof, Array2DR8, numLandunits, numLevels)
   }
 };
 
@@ -125,8 +128,10 @@ struct UrbanParamsType {
   HeightParameters heights;   // height parameters for surface flux calculations
   BuildingParameters building; // building parameters
 
-  UrbanParamsType(int numLandunits, int numRadBands, int numRadTypes)
-      : viewFactor(numLandunits), tk(numLandunits), cv(numLandunits),
+  UrbanParamsType(int numLandunits, int numRadBands, int numRadTypes,
+                  int numLevels)
+      : viewFactor(numLandunits), tk(numLandunits, numLevels),
+        cv(numLandunits, numLevels),
         albedo(numLandunits, numRadBands, numRadTypes),
         emissivity(numLandunits), heights(numLandunits),
         building(numLandunits) {

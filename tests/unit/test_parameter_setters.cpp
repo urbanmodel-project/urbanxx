@@ -103,31 +103,43 @@ TEST_F(ParameterSetterTest, SetEmissivity_ValidData) {
 
 // Test: Thermal conductivity setters
 TEST_F(ParameterSetterTest, SetThermalConductivity_ValidData) {
-  double values[10] = {0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4};
+  const int numLevels = 15;
+  const int totalSize = numLandunits * numLevels;
+  double values[150];
+  for (int i = 0; i < totalSize; ++i) {
+    values[i] = 0.5 + (i % numLevels) * 0.1;
+  }
+  const int size[2] = {numLandunits, numLevels};
   UrbanErrorCode status;
 
-  UrbanSetThermalConductivityRoad(urban, values, numLandunits, &status);
+  UrbanSetThermalConductivityRoad(urban, values, size, &status);
   EXPECT_EQ(status, URBAN_SUCCESS) << "UrbanSetThermalConductivityRoad should succeed";
 
-  UrbanSetThermalConductivityWall(urban, values, numLandunits, &status);
+  UrbanSetThermalConductivityWall(urban, values, size, &status);
   EXPECT_EQ(status, URBAN_SUCCESS) << "UrbanSetThermalConductivityWall should succeed";
 
-  UrbanSetThermalConductivityRoof(urban, values, numLandunits, &status);
+  UrbanSetThermalConductivityRoof(urban, values, size, &status);
   EXPECT_EQ(status, URBAN_SUCCESS) << "UrbanSetThermalConductivityRoof should succeed";
 }
 
 // Test: Heat capacity setters
 TEST_F(ParameterSetterTest, SetHeatCapacity_ValidData) {
-  double values[10] = {1000.0, 1100.0, 1200.0, 1300.0, 1400.0, 1500.0, 1600.0, 1700.0, 1800.0, 1900.0};
+  const int numLevels = 15;
+  const int totalSize = numLandunits * numLevels;
+  double values[150];
+  for (int i = 0; i < totalSize; ++i) {
+    values[i] = 1000.0 + (i % numLevels) * 100.0;
+  }
+  const int size[2] = {numLandunits, numLevels};
   UrbanErrorCode status;
 
-  UrbanSetHeatCapacityRoad(urban, values, numLandunits, &status);
+  UrbanSetHeatCapacityRoad(urban, values, size, &status);
   EXPECT_EQ(status, URBAN_SUCCESS) << "UrbanSetHeatCapacityRoad should succeed";
 
-  UrbanSetHeatCapacityWall(urban, values, numLandunits, &status);
+  UrbanSetHeatCapacityWall(urban, values, size, &status);
   EXPECT_EQ(status, URBAN_SUCCESS) << "UrbanSetHeatCapacityWall should succeed";
 
-  UrbanSetHeatCapacityRoof(urban, values, numLandunits, &status);
+  UrbanSetHeatCapacityRoof(urban, values, size, &status);
   EXPECT_EQ(status, URBAN_SUCCESS) << "UrbanSetHeatCapacityRoof should succeed";
 }
 

@@ -81,26 +81,29 @@ URBAN_EXTERN void UrbanSetEmissivityRoof(UrbanType urban, const double *values,
 // Thermal conductivity setter functions
 URBAN_EXTERN void UrbanSetThermalConductivityRoad(UrbanType urban,
                                                   const double *values,
-                                                  int length,
+                                                  const int size[2],
                                                   UrbanErrorCode *status);
 URBAN_EXTERN void UrbanSetThermalConductivityWall(UrbanType urban,
                                                   const double *values,
-                                                  int length,
+                                                  const int size[2],
                                                   UrbanErrorCode *status);
 URBAN_EXTERN void UrbanSetThermalConductivityRoof(UrbanType urban,
                                                   const double *values,
-                                                  int length,
+                                                  const int size[2],
                                                   UrbanErrorCode *status);
 
 // Heat capacity setter functions
 URBAN_EXTERN void UrbanSetHeatCapacityRoad(UrbanType urban,
-                                           const double *values, int length,
+                                           const double *values,
+                                           const int size[2],
                                            UrbanErrorCode *status);
 URBAN_EXTERN void UrbanSetHeatCapacityWall(UrbanType urban,
-                                           const double *values, int length,
+                                           const double *values,
+                                           const int size[2],
                                            UrbanErrorCode *status);
 URBAN_EXTERN void UrbanSetHeatCapacityRoof(UrbanType urban,
-                                           const double *values, int length,
+                                           const double *values,
+                                           const int size[2],
                                            UrbanErrorCode *status);
 
 // Height parameter setter functions

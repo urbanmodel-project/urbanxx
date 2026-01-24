@@ -43,20 +43,28 @@ protected:
     UrbanSetEmissivityRoof(urban, emissivity, numLandunits, &status);
     ASSERT_EQ(status, URBAN_SUCCESS);
 
-    double thermal_cond[5] = {1.0, 1.0, 1.0, 1.0, 1.0};
-    UrbanSetThermalConductivityRoad(urban, thermal_cond, numLandunits, &status);
+    const int numLevels = 15;
+    const int totalSize = numLandunits * numLevels;
+    double thermal_cond[75];  // 5 * 15
+    double heat_cap[75];      // 5 * 15
+    for (int i = 0; i < totalSize; ++i) {
+      thermal_cond[i] = 1.0;
+      heat_cap[i] = 1500.0;
+    }
+    const int size2D[2] = {numLandunits, numLevels};
+    
+    UrbanSetThermalConductivityRoad(urban, thermal_cond, size2D, &status);
     ASSERT_EQ(status, URBAN_SUCCESS);
-    UrbanSetThermalConductivityWall(urban, thermal_cond, numLandunits, &status);
+    UrbanSetThermalConductivityWall(urban, thermal_cond, size2D, &status);
     ASSERT_EQ(status, URBAN_SUCCESS);
-    UrbanSetThermalConductivityRoof(urban, thermal_cond, numLandunits, &status);
+    UrbanSetThermalConductivityRoof(urban, thermal_cond, size2D, &status);
     ASSERT_EQ(status, URBAN_SUCCESS);
 
-    double heat_cap[5] = {1500.0, 1500.0, 1500.0, 1500.0, 1500.0};
-    UrbanSetHeatCapacityRoad(urban, heat_cap, numLandunits, &status);
+    UrbanSetHeatCapacityRoad(urban, heat_cap, size2D, &status);
     ASSERT_EQ(status, URBAN_SUCCESS);
-    UrbanSetHeatCapacityWall(urban, heat_cap, numLandunits, &status);
+    UrbanSetHeatCapacityWall(urban, heat_cap, size2D, &status);
     ASSERT_EQ(status, URBAN_SUCCESS);
-    UrbanSetHeatCapacityRoof(urban, heat_cap, numLandunits, &status);
+    UrbanSetHeatCapacityRoof(urban, heat_cap, size2D, &status);
     ASSERT_EQ(status, URBAN_SUCCESS);
 
     // Set height parameters
@@ -75,19 +83,19 @@ protected:
     ASSERT_EQ(status, URBAN_SUCCESS);
 
     // Set albedos
-    const int size[3] = {numLandunits, 2, 2}; // landunits x bands x rad_types
+    const int size3D[3] = {numLandunits, 2, 2}; // landunits x bands x rad_types
     double albedo[20];
     for (int i = 0; i < 20; ++i) albedo[i] = 0.20;
     
-    UrbanSetAlbedoPerviousRoad(urban, albedo, size, &status);
+    UrbanSetAlbedoPerviousRoad(urban, albedo, size3D, &status);
     ASSERT_EQ(status, URBAN_SUCCESS);
-    UrbanSetAlbedoImperviousRoad(urban, albedo, size, &status);
+    UrbanSetAlbedoImperviousRoad(urban, albedo, size3D, &status);
     ASSERT_EQ(status, URBAN_SUCCESS);
-    UrbanSetAlbedoSunlitWall(urban, albedo, size, &status);
+    UrbanSetAlbedoSunlitWall(urban, albedo, size3D, &status);
     ASSERT_EQ(status, URBAN_SUCCESS);
-    UrbanSetAlbedoShadedWall(urban, albedo, size, &status);
+    UrbanSetAlbedoShadedWall(urban, albedo, size3D, &status);
     ASSERT_EQ(status, URBAN_SUCCESS);
-    UrbanSetAlbedoRoof(urban, albedo, size, &status);
+    UrbanSetAlbedoRoof(urban, albedo, size3D, &status);
     ASSERT_EQ(status, URBAN_SUCCESS);
 
     // Set atmospheric forcing
@@ -115,7 +123,7 @@ protected:
 
     double shortwave[20];
     for (int i = 0; i < 20; ++i) shortwave[i] = 500.0;
-    UrbanSetAtmShortwaveDown(urban, shortwave, size, &status);
+    UrbanSetAtmShortwaveDown(urban, shortwave, size3D, &status);
     ASSERT_EQ(status, URBAN_SUCCESS);
 
     double frac_perv[5] = {0.2, 0.2, 0.2, 0.2, 0.2};
