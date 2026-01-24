@@ -97,6 +97,18 @@ struct HeightParameters {
   }
 };
 
+struct BuildingParameters {
+  DECLARE_DEVICE_VIEW(
+      1DR8, MaxTemperature) // maximum allowable interior temperature (K)
+  DECLARE_DEVICE_VIEW(
+      1DR8, MinTemperature) // minimum allowable interior temperature (K)
+
+  BuildingParameters(int numLandunits) {
+    ALLOCATE_DEVICE_VIEW(MaxTemperature, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(MinTemperature, Array1DR8, numLandunits)
+  }
+};
+
 struct UrbanParamsType {
   DECLARE_DEVICE_VIEW(1DR8, CanyonHwr) // canyon height-to-width ratio (-)
   DECLARE_DEVICE_VIEW(1DR8,
@@ -111,11 +123,13 @@ struct UrbanParamsType {
   Albedo albedo;              // albedo for various urban surfaces
   Emissivity emissivity;      // emissivity for various urban surfaces
   HeightParameters heights;   // height parameters for surface flux calculations
+  BuildingParameters building; // building parameters
 
   UrbanParamsType(int numLandunits, int numRadBands, int numRadTypes)
       : viewFactor(numLandunits), tk(numLandunits), cv(numLandunits),
         albedo(numLandunits, numRadBands, numRadTypes),
-        emissivity(numLandunits), heights(numLandunits) {
+        emissivity(numLandunits), heights(numLandunits),
+        building(numLandunits) {
     ALLOCATE_DEVICE_VIEW(CanyonHwr, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(FracPervRoadOfTotalRoad, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(WtRoof, Array1DR8, numLandunits)
