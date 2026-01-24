@@ -208,12 +208,33 @@ void SetThermalConductivity(UrbanType urban, int numLandunits, int mpi_rank) {
   double *tkWall = AllocateArray(totalSize, "tkWall");
   double *tkRoof = AllocateArray(totalSize, "tkRoof");
 
+  // Thermal conductivity values for 15 levels
+  double tkRoadLevels[15] = {
+    1.89999997615814, 1.66999995708466, 1.66999995708466,
+    0.560000002384186, 0.560000002384186, 0.560000002384186,
+    0.360000014305115, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+  };
+  double tkWallLevels[15] = {
+    1.44716906547546, 1.06582415103912, 0.970157384872437,
+    1.44716906547546, 1.06582415103912, 0.970157384872437,
+    1.44716906547546, 1.06582415103912, 0.970157384872437,
+    1.44716906547546, 1.06582415103912, 0.970157384872437,
+    1.44716906547546, 1.06582415103912, 0.970157384872437
+  };
+  double tkRoofLevels[15] = {
+    0.503093481063843, 0.094768725335598, 0.127733826637268,
+    0.503093481063843, 0.094768725335598, 0.127733826637268,
+    0.503093481063843, 0.094768725335598, 0.127733826637268,
+    0.503093481063843, 0.094768725335598, 0.127733826637268,
+    0.503093481063843, 0.094768725335598, 0.127733826637268
+  };
+
   for (int i = 0; i < numLandunits; ++i) {
     for (int k = 0; k < NUM_LEVELS; ++k) {
       int idx = i * NUM_LEVELS + k;
-      tkRoad[idx] = 1.0;
-      tkWall[idx] = 0.8;
-      tkRoof[idx] = 0.9;
+      tkRoad[idx] = tkRoadLevels[k];
+      tkWall[idx] = tkWallLevels[k];
+      tkRoof[idx] = tkRoofLevels[k];
     }
   }
 
@@ -240,12 +261,33 @@ void SetHeatCapacity(UrbanType urban, int numLandunits, int mpi_rank) {
   double *cvWall = AllocateArray(totalSize, "cvWall");
   double *cvRoof = AllocateArray(totalSize, "cvRoof");
 
+  // Heat capacity values for 15 levels
+  double cvRoadLevels[15] = {
+    2100000.0, 2060470.625, 2060470.625,
+    1773000.0, 1712294.75, 1712294.75,
+    1545600.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+  };
+  double cvWallLevels[15] = {
+    1079394.75, 957632.8125, 899827.1875,
+    1079394.75, 957632.8125, 899827.1875,
+    1079394.75, 957632.8125, 899827.1875,
+    1079394.75, 957632.8125, 899827.1875,
+    1079394.75, 957632.8125, 899827.1875
+  };
+  double cvRoofLevels[15] = {
+    570998.0, 646213.375, 862451.375,
+    570998.0, 646213.375, 862451.375,
+    570998.0, 646213.375, 862451.375,
+    570998.0, 646213.375, 862451.375,
+    570998.0, 646213.375, 862451.375
+  };
+
   for (int i = 0; i < numLandunits; ++i) {
     for (int k = 0; k < NUM_LEVELS; ++k) {
       int idx = i * NUM_LEVELS + k;
-      cvRoad[idx] = 2.0e6;
-      cvWall[idx] = 1.8e6;
-      cvRoof[idx] = 1.9e6;
+      cvRoad[idx] = cvRoadLevels[k];
+      cvWall[idx] = cvWallLevels[k];
+      cvRoof[idx] = cvRoofLevels[k];
     }
   }
 
