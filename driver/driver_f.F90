@@ -177,6 +177,41 @@ contains
     deallocate(windHgtCanyon)
   end subroutine SetHeightParameters
 
+  subroutine SetBuildingTemperature(urban, numLandunits, mpi_rank)
+    type(UrbanType), intent(in) :: urban
+    integer(c_int), intent(in) :: numLandunits
+    integer, intent(in) :: mpi_rank
+    integer(c_int) :: status, i
+    real(c_double), allocatable, target :: minTemp(:)
+    real(c_double), allocatable, target :: maxTemp(:)
+    real(c_double), parameter :: MIN_TEMP = 285.0d0  ! K
+    real(c_double), parameter :: MAX_TEMP = 310.0d0  ! K
+
+    allocate(minTemp(numLandunits))
+    allocate(maxTemp(numLandunits))
+
+    do i = 1, numLandunits
+      minTemp(i) = MIN_TEMP
+      maxTemp(i) = MAX_TEMP
+    end do
+
+    call UrbanSetBuildingMinTemperature(urban%ptr, c_loc(minTemp), &
+      numLandunits, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+    call UrbanSetBuildingMaxTemperature(urban%ptr, c_loc(maxTemp), &
+      numLandunits, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+
+    if (mpi_rank == 0) then
+      write(*,*) 'Set building temperature limits:'
+      write(*,*) '  Min temperature:', MIN_TEMP, 'K'
+      write(*,*) '  Max temperature:', MAX_TEMP, 'K'
+    end if
+
+    deallocate(minTemp)
+    deallocate(maxTemp)
+  end subroutine SetBuildingTemperature
+
   subroutine SetWtRoof(urban, numLandunits, mpi_rank)
     type(UrbanType), intent(in) :: urban
     integer(c_int), intent(in) :: numLandunits
@@ -525,6 +560,7 @@ contains
     call SetFracPervRoadOfTotalRoad(urban, numLandunits, mpi_rank)
     call SetWtRoof(urban, numLandunits, mpi_rank)
     call SetHeightParameters(urban, numLandunits, mpi_rank)
+    call SetBuildingTemperature(urban, numLandunits, mpi_rank)
     call SetAlbedo(urban, numLandunits, mpi_rank)
     call SetEmissivity(urban, numLandunits, mpi_rank)
     call SetThermalConductivity(urban, numLandunits, mpi_rank)
