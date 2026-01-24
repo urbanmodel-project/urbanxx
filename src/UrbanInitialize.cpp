@@ -21,11 +21,11 @@ void UrbanInitializeTemperature(UrbanType urban, UrbanErrorCode *status) {
 
   try {
     // Get references to temperature views
-    auto &roofTemp = urban->roof.Temperature;
-    auto &imperviousRoadTemp = urban->imperviousRoad.Temperature;
-    auto &perviousRoadTemp = urban->perviousRoad.Temperature;
-    auto &sunlitWallTemp = urban->sunlitWall.Temperature;
-    auto &shadedWallTemp = urban->shadedWall.Temperature;
+    auto &roofTemp = urban->roof.EffectiveSurfTemp;
+    auto &imperviousRoadTemp = urban->imperviousRoad.EffectiveSurfTemp;
+    auto &perviousRoadTemp = urban->perviousRoad.EffectiveSurfTemp;
+    auto &sunlitWallTemp = urban->sunlitWall.EffectiveSurfTemp;
+    auto &shadedWallTemp = urban->shadedWall.EffectiveSurfTemp;
 
     // Get references to canyon air properties
     auto &taf = urban->urbanCanyon.Taf;

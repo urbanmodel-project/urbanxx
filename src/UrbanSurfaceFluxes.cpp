@@ -390,26 +390,26 @@ KOKKOS_INLINE_FUNCTION
 void ComputeQsatForSurfaces(int l, Real forcP,
                             const URBANXX::_p_UrbanType &urban) {
   // Roof
-  ComputeSurfaceQsat(l, forcP, urban.roof.Temperature, urban.roof.Es,
+  ComputeSurfaceQsat(l, forcP, urban.roof.EffectiveSurfTemp, urban.roof.Es,
                      urban.roof.EsdT, urban.roof.Qs, urban.roof.QsdT);
 
   // Sunlit wall
-  ComputeSurfaceQsat(l, forcP, urban.sunlitWall.Temperature,
+  ComputeSurfaceQsat(l, forcP, urban.sunlitWall.EffectiveSurfTemp,
                      urban.sunlitWall.Es, urban.sunlitWall.EsdT,
                      urban.sunlitWall.Qs, urban.sunlitWall.QsdT);
 
   // Shaded wall
-  ComputeSurfaceQsat(l, forcP, urban.shadedWall.Temperature,
+  ComputeSurfaceQsat(l, forcP, urban.shadedWall.EffectiveSurfTemp,
                      urban.shadedWall.Es, urban.shadedWall.EsdT,
                      urban.shadedWall.Qs, urban.shadedWall.QsdT);
 
   // Impervious road
-  ComputeSurfaceQsat(l, forcP, urban.imperviousRoad.Temperature,
+  ComputeSurfaceQsat(l, forcP, urban.imperviousRoad.EffectiveSurfTemp,
                      urban.imperviousRoad.Es, urban.imperviousRoad.EsdT,
                      urban.imperviousRoad.Qs, urban.imperviousRoad.QsdT);
 
   // Pervious road
-  ComputeSurfaceQsat(l, forcP, urban.perviousRoad.Temperature,
+  ComputeSurfaceQsat(l, forcP, urban.perviousRoad.EffectiveSurfTemp,
                      urban.perviousRoad.Es, urban.perviousRoad.EsdT,
                      urban.perviousRoad.Qs, urban.perviousRoad.QsdT);
 }
@@ -428,11 +428,11 @@ void ComputeNewTafAndQaf(int l, Real canyonWind, Real thm, Real rahu, Real rawu,
   const Real qSunwall = 0.0;
   const Real qShadewall = 0.0;
 
-  const Real tRoof = urban.roof.Temperature(l);
-  const Real tRoadImperv = urban.imperviousRoad.Temperature(l);
-  const Real tRoadPerv = urban.perviousRoad.Temperature(l);
-  const Real tSunwall = urban.sunlitWall.Temperature(l);
-  const Real tShadewall = urban.shadedWall.Temperature(l);
+  const Real tRoof = urban.roof.EffectiveSurfTemp(l);
+  const Real tRoadImperv = urban.imperviousRoad.EffectiveSurfTemp(l);
+  const Real tRoadPerv = urban.perviousRoad.EffectiveSurfTemp(l);
+  const Real tSunwall = urban.sunlitWall.EffectiveSurfTemp(l);
+  const Real tShadewall = urban.shadedWall.EffectiveSurfTemp(l);
 
   const Real forcQ = urban.atmosphereData.ForcSpcHumd(l);
   const Real forcRho = urban.atmosphereData.ForcRho(l);
