@@ -479,14 +479,14 @@ int main(int argc, char *argv[]) {
                 << " landunits" << std::endl;
     }
 
+    // Set all urban parameters
+    SetUrbanParameters(urban, numLandunits, mpi_rank);
+
     // Initialize temperatures
     UrbanCall(UrbanInitializeTemperature(urban, &ierr), &ierr);
     if (mpi_rank == 0) {
       std::cout << "Initialized surface temperatures" << std::endl;
     }
-
-    // Set all urban parameters
-    SetUrbanParameters(urban, numLandunits, mpi_rank);
 
     // Advance the model one time step
     UrbanCall(UrbanAdvance(urban, &ierr), &ierr);

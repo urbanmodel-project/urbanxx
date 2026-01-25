@@ -32,15 +32,15 @@ program urbanxx_driver_f
     write(*,*) 'Successfully created Urban object with ', numLandunits, ' landunits'
   end if
 
+  ! Set all urban parameters
+  call SetUrbanParameters(urban, numLandunits, mpi_rank)
+
   ! Initialize temperatures
   call UrbanInitializeTemperature(urban%ptr, status)
   if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
   if (mpi_rank == 0) then
     write(*,*) 'Initialized surface temperatures'
   end if
-
-  ! Set all urban parameters
-  call SetUrbanParameters(urban, numLandunits, mpi_rank)
 
   ! Advance the model one time step
   call UrbanAdvance(urban%ptr, status)
