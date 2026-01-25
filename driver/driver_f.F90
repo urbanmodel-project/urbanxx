@@ -35,11 +35,11 @@ program urbanxx_driver_f
   ! Set all urban parameters
   call SetUrbanParameters(urban, numLandunits, mpi_rank)
 
-  ! Initialize temperatures
-  call UrbanInitializeTemperature(urban, status)
+  ! Setup urban model (initialize temperatures and other setup tasks)
+  call UrbanSetup(urban, status)
   if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
   if (mpi_rank == 0) then
-    write(*,*) 'Initialized surface temperatures'
+    write(*,*) 'Completed urban model setup'
   end if
 
   ! Advance the model one time step

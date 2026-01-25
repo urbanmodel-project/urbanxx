@@ -4,7 +4,7 @@ module urban_mod
   implicit none
 
   ! Opaque handle type
-  type :: UrbanType
+  type, bind(C) :: UrbanType
     type(c_ptr) :: ptr = c_null_ptr
   end type UrbanType
 
@@ -270,43 +270,43 @@ module urban_mod
 
     ! Building parameter setter functions
     subroutine UrbanSetBuildingMaxTemperature(urban, values, length, status) bind(C, name="UrbanSetBuildingMaxTemperature")
-      import :: c_ptr, c_int
-      type(c_ptr), value :: urban
+      import :: c_ptr, c_int, UrbanType
+      type(UrbanType), value :: urban
       type(c_ptr), value :: values
       integer(c_int), value :: length
       integer(c_int) :: status
     end subroutine UrbanSetBuildingMaxTemperature
 
     subroutine UrbanSetBuildingMinTemperature(urban, values, length, status) bind(C, name="UrbanSetBuildingMinTemperature")
-      import :: c_ptr, c_int
-      type(c_ptr), value :: urban
+      import :: c_ptr, c_int, UrbanType
+      type(UrbanType), value :: urban
       type(c_ptr), value :: values
       integer(c_int), value :: length
       integer(c_int) :: status
     end subroutine UrbanSetBuildingMinTemperature
 
     subroutine UrbanSetBuildingWallThickness(urban, values, length, status) bind(C, name="UrbanSetBuildingWallThickness")
-      import :: c_ptr, c_int
-      type(c_ptr), value :: urban
+      import :: c_ptr, c_int, UrbanType
+      type(UrbanType), value :: urban
       type(c_ptr), value :: values
       integer(c_int), value :: length
       integer(c_int) :: status
     end subroutine UrbanSetBuildingWallThickness
 
     subroutine UrbanSetBuildingRoofThickness(urban, values, length, status) bind(C, name="UrbanSetBuildingRoofThickness")
-      import :: c_ptr, c_int
-      type(c_ptr), value :: urban
+      import :: c_ptr, c_int, UrbanType
+      type(UrbanType), value :: urban
       type(c_ptr), value :: values
       integer(c_int), value :: length
       integer(c_int) :: status
     end subroutine UrbanSetBuildingRoofThickness
 
-    ! Initialization functions
-    subroutine UrbanInitializeTemperature_C(urban, status) bind(C, name="UrbanInitializeTemperature")
-      import :: c_ptr, c_int
-      type(c_ptr), value :: urban
+    ! Setup and initialization functions
+    subroutine UrbanSetup(urban, status) bind(C, name="UrbanSetup")
+      import :: c_ptr, c_int, UrbanType
+      type(UrbanType), value :: urban
       integer(c_int) :: status
-    end subroutine UrbanInitializeTemperature_C
+    end subroutine UrbanSetup
 
     ! Time-stepping functions
     subroutine UrbanAdvance_C(urban, status) bind(C, name="UrbanAdvance")
@@ -874,12 +874,6 @@ module urban_mod
     integer(c_int), intent(out) :: status
     call UrbanSetWindHgtCanyon_C(urban%ptr, values, length, status)
   end subroutine UrbanSetWindHgtCanyon
-
-  subroutine UrbanInitializeTemperature(urban, status)
-    type(UrbanType), intent(in) :: urban
-    integer(c_int), intent(out) :: status
-    call UrbanInitializeTemperature_C(urban%ptr, status)
-  end subroutine UrbanInitializeTemperature
 
   subroutine UrbanAdvance(urban, status)
     type(UrbanType), intent(in) :: urban

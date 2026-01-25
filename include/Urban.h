@@ -140,6 +140,10 @@ URBAN_EXTERN void UrbanSetHtRoof(UrbanType urban, const double *values,
 URBAN_EXTERN void UrbanSetWindHgtCanyon(UrbanType urban, const double *values,
                                         int length, UrbanErrorCode *status);
 
+// Initialization functions
+URBAN_EXTERN void UrbanInitializeTemperature(UrbanType urban,
+                                             UrbanErrorCode *status);
+
 // Building parameter setter functions
 URBAN_EXTERN void UrbanSetBuildingMaxTemperature(UrbanType urban,
                                                  const double *values,
@@ -158,9 +162,8 @@ URBAN_EXTERN void UrbanSetBuildingRoofThickness(UrbanType urban,
                                                 int length,
                                                 UrbanErrorCode *status);
 
-// Initialization functions
-URBAN_EXTERN void UrbanInitializeTemperature(UrbanType urban,
-                                             UrbanErrorCode *status);
+// Setup and initialization functions
+URBAN_EXTERN void UrbanSetup(UrbanType urban, UrbanErrorCode *status);
 
 // Time-stepping functions
 URBAN_EXTERN void UrbanAdvance(UrbanType urban, UrbanErrorCode *status);
