@@ -64,7 +64,14 @@ struct SurfaceDataBase {
   DECLARE_DEVICE_VIEW(1DR8, Qs)   // saturation specific humidity (kg/kg)
   DECLARE_DEVICE_VIEW(1DR8, QsdT) // d(qs)/dT (1/K)
 
-  SurfaceDataBase(int numLandunits, int numRadBands, int numRadTypes) {
+  // Information about layers
+  DECLARE_DEVICE_VIEW(2DR8, Zc)         // depth at the center of layer (m)
+  DECLARE_DEVICE_VIEW(2DR8, Zi)         // depth at the layer interface (m)
+  DECLARE_DEVICE_VIEW(2DR8, Dz)         // layer thickness (m)
+  DECLARE_DEVICE_VIEW(1DR8, TotalDepth) // total depth of surface layers (m)
+
+  SurfaceDataBase(int numLandunits, int numRadBands, int numRadTypes,
+                  int numLayers) {
     ALLOCATE_DEVICE_VIEW(ReflectedShortRad, Array3DR8, numLandunits,
                          numRadBands, numRadTypes)
     ALLOCATE_DEVICE_VIEW(AbsorbedShortRad, Array3DR8, numLandunits, numRadBands,
@@ -77,6 +84,10 @@ struct SurfaceDataBase {
     ALLOCATE_DEVICE_VIEW(EsdT, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(Qs, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(QsdT, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(Zc, Array2DR8, numLandunits, numLayers)
+    ALLOCATE_DEVICE_VIEW(Zi, Array2DR8, numLandunits, numLayers)
+    ALLOCATE_DEVICE_VIEW(Dz, Array2DR8, numLandunits, numLayers)
+    ALLOCATE_DEVICE_VIEW(TotalDepth, Array1DR8, numLandunits)
   }
 };
 
@@ -86,8 +97,9 @@ struct SnowCoveredSurfaceData : SurfaceDataBase {
   DECLARE_DEVICE_VIEW(3DR8,
                       AlbedoWithSnowEffects) // albedo including snow effects
 
-  SnowCoveredSurfaceData(int numLandunits, int numRadBands, int numRadTypes)
-      : SurfaceDataBase(numLandunits, numRadBands, numRadTypes) {
+  SnowCoveredSurfaceData(int numLandunits, int numRadBands, int numRadTypes,
+                         int numLayers)
+      : SurfaceDataBase(numLandunits, numRadBands, numRadTypes, numLayers) {
     ALLOCATE_DEVICE_VIEW(SnowAlbedo, Array3DR8, numLandunits, numRadBands,
                          numRadTypes)
     ALLOCATE_DEVICE_VIEW(AlbedoWithSnowEffects, Array3DR8, numLandunits,
@@ -97,8 +109,10 @@ struct SnowCoveredSurfaceData : SurfaceDataBase {
 
 struct RoadDataType : SnowCoveredSurfaceData {
   // Inherits all fields from SnowCoveredSurfaceData and SurfaceDataBase
-  RoadDataType(int numLandunits, int numRadBands, int numRadTypes)
-      : SnowCoveredSurfaceData(numLandunits, numRadBands, numRadTypes) {}
+  RoadDataType(int numLandunits, int numRadBands, int numRadTypes,
+               int numLayers)
+      : SnowCoveredSurfaceData(numLandunits, numRadBands, numRadTypes,
+                               numLayers) {}
 };
 
 struct WallDataType : SurfaceDataBase {
@@ -107,8 +121,9 @@ struct WallDataType : SurfaceDataBase {
       DownwellingShortRad) // downwelling shortwave radiation per unit wall area
   // Inherits common radiative fields from SurfaceDataBase
 
-  WallDataType(int numLandunits, int numRadBands, int numRadTypes)
-      : SurfaceDataBase(numLandunits, numRadBands, numRadTypes) {
+  WallDataType(int numLandunits, int numRadBands, int numRadTypes,
+               int numLayers)
+      : SurfaceDataBase(numLandunits, numRadBands, numRadTypes, numLayers) {
     ALLOCATE_DEVICE_VIEW(DownwellingShortRad, Array3DR8, numLandunits,
                          numRadBands, numRadTypes)
   }
@@ -117,8 +132,10 @@ struct WallDataType : SurfaceDataBase {
 struct RoofDataType : SnowCoveredSurfaceData {
   // Inherits all fields from SnowCoveredSurfaceData and SurfaceDataBase
 
-  RoofDataType(int numLandunits, int numRadBands, int numRadTypes)
-      : SnowCoveredSurfaceData(numLandunits, numRadBands, numRadTypes) {}
+  RoofDataType(int numLandunits, int numRadBands, int numRadTypes,
+               int numLayers)
+      : SnowCoveredSurfaceData(numLandunits, numRadBands, numRadTypes,
+                               numLayers) {}
 };
 } // namespace URBANXX
 
