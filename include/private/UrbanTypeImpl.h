@@ -33,12 +33,16 @@ struct _p_UrbanType {
         urbanParams(numLandunits_, NUM_RAD_BANDS, NUM_RAD_TYPES,
                     NUM_VERTICAL_LEVELS),
         urbanCanyon(numLandunits_),
-        roof(numLandunits_, NUM_RAD_BANDS, NUM_RAD_TYPES),
-        imperviousRoad(numLandunits_, NUM_RAD_BANDS, NUM_RAD_TYPES),
-        perviousRoad(numLandunits_, NUM_RAD_BANDS, NUM_RAD_TYPES),
+        roof(numLandunits_, NUM_RAD_BANDS, NUM_RAD_TYPES, NUM_VERTICAL_LEVELS),
+        imperviousRoad(numLandunits_, NUM_RAD_BANDS, NUM_RAD_TYPES,
+                       NUM_VERTICAL_LEVELS),
+        perviousRoad(numLandunits_, NUM_RAD_BANDS, NUM_RAD_TYPES,
+                     NUM_VERTICAL_LEVELS),
         compositeRoadSurface(numLandunits_, NUM_RAD_BANDS, NUM_RAD_TYPES),
-        sunlitWall(numLandunits_, NUM_RAD_BANDS, NUM_RAD_TYPES),
-        shadedWall(numLandunits_, NUM_RAD_BANDS, NUM_RAD_TYPES),
+        sunlitWall(numLandunits_, NUM_RAD_BANDS, NUM_RAD_TYPES,
+                   NUM_VERTICAL_LEVELS),
+        shadedWall(numLandunits_, NUM_RAD_BANDS, NUM_RAD_TYPES,
+                   NUM_VERTICAL_LEVELS),
         building(numLandunits_) {}
 };
 
