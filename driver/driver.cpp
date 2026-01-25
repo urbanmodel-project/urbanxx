@@ -482,10 +482,10 @@ int main(int argc, char *argv[]) {
     // Set all urban parameters
     SetUrbanParameters(urban, numLandunits, mpi_rank);
 
-    // Initialize temperatures
-    UrbanCall(UrbanInitializeTemperature(urban, &ierr), &ierr);
+    // Setup urban model (initialize temperatures and other setup tasks)
+    UrbanCall(UrbanSetup(urban, &ierr), &ierr);
     if (mpi_rank == 0) {
-      std::cout << "Initialized surface temperatures" << std::endl;
+      std::cout << "Completed urban model setup" << std::endl;
     }
 
     // Advance the model one time step

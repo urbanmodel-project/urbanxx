@@ -138,9 +138,8 @@ URBAN_EXTERN void UrbanSetBuildingRoofThickness(UrbanType urban,
                                                 int length,
                                                 UrbanErrorCode *status);
 
-// Initialization functions
-URBAN_EXTERN void UrbanInitializeTemperature(UrbanType urban,
-                                             UrbanErrorCode *status);
+// Setup and initialization functions
+URBAN_EXTERN void UrbanSetup(UrbanType urban, UrbanErrorCode *status);
 
 // Time-stepping functions
 URBAN_EXTERN void UrbanAdvance(UrbanType urban, UrbanErrorCode *status);

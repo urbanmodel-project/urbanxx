@@ -132,76 +132,76 @@ protected:
   }
 };
 
-// Test: UrbanInitializeTemperature with valid parameters
-TEST_F(InitializationTest, InitializeTemperature_WithValidParameters) {
+// Test: UrbanSetup with valid parameters
+TEST_F(InitializationTest, Setup_WithValidParameters) {
   UrbanErrorCode status;
   
   // Set all required parameters
   SetMinimalParameters();
   
-  // Initialize temperature
-  UrbanInitializeTemperature(urban, &status);
+  // Setup urban model
+  UrbanSetup(urban, &status);
   
   EXPECT_EQ(status, URBAN_SUCCESS) 
-      << "UrbanInitializeTemperature should succeed with valid parameters";
+      << "UrbanSetup should succeed with valid parameters";
 }
 
-// Test: UrbanInitializeTemperature with null urban object
-TEST_F(InitializationTest, InitializeTemperature_NullUrban) {
+// Test: UrbanSetup with null urban object
+TEST_F(InitializationTest, Setup_NullUrban) {
   UrbanErrorCode status;
   
-  UrbanInitializeTemperature(nullptr, &status);
+  UrbanSetup(nullptr, &status);
   
   EXPECT_EQ(status, URBAN_ERR_INVALID_ARGUMENT) 
-      << "UrbanInitializeTemperature should fail with null urban object";
+      << "UrbanSetup should fail with null urban object";
 }
 
-// Test: UrbanInitializeTemperature with null status
-TEST_F(InitializationTest, InitializeTemperature_NullStatus) {
+// Test: UrbanSetup with null status
+TEST_F(InitializationTest, Setup_NullStatus) {
   // Set all required parameters
   SetMinimalParameters();
   
   // Should not crash with null status
-  UrbanInitializeTemperature(urban, nullptr);
+  UrbanSetup(urban, nullptr);
 }
 
-// Test: Initialize temperature multiple times (should work)
-TEST_F(InitializationTest, InitializeTemperature_MultipleTimes) {
+// Test: Setup multiple times (should work)
+TEST_F(InitializationTest, Setup_MultipleTimes) {
   UrbanErrorCode status;
   
   // Set all required parameters
   SetMinimalParameters();
   
-  // First initialization
-  UrbanInitializeTemperature(urban, &status);
+  // First setup
+  UrbanSetup(urban, &status);
   ASSERT_EQ(status, URBAN_SUCCESS);
   
-  // Second initialization (should also succeed)
-  UrbanInitializeTemperature(urban, &status);
+  // Second setup (should also succeed)
+  UrbanSetup(urban, &status);
   EXPECT_EQ(status, URBAN_SUCCESS) 
-      << "Re-initializing temperature should succeed";
+      << "Re-running setup should succeed";
 }
 
-// Test: Full workflow - Create, Set Parameters, Initialize
-TEST_F(InitializationTest, FullWorkflow_CreateSetInitialize) {
+// Test: Full workflow - Create, Set Parameters, Setup
+TEST_F(InitializationTest, FullWorkflow_CreateSetSetup) {
   UrbanErrorCode status;
   
   // Set all parameters
   SetMinimalParameters();
   
-  // Initialize
-  UrbanInitializeTemperature(urban, &status);
+  // Setup
+  UrbanSetup(urban, &status);
   EXPECT_EQ(status, URBAN_SUCCESS);
 }
 
-// Test: Initialize immediately after create (without setting parameters)
-TEST_F(InitializationTest, InitializeTemperature_WithoutParameters) {
+// Test: Setup immediately after create (without setting parameters)
+TEST_F(InitializationTest, Setup_WithoutParameters) {
   UrbanErrorCode status;
   
-  // Try to initialize without setting any parameters
+  // Try to setup without setting any parameters
   // This may succeed or fail depending on implementation
   // We're testing that it doesn't crash
-  UrbanInitializeTemperature(urban, &status);
+  UrbanSetup(urban, &status);
   
   // Just check that we get a valid error code (not necessarily success)
   EXPECT_TRUE(status == URBAN_SUCCESS || 
