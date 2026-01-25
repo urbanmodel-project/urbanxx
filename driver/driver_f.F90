@@ -199,10 +199,10 @@ contains
       maxTemp(i) = MAX_TEMP
     end do
 
-    call UrbanSetBuildingMinTemperature(urban%ptr, c_loc(minTemp), &
+    call UrbanSetBuildingMinTemperature(urban, c_loc(minTemp), &
       numLandunits, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
-    call UrbanSetBuildingMaxTemperature(urban%ptr, c_loc(maxTemp), &
+    call UrbanSetBuildingMaxTemperature(urban, c_loc(maxTemp), &
       numLandunits, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
 
@@ -224,10 +224,10 @@ contains
       roofThickness(i) = THICK_ROOF
     end do
 
-    call UrbanSetBuildingWallThickness(urban%ptr, c_loc(wallThickness), &
+    call UrbanSetBuildingWallThickness(urban, c_loc(wallThickness), &
       numLandunits, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
-    call UrbanSetBuildingRoofThickness(urban%ptr, c_loc(roofThickness), &
+    call UrbanSetBuildingRoofThickness(urban, c_loc(roofThickness), &
       numLandunits, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
 
