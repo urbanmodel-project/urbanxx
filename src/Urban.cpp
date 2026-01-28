@@ -1,6 +1,7 @@
 #include "Urban.h"
 #include "private/AtmosphereTypeImpl.h"
 #include "private/DataTypesImpl.h"
+#include "private/UrbanHeatDiffusionImpl.h"
 #include "private/UrbanLongwaveRadImpl.h"
 #include "private/UrbanShortwaveRadImpl.h"
 #include "private/UrbanSurfaceFluxesImpl.h"
@@ -62,11 +63,14 @@ void UrbanAdvance(UrbanType urban, UrbanErrorCode *status) {
     // Compute net longwave radiation
     URBANXX::ComputeNetLongwave(*urban);
 
-    // Compute net shortwave radiation
-    URBANXX::ComputeNetShortwave(*urban);
-
     // Compute surface fluxes
     URBANXX::ComputeSurfaceFluxes(*urban);
+
+    // Compute heat diffusion in urban surfaces
+    URBANXX::ComputeHeatDiffusion(*urban);
+
+    // Compute net shortwave radiation
+    URBANXX::ComputeNetShortwave(*urban);
 
     *status = URBAN_SUCCESS;
   } catch (...) {

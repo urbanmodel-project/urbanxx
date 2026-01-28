@@ -103,13 +103,13 @@ TEST_F(ParameterSetterTest, SetEmissivity_ValidData) {
 
 // Test: Thermal conductivity setters
 TEST_F(ParameterSetterTest, SetThermalConductivity_ValidData) {
-  const int numLevels = 15;
-  const int totalSize = numLandunits * numLevels;
+  const int numUrbanLayers = 15;
+  const int totalSize = numLandunits * numUrbanLayers;
   double values[150];
   for (int i = 0; i < totalSize; ++i) {
-    values[i] = 0.5 + (i % numLevels) * 0.1;
+    values[i] = 0.5 + (i % numUrbanLayers) * 0.1;
   }
-  const int size[2] = {numLandunits, numLevels};
+  const int size[2] = {numLandunits, numUrbanLayers};
   UrbanErrorCode status;
 
   UrbanSetThermalConductivityRoad(urban, values, size, &status);
@@ -124,13 +124,13 @@ TEST_F(ParameterSetterTest, SetThermalConductivity_ValidData) {
 
 // Test: Heat capacity setters
 TEST_F(ParameterSetterTest, SetHeatCapacity_ValidData) {
-  const int numLevels = 15;
-  const int totalSize = numLandunits * numLevels;
+  const int numUrbanLayers = 15;
+  const int totalSize = numLandunits * numUrbanLayers;
   double values[150];
   for (int i = 0; i < totalSize; ++i) {
-    values[i] = 1000.0 + (i % numLevels) * 100.0;
+    values[i] = 1000.0 + (i % numUrbanLayers) * 100.0;
   }
-  const int size[2] = {numLandunits, numLevels};
+  const int size[2] = {numLandunits, numUrbanLayers};
   UrbanErrorCode status;
 
   UrbanSetHeatCapacityRoad(urban, values, size, &status);
