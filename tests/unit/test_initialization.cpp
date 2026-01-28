@@ -43,10 +43,10 @@ protected:
     UrbanSetEmissivityRoof(urban, emissivity, numLandunits, &status);
     ASSERT_EQ(status, URBAN_SUCCESS);
 
-    const int numUrbanLayers = 15;
+    const int numUrbanLayers = 5;
     const int totalSize = numLandunits * numUrbanLayers;
-    double thermal_cond[75];  // 5 * 15
-    double heat_cap[75];      // 5 * 15
+    double thermal_cond[25];  // 5 * 5
+    double heat_cap[25];      // 5 * 5
     for (int i = 0; i < totalSize; ++i) {
       thermal_cond[i] = 1.0;
       heat_cap[i] = 1500.0;
