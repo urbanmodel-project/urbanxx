@@ -43,15 +43,15 @@ protected:
     UrbanSetEmissivityRoof(urban, emissivity, numLandunits, &status);
     ASSERT_EQ(status, URBAN_SUCCESS);
 
-    const int numLevels = 15;
-    const int totalSize = numLandunits * numLevels;
+    const int numUrbanLayers = 15;
+    const int totalSize = numLandunits * numUrbanLayers;
     double thermal_cond[75];  // 5 * 15
     double heat_cap[75];      // 5 * 15
     for (int i = 0; i < totalSize; ++i) {
       thermal_cond[i] = 1.0;
       heat_cap[i] = 1500.0;
     }
-    const int size2D[2] = {numLandunits, numLevels};
+    const int size2D[2] = {numLandunits, numUrbanLayers};
     
     UrbanSetThermalConductivityRoad(urban, thermal_cond, size2D, &status);
     ASSERT_EQ(status, URBAN_SUCCESS);

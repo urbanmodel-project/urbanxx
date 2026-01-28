@@ -388,36 +388,39 @@ contains
     type(UrbanType), intent(in) :: urban
     integer(c_int), intent(in) :: numLandunits
     integer, intent(in) :: mpi_rank
-    integer(c_int) :: status, i, k
-    integer(c_int), parameter :: NUM_LEVELS = 15
+    integer(c_int) :: status, i, k, urban_density_class
+    integer(c_int), parameter :: NUM_LEVELS = 5
     integer(c_int) :: totalSize
     integer(c_int), dimension(2) :: size2D
     real(c_double), allocatable, target :: tkRoad(:)
     real(c_double), allocatable, target :: tkWall(:)
     real(c_double), allocatable, target :: tkRoof(:)
-    real(c_double), dimension(15) :: tkRoadLevels
-    real(c_double), dimension(15) :: tkWallLevels
-    real(c_double), dimension(15) :: tkRoofLevels
+    ! Thermal conductivity values for 5 levels across 3 urban density classes
+    ! [layer][urban_density_class]: 0=Tall Building District, 1=High Density, 2=Medium Density
+    real(c_double), dimension(5,3) :: tkRoadLevels
+    real(c_double), dimension(5,3) :: tkWallLevels
+    real(c_double), dimension(5,3) :: tkRoofLevels
 
-    ! Thermal conductivity values for 15 levels
-    tkRoadLevels = (/ &
+    tkRoadLevels = reshape((/ &
       1.89999997615814d0, 1.66999995708466d0, 1.66999995708466d0, &
       0.560000002384186d0, 0.560000002384186d0, 0.560000002384186d0, &
-      0.360000014305115d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0 /)
+      0.360000014305115d0, 0.0d0, 0.0d0, &
+      0.0d0, 0.0d0, 0.0d0, &
+      0.0d0, 0.0d0, 0.0d0 /), shape(tkRoadLevels))
     
-    tkWallLevels = (/ &
+    tkWallLevels = reshape((/ &
       1.44716906547546d0, 1.06582415103912d0, 0.970157384872437d0, &
       1.44716906547546d0, 1.06582415103912d0, 0.970157384872437d0, &
       1.44716906547546d0, 1.06582415103912d0, 0.970157384872437d0, &
       1.44716906547546d0, 1.06582415103912d0, 0.970157384872437d0, &
-      1.44716906547546d0, 1.06582415103912d0, 0.970157384872437d0 /)
+      1.44716906547546d0, 1.06582415103912d0, 0.970157384872437d0 /), shape(tkWallLevels))
     
-    tkRoofLevels = (/ &
+    tkRoofLevels = reshape((/ &
       0.503093481063843d0, 0.094768725335598d0, 0.127733826637268d0, &
       0.503093481063843d0, 0.094768725335598d0, 0.127733826637268d0, &
       0.503093481063843d0, 0.094768725335598d0, 0.127733826637268d0, &
       0.503093481063843d0, 0.094768725335598d0, 0.127733826637268d0, &
-      0.503093481063843d0, 0.094768725335598d0, 0.127733826637268d0 /)
+      0.503093481063843d0, 0.094768725335598d0, 0.127733826637268d0 /), shape(tkRoofLevels))
 
     totalSize = numLandunits * NUM_LEVELS
     size2D(1) = numLandunits
@@ -428,10 +431,11 @@ contains
     allocate(tkRoof(totalSize))
 
     do i = 1, numLandunits
+      urban_density_class = mod(i-1, 3) + 1  ! 1=Tall Building District, 2=High Density, 3=Medium Density
       do k = 1, NUM_LEVELS
-        tkRoad((i-1) * NUM_LEVELS + k) = tkRoadLevels(k)
-        tkWall((i-1) * NUM_LEVELS + k) = tkWallLevels(k)
-        tkRoof((i-1) * NUM_LEVELS + k) = tkRoofLevels(k)
+        tkRoad((i-1) * NUM_LEVELS + k) = tkRoadLevels(k, urban_density_class)
+        tkWall((i-1) * NUM_LEVELS + k) = tkWallLevels(k, urban_density_class)
+        tkRoof((i-1) * NUM_LEVELS + k) = tkRoofLevels(k, urban_density_class)
       end do
     end do
 
@@ -458,36 +462,39 @@ contains
     type(UrbanType), intent(in) :: urban
     integer(c_int), intent(in) :: numLandunits
     integer, intent(in) :: mpi_rank
-    integer(c_int) :: status, i, k
-    integer(c_int), parameter :: NUM_LEVELS = 15
+    integer(c_int) :: status, i, k, urban_density_class
+    integer(c_int), parameter :: NUM_LEVELS = 5
     integer(c_int) :: totalSize
     integer(c_int), dimension(2) :: size2D
     real(c_double), allocatable, target :: cvRoad(:)
     real(c_double), allocatable, target :: cvWall(:)
     real(c_double), allocatable, target :: cvRoof(:)
-    real(c_double), dimension(15) :: cvRoadLevels
-    real(c_double), dimension(15) :: cvWallLevels
-    real(c_double), dimension(15) :: cvRoofLevels
+    ! Heat capacity values for 5 levels across 3 urban density classes
+    ! [layer][urban_density_class]: 0=Tall Building District, 1=High Density, 2=Medium Density
+    real(c_double), dimension(5,3) :: cvRoadLevels
+    real(c_double), dimension(5,3) :: cvWallLevels
+    real(c_double), dimension(5,3) :: cvRoofLevels
 
-    ! Heat capacity values for 15 levels
-    cvRoadLevels = (/ &
+    cvRoadLevels = reshape((/ &
       2100000.0d0, 2060470.625d0, 2060470.625d0, &
       1773000.0d0, 1712294.75d0, 1712294.75d0, &
-      1545600.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0 /)
+      1545600.0d0, 0.0d0, 0.0d0, &
+      0.0d0, 0.0d0, 0.0d0, &
+      0.0d0, 0.0d0, 0.0d0 /), shape(cvRoadLevels))
     
-    cvWallLevels = (/ &
+    cvWallLevels = reshape((/ &
       1079394.75d0, 957632.8125d0, 899827.1875d0, &
       1079394.75d0, 957632.8125d0, 899827.1875d0, &
       1079394.75d0, 957632.8125d0, 899827.1875d0, &
       1079394.75d0, 957632.8125d0, 899827.1875d0, &
-      1079394.75d0, 957632.8125d0, 899827.1875d0 /)
+      1079394.75d0, 957632.8125d0, 899827.1875d0 /), shape(cvWallLevels))
     
-    cvRoofLevels = (/ &
+    cvRoofLevels = reshape((/ &
       570998.0d0, 646213.375d0, 862451.375d0, &
       570998.0d0, 646213.375d0, 862451.375d0, &
       570998.0d0, 646213.375d0, 862451.375d0, &
       570998.0d0, 646213.375d0, 862451.375d0, &
-      570998.0d0, 646213.375d0, 862451.375d0 /)
+      570998.0d0, 646213.375d0, 862451.375d0 /), shape(cvRoofLevels))
 
     totalSize = numLandunits * NUM_LEVELS
     size2D(1) = numLandunits
@@ -498,10 +505,11 @@ contains
     allocate(cvRoof(totalSize))
 
     do i = 1, numLandunits
+      urban_density_class = mod(i-1, 3) + 1  ! 1=Tall Building District, 2=High Density, 3=Medium Density
       do k = 1, NUM_LEVELS
-        cvRoad((i-1) * NUM_LEVELS + k) = cvRoadLevels(k)
-        cvWall((i-1) * NUM_LEVELS + k) = cvWallLevels(k)
-        cvRoof((i-1) * NUM_LEVELS + k) = cvRoofLevels(k)
+        cvRoad((i-1) * NUM_LEVELS + k) = cvRoadLevels(k, urban_density_class)
+        cvWall((i-1) * NUM_LEVELS + k) = cvWallLevels(k, urban_density_class)
+        cvRoof((i-1) * NUM_LEVELS + k) = cvRoofLevels(k, urban_density_class)
       end do
     end do
 

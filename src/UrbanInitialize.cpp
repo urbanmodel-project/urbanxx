@@ -105,7 +105,7 @@ KOKKOS_INLINE_FUNCTION void ComputeVertDiscretizationForRoad(
 
 static void UrbanInitializeVerticalDiscretization(UrbanType urban) {
   const int numLandunits = urban->numLandunits;
-  const int numLevels = urban->numLevels;
+  const int numUrbanLayers = urban->numUrbanLayers;
 
   // Access vertical discretization views
   auto &thick_wall = urban->urbanParams.building.WallThickness;
@@ -145,42 +145,43 @@ static void UrbanInitializeVerticalDiscretization(UrbanType urban) {
         constexpr Real zecoeff = 0.5;
 
         // Sunlit wall - uniform discretization
-        ComputeVertDiscretizationForRoofOrWall(thick_wall(l), numLevels, l,
+        ComputeVertDiscretizationForRoofOrWall(thick_wall(l), numUrbanLayers, l,
                                                zc_sunlit_wall, dz_sunlit_wall,
                                                zi_sunlit_wall);
         depth_sunlit_wall(l) = thick_wall(l);
 
         // Shaded wall - uniform discretization
-        ComputeVertDiscretizationForRoofOrWall(thick_wall(l), numLevels, l,
+        ComputeVertDiscretizationForRoofOrWall(thick_wall(l), numUrbanLayers, l,
                                                zc_shaded_wall, dz_shaded_wall,
                                                zi_shaded_wall);
         depth_shaded_wall(l) = thick_wall(l);
 
         // Roof - uniform discretization
-        ComputeVertDiscretizationForRoofOrWall(thick_roof(l), numLevels, l,
+        ComputeVertDiscretizationForRoofOrWall(thick_roof(l), numUrbanLayers, l,
                                                zc_roof, dz_roof, zi_roof);
         depth_roof(l) = thick_roof(l);
 
         // Pervious road - exponential discretization
-        ComputeVertDiscretizationForRoad(numLevels, l, zc_pervious_road,
+        ComputeVertDiscretizationForRoad(numUrbanLayers, l, zc_pervious_road,
                                          dz_pervious_road, zi_pervious_road,
                                          scalez, zecoeff);
-        depth_pervious_road(l) = zc_pervious_road(l, numLevels);
+        depth_pervious_road(l) = zc_pervious_road(l, numUrbanLayers);
 
         // Impervious road - exponential discretization
-        ComputeVertDiscretizationForRoad(numLevels, l, zc_impervious_road,
+        ComputeVertDiscretizationForRoad(numUrbanLayers, l, zc_impervious_road,
                                          dz_impervious_road, zi_impervious_road,
                                          scalez, zecoeff);
-        depth_impervious_road(l) = zc_impervious_road(l, numLevels);
+        depth_impervious_road(l) = zc_impervious_road(l, numUrbanLayers);
       });
   Kokkos::fence();
 }
 
 // Helper function to copy thermal properties from parameters to surface data
 template <typename ViewType>
-KOKKOS_INLINE_FUNCTION void CopyThermalProperties(
-    const int numLevels, const int l, const ViewType &src_tk,
-    const ViewType &src_cv, const ViewType &dst_tk, const ViewType &dst_cv) {
+KOKKOS_INLINE_FUNCTION void
+CopyThermalProperties(const int numLevels, const int l, const ViewType &src_tk,
+                      const ViewType &src_cv, const ViewType &dst_tk,
+                      const ViewType &dst_cv) {
   for (int k = 0; k < numLevels; ++k) {
     dst_tk(l, k) = src_tk(l, k);
     dst_cv(l, k) = src_cv(l, k);
@@ -189,7 +190,7 @@ KOKKOS_INLINE_FUNCTION void CopyThermalProperties(
 
 static void UrbanInitializeThermalProperties(UrbanType urban) {
   const int numLandunits = urban->numLandunits;
-  const int numLevels = urban->numLevels;
+  const int numUrbanLayers = urban->numUrbanLayers;
 
   // Access parameter thermal properties
   auto &tk_wall_params = urban->urbanParams.tk.Wall;
@@ -213,22 +214,21 @@ static void UrbanInitializeThermalProperties(UrbanType urban) {
 
   // Copy thermal properties
   Kokkos::parallel_for(
-      "UrbanInitializeThermalProperties", numLandunits,
-      KOKKOS_LAMBDA(int l) {
+      "UrbanInitializeThermalProperties", numLandunits, KOKKOS_LAMBDA(int l) {
         // Copy wall thermal properties to both sunlit and shaded walls
-        CopyThermalProperties(numLevels, l, tk_wall_params, cv_wall_params,
+        CopyThermalProperties(numUrbanLayers, l, tk_wall_params, cv_wall_params,
                               tk_sunlit_wall, cv_sunlit_wall);
-        CopyThermalProperties(numLevels, l, tk_wall_params, cv_wall_params,
+        CopyThermalProperties(numUrbanLayers, l, tk_wall_params, cv_wall_params,
                               tk_shaded_wall, cv_shaded_wall);
 
         // Copy roof thermal properties
-        CopyThermalProperties(numLevels, l, tk_roof_params, cv_roof_params,
+        CopyThermalProperties(numUrbanLayers, l, tk_roof_params, cv_roof_params,
                               tk_roof, cv_roof);
 
         // Copy road thermal properties to both pervious and impervious roads
-        CopyThermalProperties(numLevels, l, tk_road_params, cv_road_params,
+        CopyThermalProperties(numUrbanLayers, l, tk_road_params, cv_road_params,
                               tk_pervious_road, cv_pervious_road);
-        CopyThermalProperties(numLevels, l, tk_road_params, cv_road_params,
+        CopyThermalProperties(numUrbanLayers, l, tk_road_params, cv_road_params,
                               tk_impervious_road, cv_impervious_road);
       });
   Kokkos::fence();

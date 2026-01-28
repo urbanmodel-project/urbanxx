@@ -17,6 +17,12 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
   // 2. Apply boundary conditions (surface flux, bottom temperature)
   // 3. Solve tridiagonal system for new temperatures
   // 4. Compute ground heat flux for roof, wall, and road surfaces
+
+  // printf("In ComputeHeatDiffusion\n");
+  //  Get number of landunits for parallel execution
+  // const int numLandunits = urban.numLandunits;
+
+  // exit(0);
 }
 
 } // namespace URBANXX

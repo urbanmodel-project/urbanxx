@@ -72,7 +72,7 @@ struct SurfaceDataBase {
 
   // Thermal properties
   DECLARE_DEVICE_VIEW(2DR8, ThermalConductivity) // thermal conductivity (W/m/K)
-  DECLARE_DEVICE_VIEW(2DR8, HeatCapacity)        // volumetric heat capacity (J/m^3/K)
+  DECLARE_DEVICE_VIEW(2DR8, HeatCapacity) // volumetric heat capacity (J/m^3/K)
 
   SurfaceDataBase(int numLandunits, int numRadBands, int numRadTypes,
                   int numLayers) {
@@ -92,7 +92,8 @@ struct SurfaceDataBase {
     ALLOCATE_DEVICE_VIEW(Zi, Array2DR8, numLandunits, numLayers + 1)
     ALLOCATE_DEVICE_VIEW(Dz, Array2DR8, numLandunits, numLayers)
     ALLOCATE_DEVICE_VIEW(TotalDepth, Array1DR8, numLandunits)
-    ALLOCATE_DEVICE_VIEW(ThermalConductivity, Array2DR8, numLandunits, numLayers)
+    ALLOCATE_DEVICE_VIEW(ThermalConductivity, Array2DR8, numLandunits,
+                         numLayers)
     ALLOCATE_DEVICE_VIEW(HeatCapacity, Array2DR8, numLandunits, numLayers)
   }
 };

@@ -13,7 +13,7 @@ struct _p_UrbanType {
   int numLandunits;
   int numRadBands;
   int numRadTypes;
-  int numLevels;
+  int numUrbanLayers;
 
   AtmosphereType atmosphereData;
   UrbanParamsType urbanParams;
@@ -28,21 +28,21 @@ struct _p_UrbanType {
 
   _p_UrbanType(int numLandunits_)
       : numLandunits(numLandunits_), numRadBands(NUM_RAD_BANDS),
-        numRadTypes(NUM_RAD_TYPES), numLevels(NUM_VERTICAL_LEVELS),
+        numRadTypes(NUM_RAD_TYPES), numUrbanLayers(NUM_URBAN_LAYERS),
         atmosphereData(numLandunits_, NUM_RAD_BANDS, NUM_RAD_TYPES),
         urbanParams(numLandunits_, NUM_RAD_BANDS, NUM_RAD_TYPES,
-                    NUM_VERTICAL_LEVELS),
+                    NUM_URBAN_LAYERS),
         urbanCanyon(numLandunits_),
-        roof(numLandunits_, NUM_RAD_BANDS, NUM_RAD_TYPES, NUM_VERTICAL_LEVELS),
+        roof(numLandunits_, NUM_RAD_BANDS, NUM_RAD_TYPES, NUM_URBAN_LAYERS),
         imperviousRoad(numLandunits_, NUM_RAD_BANDS, NUM_RAD_TYPES,
-                       NUM_VERTICAL_LEVELS),
+                       NUM_URBAN_LAYERS),
         perviousRoad(numLandunits_, NUM_RAD_BANDS, NUM_RAD_TYPES,
-                     NUM_VERTICAL_LEVELS),
+                     NUM_URBAN_LAYERS),
         compositeRoadSurface(numLandunits_, NUM_RAD_BANDS, NUM_RAD_TYPES),
         sunlitWall(numLandunits_, NUM_RAD_BANDS, NUM_RAD_TYPES,
-                   NUM_VERTICAL_LEVELS),
+                   NUM_URBAN_LAYERS),
         shadedWall(numLandunits_, NUM_RAD_BANDS, NUM_RAD_TYPES,
-                   NUM_VERTICAL_LEVELS),
+                   NUM_URBAN_LAYERS),
         building(numLandunits_) {}
 };
 

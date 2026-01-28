@@ -200,7 +200,7 @@ void SetEmissivity(UrbanType urban, int numLandunits, int mpi_rank) {
 void SetThermalConductivity(UrbanType urban, int numLandunits, int mpi_rank) {
   UrbanErrorCode ierr;
 
-  const int NUM_LEVELS = 15;
+  const int NUM_LEVELS = 5;
   int size2D[2] = {numLandunits, NUM_LEVELS};
   int totalSize = numLandunits * NUM_LEVELS;
 
@@ -208,33 +208,37 @@ void SetThermalConductivity(UrbanType urban, int numLandunits, int mpi_rank) {
   double *tkWall = AllocateArray(totalSize, "tkWall");
   double *tkRoof = AllocateArray(totalSize, "tkRoof");
 
-  // Thermal conductivity values for 15 levels
-  double tkRoadLevels[15] = {
-    1.89999997615814, 1.66999995708466, 1.66999995708466,
-    0.560000002384186, 0.560000002384186, 0.560000002384186,
-    0.360000014305115, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+  // Thermal conductivity values for 5 levels across 3 urban density classes
+  // [layer][urban_density_class]: 0=Tall Building District, 1=High Density, 2=Medium Density
+  double tkRoadLevels[5][3] = {
+    {1.89999997615814, 1.66999995708466, 1.66999995708466},
+    {0.560000002384186, 0.560000002384186, 0.560000002384186},
+    {0.360000014305115, 0.0, 0.0},
+    {0.0, 0.0, 0.0},
+    {0.0, 0.0, 0.0}
   };
-  double tkWallLevels[15] = {
-    1.44716906547546, 1.06582415103912, 0.970157384872437,
-    1.44716906547546, 1.06582415103912, 0.970157384872437,
-    1.44716906547546, 1.06582415103912, 0.970157384872437,
-    1.44716906547546, 1.06582415103912, 0.970157384872437,
-    1.44716906547546, 1.06582415103912, 0.970157384872437
+  double tkWallLevels[5][3] = {
+    {1.44716906547546, 1.06582415103912, 0.970157384872437},
+    {1.44716906547546, 1.06582415103912, 0.970157384872437},
+    {1.44716906547546, 1.06582415103912, 0.970157384872437},
+    {1.44716906547546, 1.06582415103912, 0.970157384872437},
+    {1.44716906547546, 1.06582415103912, 0.970157384872437}
   };
-  double tkRoofLevels[15] = {
-    0.503093481063843, 0.094768725335598, 0.127733826637268,
-    0.503093481063843, 0.094768725335598, 0.127733826637268,
-    0.503093481063843, 0.094768725335598, 0.127733826637268,
-    0.503093481063843, 0.094768725335598, 0.127733826637268,
-    0.503093481063843, 0.094768725335598, 0.127733826637268
+  double tkRoofLevels[5][3] = {
+    {0.503093481063843, 0.094768725335598, 0.127733826637268},
+    {0.503093481063843, 0.094768725335598, 0.127733826637268},
+    {0.503093481063843, 0.094768725335598, 0.127733826637268},
+    {0.503093481063843, 0.094768725335598, 0.127733826637268},
+    {0.503093481063843, 0.094768725335598, 0.127733826637268}
   };
 
   for (int i = 0; i < numLandunits; ++i) {
-    for (int k = 0; k < NUM_LEVELS; ++k) {
-      int idx = i * NUM_LEVELS + k;
-      tkRoad[idx] = tkRoadLevels[k];
-      tkWall[idx] = tkWallLevels[k];
-      tkRoof[idx] = tkRoofLevels[k];
+    const int urban_density_class = i % 3;  // 0: Tall Building District, 1: High Density, 2: Medium Density
+    for (int layer = 0; layer < 5; ++layer) {
+      int idx = i * NUM_LEVELS + layer;
+      tkRoad[idx] = tkRoadLevels[layer][urban_density_class];
+      tkWall[idx] = tkWallLevels[layer][urban_density_class];
+      tkRoof[idx] = tkRoofLevels[layer][urban_density_class];
     }
   }
 
@@ -253,7 +257,7 @@ void SetThermalConductivity(UrbanType urban, int numLandunits, int mpi_rank) {
 void SetHeatCapacity(UrbanType urban, int numLandunits, int mpi_rank) {
   UrbanErrorCode ierr;
 
-  const int NUM_LEVELS = 15;
+  const int NUM_LEVELS = 5;
   int size2D[2] = {numLandunits, NUM_LEVELS};
   int totalSize = numLandunits * NUM_LEVELS;
 
@@ -261,33 +265,37 @@ void SetHeatCapacity(UrbanType urban, int numLandunits, int mpi_rank) {
   double *cvWall = AllocateArray(totalSize, "cvWall");
   double *cvRoof = AllocateArray(totalSize, "cvRoof");
 
-  // Heat capacity values for 15 levels
-  double cvRoadLevels[15] = {
-    2100000.0, 2060470.625, 2060470.625,
-    1773000.0, 1712294.75, 1712294.75,
-    1545600.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+  // Heat capacity values for 5 levels across 3 urban density classes
+  // [layer][urban_density_class]: 0=Tall Building District, 1=High Density, 2=Medium Density
+  double cvRoadLevels[5][3] = {
+    {2100000.0, 2060470.625, 2060470.625},
+    {1773000.0, 1712294.75, 1712294.75},
+    {1545600.0, 0.0, 0.0},
+    {0.0, 0.0, 0.0},
+    {0.0, 0.0, 0.0}
   };
-  double cvWallLevels[15] = {
-    1079394.75, 957632.8125, 899827.1875,
-    1079394.75, 957632.8125, 899827.1875,
-    1079394.75, 957632.8125, 899827.1875,
-    1079394.75, 957632.8125, 899827.1875,
-    1079394.75, 957632.8125, 899827.1875
+  double cvWallLevels[5][3] = {
+    {1079394.75, 957632.8125, 899827.1875},
+    {1079394.75, 957632.8125, 899827.1875},
+    {1079394.75, 957632.8125, 899827.1875},
+    {1079394.75, 957632.8125, 899827.1875},
+    {1079394.75, 957632.8125, 899827.1875}
   };
-  double cvRoofLevels[15] = {
-    570998.0, 646213.375, 862451.375,
-    570998.0, 646213.375, 862451.375,
-    570998.0, 646213.375, 862451.375,
-    570998.0, 646213.375, 862451.375,
-    570998.0, 646213.375, 862451.375
+  double cvRoofLevels[5][3] = {
+    {570998.0, 646213.375, 862451.375},
+    {570998.0, 646213.375, 862451.375},
+    {570998.0, 646213.375, 862451.375},
+    {570998.0, 646213.375, 862451.375},
+    {570998.0, 646213.375, 862451.375}
   };
 
   for (int i = 0; i < numLandunits; ++i) {
-    for (int k = 0; k < NUM_LEVELS; ++k) {
-      int idx = i * NUM_LEVELS + k;
-      cvRoad[idx] = cvRoadLevels[k];
-      cvWall[idx] = cvWallLevels[k];
-      cvRoof[idx] = cvRoofLevels[k];
+    const int urban_density_class = i % 3;  // 0: Tall Building District, 1: High Density, 2: Medium Density
+    for (int layer = 0; layer < 5; ++layer) {
+      int idx = i * NUM_LEVELS + layer;
+      cvRoad[idx] = cvRoadLevels[layer][urban_density_class];
+      cvWall[idx] = cvWallLevels[layer][urban_density_class];
+      cvRoof[idx] = cvRoofLevels[layer][urban_density_class];
     }
   }
 
