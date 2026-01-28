@@ -85,7 +85,7 @@ struct SurfaceDataBase {
     ALLOCATE_DEVICE_VIEW(Qs, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(QsdT, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(Zc, Array2DR8, numLandunits, numLayers)
-    ALLOCATE_DEVICE_VIEW(Zi, Array2DR8, numLandunits, numLayers)
+    ALLOCATE_DEVICE_VIEW(Zi, Array2DR8, numLandunits, numLayers + 1)
     ALLOCATE_DEVICE_VIEW(Dz, Array2DR8, numLandunits, numLayers)
     ALLOCATE_DEVICE_VIEW(TotalDepth, Array1DR8, numLandunits)
   }
