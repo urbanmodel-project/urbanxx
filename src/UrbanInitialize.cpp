@@ -51,8 +51,132 @@ static void UrbanInitializeTemperature(UrbanType urban) {
   Kokkos::fence();
 }
 
-extern "C" {
+// Helper function to compute vertical discretization for a surface with uniform
+// layers
+template <typename ViewType>
+KOKKOS_INLINE_FUNCTION void ComputeVertDiscretizationForRoofOrWall(
+    const Real thickness, const int numLevels, const int l, const ViewType &zc,
+    const ViewType &dz, const ViewType &zi) {
+  // Compute cell centers
+  for (int k = 0; k < numLevels; ++k) {
+    zc(l, k) = (k + 0.5) * (thickness / numLevels);
+  }
 
+  // Compute layer thickness
+  dz(l, 0) = 0.5 * (zc(l, 0) + zc(l, 1));
+  for (int k = 1; k < numLevels - 1; ++k) {
+    dz(l, k) = 0.5 * (zc(l, k + 1) - zc(l, k - 1));
+  }
+  dz(l, numLevels - 1) = zc(l, numLevels - 1) - zc(l, numLevels - 2);
+
+  // Compute interface depths
+  zi(l, 0) = 0.0;
+  for (int k = 1; k < numLevels; ++k) {
+    zi(l, k) = 0.5 * (zc(l, k - 1) + zc(l, k));
+  }
+  zi(l, numLevels) = zc(l, numLevels - 1) + 0.5 * dz(l, numLevels - 1);
+}
+
+// Helper function to compute vertical discretization for roads with
+// exponential layers
+template <typename ViewType>
+KOKKOS_INLINE_FUNCTION void ComputeVertDiscretizationForRoad(
+    const int numLevels, const int l, const ViewType &zc, const ViewType &dz,
+    const ViewType &zi, const Real scalez, const Real zecoeff) {
+  // Compute cell centers (node depths) with exponential spacing
+  for (int k = 0; k < numLevels; ++k) {
+    zc(l, k) = scalez * (Kokkos::exp(zecoeff * ((double)k + 0.5)) - 1.0);
+  }
+
+  // Compute layer thickness
+  dz(l, 0) = 0.5 * (zc(l, 0) + zc(l, 1));
+  for (int k = 1; k < numLevels - 1; ++k) {
+    dz(l, k) = 0.5 * (zc(l, k + 1) - zc(l, k - 1));
+  }
+  dz(l, numLevels - 1) = zc(l, numLevels - 1) - zc(l, numLevels - 2);
+
+  // Compute interface depths
+  zi(l, 0) = 0.0;
+  for (int k = 1; k < numLevels; ++k) {
+    zi(l, k) = 0.5 * (zc(l, k - 1) + zc(l, k));
+  }
+  zi(l, numLevels) = zc(l, numLevels - 1) + 0.5 * dz(l, numLevels - 1);
+}
+
+static void UrbanInitializeVerticalDiscretization(UrbanType urban) {
+  const int numLandunits = urban->numLandunits;
+  const int numLevels = urban->numLevels;
+
+  // Access vertical discretization views
+  auto &thick_wall = urban->urbanParams.building.WallThickness;
+  auto &thick_roof = urban->urbanParams.building.RoofThickness;
+
+  auto &zc_sunlit_wall = urban->sunlitWall.Zc;
+  auto &dz_sunlit_wall = urban->sunlitWall.Dz;
+  auto &zi_sunlit_wall = urban->sunlitWall.Zi;
+  auto &depth_sunlit_wall = urban->sunlitWall.TotalDepth;
+
+  auto &zc_shaded_wall = urban->shadedWall.Zc;
+  auto &dz_shaded_wall = urban->shadedWall.Dz;
+  auto &zi_shaded_wall = urban->shadedWall.Zi;
+  auto &depth_shaded_wall = urban->shadedWall.TotalDepth;
+
+  auto &zc_pervious_road = urban->perviousRoad.Zc;
+  auto &dz_pervious_road = urban->perviousRoad.Dz;
+  auto &zi_pervious_road = urban->perviousRoad.Zi;
+  auto &depth_pervious_road = urban->perviousRoad.TotalDepth;
+
+  auto &zc_impervious_road = urban->imperviousRoad.Zc;
+  auto &dz_impervious_road = urban->imperviousRoad.Dz;
+  auto &zi_impervious_road = urban->imperviousRoad.Zi;
+  auto &depth_impervious_road = urban->imperviousRoad.TotalDepth;
+
+  auto &zc_roof = urban->roof.Zc;
+  auto &dz_roof = urban->roof.Dz;
+  auto &zi_roof = urban->roof.Zi;
+  auto &depth_roof = urban->roof.TotalDepth;
+
+  // Initialize vertical discretization
+  Kokkos::parallel_for(
+      "UrbanInitializeVerticalDiscretization", numLandunits,
+      KOKKOS_LAMBDA(int l) {
+        // Road discretization parameters
+        constexpr Real scalez = 0.025;
+        constexpr Real zecoeff = 0.5;
+
+        // Sunlit wall - uniform discretization
+        ComputeVertDiscretizationForRoofOrWall(thick_wall(l), numLevels, l,
+                                               zc_sunlit_wall, dz_sunlit_wall,
+                                               zi_sunlit_wall);
+        depth_sunlit_wall(l) = thick_wall(l);
+
+        // Shaded wall - uniform discretization
+        ComputeVertDiscretizationForRoofOrWall(thick_wall(l), numLevels, l,
+                                               zc_shaded_wall, dz_shaded_wall,
+                                               zi_shaded_wall);
+        depth_shaded_wall(l) = thick_wall(l);
+
+        // Roof - uniform discretization
+        ComputeVertDiscretizationForRoofOrWall(thick_roof(l), numLevels, l,
+                                               zc_roof, dz_roof, zi_roof);
+        depth_roof(l) = thick_roof(l);
+
+        // Pervious road - exponential discretization
+        ComputeVertDiscretizationForRoad(numLevels, l, zc_pervious_road,
+                                         dz_pervious_road, zi_pervious_road,
+                                         scalez, zecoeff);
+        depth_pervious_road(l) = zc_pervious_road(l, numLevels);
+
+        // Impervious road - exponential discretization
+        ComputeVertDiscretizationForRoad(numLevels, l, zc_impervious_road,
+                                         dz_impervious_road, zi_impervious_road,
+                                         scalez, zecoeff);
+        depth_impervious_road(l) = zc_impervious_road(l, numLevels);
+      });
+  Kokkos::fence();
+}
+
+extern "C" {
 // Public setup function that performs all initialization steps
 void UrbanSetup(UrbanType urban, UrbanErrorCode *status) {
   if (urban == nullptr || status == nullptr) {
@@ -63,6 +187,8 @@ void UrbanSetup(UrbanType urban, UrbanErrorCode *status) {
 
   try {
     // Initialize surface temperatures
+    UrbanInitializeTemperature(urban);
+    UrbanInitializeVerticalDiscretization(urban);
 
     *status = URBAN_SUCCESS;
   } catch (...) {
