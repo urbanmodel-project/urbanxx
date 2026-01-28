@@ -19,6 +19,7 @@ enum RadiationType {
 constexpr int NUM_RAD_BANDS = 2;    // vis and nir
 constexpr int NUM_RAD_TYPES = 2;    // direct and diffuse
 constexpr int NUM_URBAN_LAYERS = 5; // number of vertical levels
+constexpr int NUM_SOIL_LAYERS = 15; // number of soil layers
 
 #define STEBOL 5.670374419e-8
 

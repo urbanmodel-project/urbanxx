@@ -103,9 +103,9 @@ TEST_F(ParameterSetterTest, SetEmissivity_ValidData) {
 
 // Test: Thermal conductivity setters
 TEST_F(ParameterSetterTest, SetThermalConductivity_ValidData) {
-  const int numUrbanLayers = 15;
+  const int numUrbanLayers = 5;
   const int totalSize = numLandunits * numUrbanLayers;
-  double values[150];
+  double values[50];
   for (int i = 0; i < totalSize; ++i) {
     values[i] = 0.5 + (i % numUrbanLayers) * 0.1;
   }
@@ -124,9 +124,9 @@ TEST_F(ParameterSetterTest, SetThermalConductivity_ValidData) {
 
 // Test: Heat capacity setters
 TEST_F(ParameterSetterTest, SetHeatCapacity_ValidData) {
-  const int numUrbanLayers = 15;
+  const int numUrbanLayers = 5;
   const int totalSize = numLandunits * numUrbanLayers;
-  double values[150];
+  double values[50];
   for (int i = 0; i < totalSize; ++i) {
     values[i] = 1000.0 + (i % numUrbanLayers) * 100.0;
   }
