@@ -93,6 +93,7 @@ struct SurfaceDataBase {
   DECLARE_DEVICE_VIEW(1DR8, EffectiveSurfTemp) // effective temperature
   DECLARE_DEVICE_VIEW(1DR8, NetLongRad)        // net longwave radiation
   DECLARE_DEVICE_VIEW(1DR8, UpwardLongRad)     // upward longwave radiation
+  DECLARE_DEVICE_VIEW(1DR8, NetShortRad)       // net shortwave radiation
 
   // Saturation humidity variables
   DECLARE_DEVICE_VIEW(1DR8, Es)   // saturation vapor pressure (Pa)
@@ -125,6 +126,7 @@ struct SurfaceDataBase {
     ALLOCATE_DEVICE_VIEW(EffectiveSurfTemp, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(NetLongRad, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(UpwardLongRad, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(NetShortRad, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(Es, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(EsdT, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(Qs, Array1DR8, numLandunits)
