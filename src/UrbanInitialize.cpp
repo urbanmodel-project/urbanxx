@@ -1,5 +1,6 @@
 #include "Urban.h"
 #include "private/DataTypesImpl.h"
+#include "private/UrbanConstants.h"
 #include "private/UrbanTypeImpl.h"
 #include "private/UrbanValidation.h"
 
@@ -21,11 +22,19 @@ static void UrbanInitializeTemperature(UrbanType urban) {
   auto &sunlitWallTemp = urban->sunlitWall.EffectiveSurfTemp;
   auto &shadedWallTemp = urban->shadedWall.EffectiveSurfTemp;
 
+  // Get references to layer temperature views
+  auto &roofLayerTemp = urban->roof.Temperature;
+  auto &imperviousRoadLayerTemp = urban->imperviousRoad.Temperature;
+  auto &perviousRoadLayerTemp = urban->perviousRoad.Temperature;
+  auto &sunlitWallLayerTemp = urban->sunlitWall.Temperature;
+  auto &shadedWallLayerTemp = urban->shadedWall.Temperature;
+
   // Get references to canyon air properties
   auto &taf = urban->urbanCanyon.Taf;
   auto &qaf = urban->urbanCanyon.Qaf;
 
   const int numLandunits = urban->numLandunits;
+  const int numUrbanLayers = urban->numUrbanLayers;
 
   // Temperature initialization constants
   constexpr Real TEMP_ROOF_INIT = 292.0;
@@ -37,12 +46,21 @@ static void UrbanInitializeTemperature(UrbanType urban) {
   // Initialize surface temperatures and canyon air properties
   Kokkos::parallel_for(
       "InitializeSurfaceTemperatures", numLandunits, KOKKOS_LAMBDA(int l) {
-        // Initialize temperatures
+        // Initialize effective surface temperatures
         roofTemp(l) = TEMP_ROOF_INIT;
         imperviousRoadTemp(l) = TEMP_ROAD_INIT;
         perviousRoadTemp(l) = TEMP_ROAD_INIT;
         sunlitWallTemp(l) = TEMP_WALL_INIT;
         shadedWallTemp(l) = TEMP_WALL_INIT;
+
+        // Initialize layer temperatures for all urban surfaces
+        for (int k = 0; k < numUrbanLayers; ++k) {
+          roofLayerTemp(l, k) = TEMP_ROOF_INIT;
+          imperviousRoadLayerTemp(l, k) = TEMP_ROAD_INIT;
+          perviousRoadLayerTemp(l, k) = TEMP_ROAD_INIT;
+          sunlitWallLayerTemp(l, k) = TEMP_WALL_INIT;
+          shadedWallLayerTemp(l, k) = TEMP_WALL_INIT;
+        }
 
         // Initialize canyon air properties
         taf(l) = TEMP_CANYON_AIR_INIT; // Initialize to canyon air temperature
@@ -284,6 +302,7 @@ KOKKOS_INLINE_FUNCTION void CalculatePercolationFraction(const Real om_frac,
 static void UrbanInitializePerviousRoadSoils(UrbanType urban) {
   const int numLandunits = urban->numLandunits;
   const int numSoilLayers = urban->numSoilLayers;
+  const int numUrbanLayers = urban->numUrbanLayers;
 
   // Access soil property views for pervious road
   auto &sand = urban->perviousRoad.soil.Sand;
@@ -298,6 +317,8 @@ static void UrbanInitializePerviousRoadSoils(UrbanType urban) {
   auto &water_liquid = urban->perviousRoad.soil.WaterLiquid;
   auto &water_ice = urban->perviousRoad.soil.WaterIce;
   auto &water_vol = urban->perviousRoad.soil.WaterVolumetric;
+  auto &dz = urban->perviousRoad.Dz;
+  auto &temp = urban->perviousRoad.Temperature;
 
   // Soil property constants from ELM (SoilStateType.F90)
   constexpr Real om_tkm = 0.25; // Thermal conductivity of organic soil [W/m-K]
@@ -404,10 +425,6 @@ static void UrbanInitializePerviousRoadSoils(UrbanType urban) {
           tk_layer(l, k) = tkdry; // Initially set to dry thermal conductivity
           cv_solids(l, k) = csol;
 
-          // Initialize water content to zero
-          water_liquid(l, k) = 0.0;
-          water_ice(l, k) = 0.0;
-
           // Initialize volumetric water content
           // Layers 0-9 (first 10 layers): min(0.3, watsat)
           // Layers 10-14 (last 5 layers): 0.0 (hydrologically inactive)
@@ -415,6 +432,25 @@ static void UrbanInitializePerviousRoadSoils(UrbanType urban) {
             water_vol(l, k) = Kokkos::fmin(0.3, watsat_mixed);
           } else {
             water_vol(l, k) = 0.0;
+          }
+
+          // Initialize liquid and ice water based on layer temperature
+          constexpr Real tfrz = SHR_CONST_TKFRZ;
+          constexpr Real denice = SHR_CONST_RHOICE;
+          constexpr Real denh2o = SHR_CONST_RHOWATER;
+
+          // Note: For soil layers, we use the corresponding urban layer
+          // temperature if k < numUrbanLayers, otherwise use the last urban
+          // layer temperature
+          const int temp_idx = (k < numUrbanLayers) ? k : (numUrbanLayers - 1);
+          const Real layer_temp = temp(l, temp_idx);
+
+          if (layer_temp <= tfrz) {
+            water_ice(l, k) = dz(l, k) * denice * water_vol(l, k);
+            water_liquid(l, k) = 0.0;
+          } else {
+            water_ice(l, k) = 0.0;
+            water_liquid(l, k) = dz(l, k) * denh2o * water_vol(l, k);
           }
         }
       });
