@@ -295,8 +295,9 @@ static void UrbanInitializePerviousRoadSoils(UrbanType urban) {
   auto &tk_saturated = urban->perviousRoad.soil.TkSaturated;
   auto &tk_layer = urban->perviousRoad.soil.TkLayer;
   auto &cv_solids = urban->perviousRoad.soil.CvSolids;
-  auto &liquid_water = urban->perviousRoad.soil.LiquidWater;
-  auto &ice_water = urban->perviousRoad.soil.IceWater;
+  auto &water_liquid = urban->perviousRoad.soil.WaterLiquid;
+  auto &water_ice = urban->perviousRoad.soil.WaterIce;
+  auto &water_vol = urban->perviousRoad.soil.WaterVolumetric;
 
   // Soil property constants from ELM (SoilStateType.F90)
   constexpr Real om_tkm = 0.25; // Thermal conductivity of organic soil [W/m-K]
@@ -403,9 +404,18 @@ static void UrbanInitializePerviousRoadSoils(UrbanType urban) {
           tk_layer(l, k) = tkdry; // Initially set to dry thermal conductivity
           cv_solids(l, k) = csol;
 
-          //  Initialize water content to zero
-          liquid_water(l, k) = 0.0;
-          ice_water(l, k) = 0.0;
+          // Initialize water content to zero
+          water_liquid(l, k) = 0.0;
+          water_ice(l, k) = 0.0;
+
+          // Initialize volumetric water content
+          // Layers 0-9 (first 10 layers): min(0.3, watsat)
+          // Layers 10-14 (last 5 layers): 0.0 (hydrologically inactive)
+          if (k < 10) {
+            water_vol(l, k) = Kokkos::fmin(0.3, watsat_mixed);
+          } else {
+            water_vol(l, k) = 0.0;
+          }
         }
       });
   Kokkos::fence();
