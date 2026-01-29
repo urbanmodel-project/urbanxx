@@ -20,8 +20,8 @@ struct _p_UrbanType {
   UrbanParamsType urbanParams;
   UrbanCanyonType urbanCanyon;
   RoofDataType roof;
-  RoadDataType imperviousRoad;
-  RoadDataType perviousRoad;
+  ImperviousRoadDataType imperviousRoad;
+  PerviousRoadDataType perviousRoad;
   CompositeRoadSurfaceData compositeRoadSurface;
   WallDataType sunlitWall;
   WallDataType shadedWall;
@@ -39,7 +39,7 @@ struct _p_UrbanType {
         imperviousRoad(numLandunits_, NUM_RAD_BANDS, NUM_RAD_TYPES,
                        NUM_URBAN_LAYERS),
         perviousRoad(numLandunits_, NUM_RAD_BANDS, NUM_RAD_TYPES,
-                     NUM_URBAN_LAYERS),
+                     NUM_URBAN_LAYERS, NUM_SOIL_LAYERS),
         compositeRoadSurface(numLandunits_, NUM_RAD_BANDS, NUM_RAD_TYPES),
         sunlitWall(numLandunits_, NUM_RAD_BANDS, NUM_RAD_TYPES,
                    NUM_URBAN_LAYERS),

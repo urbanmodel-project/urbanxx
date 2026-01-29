@@ -35,12 +35,48 @@ struct BuildingDataType {
   }
 };
 
+struct SoilDataType {
+  DECLARE_DEVICE_VIEW(2DR8,
+                      TkMinerals)  // thermal conductivity, soil
+                                   // minerals [W/m-K]
+  DECLARE_DEVICE_VIEW(2DR8, TkDry) // thermal conductivity, dry soil [W/m-K]
+  DECLARE_DEVICE_VIEW(2DR8,
+                      TkSaturated) // thermal conductivity,
+                                   // saturated soil [W/m-K]
+  DECLARE_DEVICE_VIEW(2DR8,
+                      TkLayer) // thermal conductivity of each layer [W/m-K]
+  DECLARE_DEVICE_VIEW(2DR8, CvSolids) // heat capacity, soil solids [J/m^3/K]
+  DECLARE_DEVICE_VIEW(2DR8,
+                      WatSat)            // volumetric soil water at
+                                         // saturation (porosity) [-]
+  DECLARE_DEVICE_VIEW(2DR8, LiquidWater) // liquid water [kg/m^2]
+  DECLARE_DEVICE_VIEW(2DR8, IceWater)    // ice lens [kg/m^2]
+  DECLARE_DEVICE_VIEW(2DR8, Sand)        // soil texture: percent sand [-]
+  DECLARE_DEVICE_VIEW(2DR8, Clay)        // soil texture: percent clay [-]
+  DECLARE_DEVICE_VIEW(2DR8, Organic)     // organic matter [kg/m³]
+
+  SoilDataType(int numLandunits, int numSoilLayers) {
+    ALLOCATE_DEVICE_VIEW(TkMinerals, Array2DR8, numLandunits, numSoilLayers)
+    ALLOCATE_DEVICE_VIEW(TkDry, Array2DR8, numLandunits, numSoilLayers)
+    ALLOCATE_DEVICE_VIEW(CvSolids, Array2DR8, numLandunits, numSoilLayers)
+    ALLOCATE_DEVICE_VIEW(WatSat, Array2DR8, numLandunits, numSoilLayers)
+    ALLOCATE_DEVICE_VIEW(TkSaturated, Array2DR8, numLandunits, numSoilLayers)
+    ALLOCATE_DEVICE_VIEW(TkLayer, Array2DR8, numLandunits, numSoilLayers)
+    ALLOCATE_DEVICE_VIEW(LiquidWater, Array2DR8, numLandunits, numSoilLayers)
+    ALLOCATE_DEVICE_VIEW(IceWater, Array2DR8, numLandunits, numSoilLayers)
+    ALLOCATE_DEVICE_VIEW(Sand, Array2DR8, numLandunits, numSoilLayers)
+    ALLOCATE_DEVICE_VIEW(Clay, Array2DR8, numLandunits, numSoilLayers)
+    ALLOCATE_DEVICE_VIEW(Organic, Array2DR8, numLandunits, numSoilLayers)
+  }
+};
+
 //
 // struct hierarchy:
 //
 // SurfaceDataBase (base)
 // ├── SnowCoveredSurfaceData
-// │   ├── RoadDataType
+// │   ├── ImperviousRoadDataType
+// │   ├── PerviousRoadDataType
 // │   └── RoofDataType
 // └── WallDataType
 //
@@ -71,7 +107,7 @@ struct SurfaceDataBase {
   DECLARE_DEVICE_VIEW(1DR8, TotalDepth) // total depth of surface layers (m)
 
   // Thermal properties
-  DECLARE_DEVICE_VIEW(2DR8, ThermalConductivity) // thermal conductivity (W/m/K)
+  DECLARE_DEVICE_VIEW(2DR8, Tk)           // thermal conductivity (W/m/K)
   DECLARE_DEVICE_VIEW(2DR8, HeatCapacity) // volumetric heat capacity (J/m^3/K)
 
   SurfaceDataBase(int numLandunits, int numRadBands, int numRadTypes,
@@ -92,8 +128,7 @@ struct SurfaceDataBase {
     ALLOCATE_DEVICE_VIEW(Zi, Array2DR8, numLandunits, numLayers + 1)
     ALLOCATE_DEVICE_VIEW(Dz, Array2DR8, numLandunits, numLayers)
     ALLOCATE_DEVICE_VIEW(TotalDepth, Array1DR8, numLandunits)
-    ALLOCATE_DEVICE_VIEW(ThermalConductivity, Array2DR8, numLandunits,
-                         numLayers)
+    ALLOCATE_DEVICE_VIEW(Tk, Array2DR8, numLandunits, numLayers)
     ALLOCATE_DEVICE_VIEW(HeatCapacity, Array2DR8, numLandunits, numLayers)
   }
 };
@@ -114,12 +149,23 @@ struct SnowCoveredSurfaceData : SurfaceDataBase {
   }
 };
 
-struct RoadDataType : SnowCoveredSurfaceData {
+struct ImperviousRoadDataType : SnowCoveredSurfaceData {
   // Inherits all fields from SnowCoveredSurfaceData and SurfaceDataBase
-  RoadDataType(int numLandunits, int numRadBands, int numRadTypes,
-               int numLayers)
+  ImperviousRoadDataType(int numLandunits, int numRadBands, int numRadTypes,
+                         int numLayers)
       : SnowCoveredSurfaceData(numLandunits, numRadBands, numRadTypes,
                                numLayers) {}
+};
+
+struct PerviousRoadDataType : SnowCoveredSurfaceData {
+  SoilDataType soil;
+  // Inherits all fields from SnowCoveredSurfaceData and SurfaceDataBase
+  // Also includes soil data for pervious road
+  PerviousRoadDataType(int numLandunits, int numRadBands, int numRadTypes,
+                       int numLayers, int numSoilLayers)
+      : SnowCoveredSurfaceData(numLandunits, numRadBands, numRadTypes,
+                               numLayers),
+        soil(numLandunits, numSoilLayers) {}
 };
 
 struct WallDataType : SurfaceDataBase {
