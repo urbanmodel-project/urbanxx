@@ -221,6 +221,31 @@ void UrbanSetHeatCapacityRoof(UrbanType urban, const double *values,
   SetView2D(urban->urbanParams.cv.Roof, values, size, status);
 }
 
+// Soil property setter functions for pervious road
+void UrbanSetSandPerviousRoad(UrbanType urban, const double *values,
+                              const int size[2], UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
+    return;
+
+  SetView2D(urban->perviousRoad.soil.Sand, values, size, status);
+}
+
+void UrbanSetClayPerviousRoad(UrbanType urban, const double *values,
+                              const int size[2], UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
+    return;
+
+  SetView2D(urban->perviousRoad.soil.Clay, values, size, status);
+}
+
+void UrbanSetOrganicPerviousRoad(UrbanType urban, const double *values,
+                                 const int size[2], UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
+    return;
+
+  SetView2D(urban->perviousRoad.soil.Organic, values, size, status);
+}
+
 // Height parameter setter functions
 void UrbanSetForcHgtT(UrbanType urban, const double *values, int length,
                       UrbanErrorCode *status) {

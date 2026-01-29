@@ -311,6 +311,47 @@ void SetHeatCapacity(UrbanType urban, int numLandunits, int mpi_rank) {
   }
 }
 
+void SetSoilProperties(UrbanType urban, int numLandunits, int mpi_rank) {
+  UrbanErrorCode ierr;
+
+  const int NUM_SOIL_LEVELS = 15;
+  int size2D[2] = {numLandunits, NUM_SOIL_LEVELS};
+  int totalSize = numLandunits * NUM_SOIL_LEVELS;
+
+  double *sand = AllocateArray(totalSize, "sand");
+  double *clay = AllocateArray(totalSize, "clay");
+  double *organic = AllocateArray(totalSize, "organic");
+
+  // Soil property values for first 10 layers (layers 11-15 use layer 10 values)
+  double sandLevels[10] = {46.0, 46.0, 44.0, 43.0, 41.0, 39.0, 37.0, 37.0, 40.0, 44.0};
+  double clayLevels[10] = {35.0, 35.0, 37.0, 39.0, 42.0, 44.0, 46.0, 45.0, 41.0, 42.0};
+  double organicLevels[10] = {25.2229820327902, 25.700711396596, 22.091324741929, 18.1150405358844,
+                              14.5211498497041, 11.4998502546828, 9.04501744160207, 7.08594278159189,
+                              0.0, 0.0};
+
+  for (int i = 0; i < numLandunits; ++i) {
+    for (int layer = 0; layer < NUM_SOIL_LEVELS; ++layer) {
+      int idx = i * NUM_SOIL_LEVELS + layer;
+      // Use layer 9 (10th layer) values for layers 10-14 (11th-15th)
+      int srcLayer = (layer < 10) ? layer : 9;
+      sand[idx] = sandLevels[srcLayer];
+      clay[idx] = clayLevels[srcLayer];
+      organic[idx] = organicLevels[srcLayer];
+    }
+  }
+
+  UrbanCall(UrbanSetSandPerviousRoad(urban, sand, size2D, &ierr), &ierr);
+  UrbanCall(UrbanSetClayPerviousRoad(urban, clay, size2D, &ierr), &ierr);
+  UrbanCall(UrbanSetOrganicPerviousRoad(urban, organic, size2D, &ierr), &ierr);
+
+  double *soilArrays[] = {sand, clay, organic};
+  FreeArrays(soilArrays, 3);
+
+  if (mpi_rank == 0) {
+    std::cout << "Set soil properties for pervious road (sand, clay, organic)" << std::endl;
+  }
+}
+
 void SetAtmosphericForcing(UrbanType urban, int numLandunits, int mpi_rank) {
   UrbanErrorCode ierr;
 
@@ -458,6 +499,7 @@ void SetUrbanParameters(UrbanType urban, int numLandunits, int mpi_rank) {
   SetEmissivity(urban, numLandunits, mpi_rank);
   SetThermalConductivity(urban, numLandunits, mpi_rank);
   SetHeatCapacity(urban, numLandunits, mpi_rank);
+  SetSoilProperties(urban, numLandunits, mpi_rank);
   SetAtmosphericForcing(urban, numLandunits, mpi_rank);
 }
 

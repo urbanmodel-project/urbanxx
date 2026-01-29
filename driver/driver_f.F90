@@ -532,6 +532,66 @@ contains
     deallocate(cvRoof)
   end subroutine SetHeatCapacity
 
+  subroutine SetSoilProperties(urban, numLandunits, mpi_rank)
+    type(UrbanType), intent(in) :: urban
+    integer(c_int), intent(in) :: numLandunits
+    integer, intent(in) :: mpi_rank
+    integer(c_int) :: status, i, k, srcLayer
+    integer(c_int), parameter :: NUM_SOIL_LEVELS = 15
+    integer(c_int) :: totalSize
+    integer(c_int), dimension(2) :: size2D
+    real(c_double), allocatable, target :: sand(:)
+    real(c_double), allocatable, target :: clay(:)
+    real(c_double), allocatable, target :: organic(:)
+    ! Soil property values for first 10 layers (layers 11-15 use layer 10 values)
+    real(c_double), dimension(10) :: sandLevels
+    real(c_double), dimension(10) :: clayLevels
+    real(c_double), dimension(10) :: organicLevels
+
+    sandLevels = (/ 46.0d0, 46.0d0, 44.0d0, 43.0d0, 41.0d0, 39.0d0, 37.0d0, 37.0d0, 40.0d0, 44.0d0 /)
+    clayLevels = (/ 35.0d0, 35.0d0, 37.0d0, 39.0d0, 42.0d0, 44.0d0, 46.0d0, 45.0d0, 41.0d0, 42.0d0 /)
+    organicLevels = (/ 25.2229820327902d0, 25.700711396596d0, 22.091324741929d0, 18.1150405358844d0, &
+                       14.5211498497041d0, 11.4998502546828d0, 9.04501744160207d0, 7.08594278159189d0, &
+                       0.0d0, 0.0d0 /)
+
+    totalSize = numLandunits * NUM_SOIL_LEVELS
+    size2D(1) = numLandunits
+    size2D(2) = NUM_SOIL_LEVELS
+
+    allocate(sand(totalSize))
+    allocate(clay(totalSize))
+    allocate(organic(totalSize))
+
+    do i = 1, numLandunits
+      do k = 1, NUM_SOIL_LEVELS
+        ! Use layer 10 values for layers 11-15
+        if (k <= 10) then
+          srcLayer = k
+        else
+          srcLayer = 10
+        end if
+        sand((i-1) * NUM_SOIL_LEVELS + k) = sandLevels(srcLayer)
+        clay((i-1) * NUM_SOIL_LEVELS + k) = clayLevels(srcLayer)
+        organic((i-1) * NUM_SOIL_LEVELS + k) = organicLevels(srcLayer)
+      end do
+    end do
+
+    call UrbanSetSandPerviousRoad(urban, c_loc(sand), size2D, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+    call UrbanSetClayPerviousRoad(urban, c_loc(clay), size2D, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+    call UrbanSetOrganicPerviousRoad(urban, c_loc(organic), size2D, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+
+    if (mpi_rank == 0) then
+      write(*,*) 'Set soil properties for pervious road (sand, clay, organic)'
+    end if
+
+    deallocate(sand)
+    deallocate(clay)
+    deallocate(organic)
+  end subroutine SetSoilProperties
+
   subroutine SetAtmosphericForcing(urban, numLandunits, mpi_rank)
     type(UrbanType), intent(in) :: urban
     integer(c_int), intent(in) :: numLandunits
@@ -666,6 +726,7 @@ contains
     call SetEmissivity(urban, numLandunits, mpi_rank)
     call SetThermalConductivity(urban, numLandunits, mpi_rank)
     call SetHeatCapacity(urban, numLandunits, mpi_rank)
+    call SetSoilProperties(urban, numLandunits, mpi_rank)
     call SetAtmosphericForcing(urban, numLandunits, mpi_rank)
   end subroutine SetUrbanParameters
 
