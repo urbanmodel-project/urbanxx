@@ -41,10 +41,8 @@ struct SoilDataType {
                                    // minerals [W/m-K]
   DECLARE_DEVICE_VIEW(2DR8, TkDry) // thermal conductivity, dry soil [W/m-K]
   DECLARE_DEVICE_VIEW(2DR8,
-                      TkSaturated) // thermal conductivity,
-                                   // saturated soil [W/m-K]
-  DECLARE_DEVICE_VIEW(2DR8,
-                      TkLayer) // thermal conductivity of each layer [W/m-K]
+                      TkSaturated)    // thermal conductivity,
+                                      // saturated soil [W/m-K]
   DECLARE_DEVICE_VIEW(2DR8, CvSolids) // heat capacity, soil solids [J/m^3/K]
   DECLARE_DEVICE_VIEW(2DR8,
                       WatSat)                // volumetric soil water at
@@ -62,7 +60,6 @@ struct SoilDataType {
     ALLOCATE_DEVICE_VIEW(CvSolids, Array2DR8, numLandunits, numSoilLayers)
     ALLOCATE_DEVICE_VIEW(WatSat, Array2DR8, numLandunits, numSoilLayers)
     ALLOCATE_DEVICE_VIEW(TkSaturated, Array2DR8, numLandunits, numSoilLayers)
-    ALLOCATE_DEVICE_VIEW(TkLayer, Array2DR8, numLandunits, numSoilLayers)
     ALLOCATE_DEVICE_VIEW(WaterLiquid, Array2DR8, numLandunits, numSoilLayers)
     ALLOCATE_DEVICE_VIEW(WaterIce, Array2DR8, numLandunits, numSoilLayers)
     ALLOCATE_DEVICE_VIEW(WaterVolumetric, Array2DR8, numLandunits,
@@ -110,7 +107,9 @@ struct SurfaceDataBase {
   DECLARE_DEVICE_VIEW(1DR8, TotalDepth) // total depth of surface layers (m)
 
   // Thermal properties
-  DECLARE_DEVICE_VIEW(2DR8, Tk)           // thermal conductivity (W/m/K)
+  DECLARE_DEVICE_VIEW(2DR8, TkLayer) // thermal conductivity (W/m/K)
+  DECLARE_DEVICE_VIEW(
+      2DR8, TkInterface) // thermal conductivity at layer interface (W/m/K)
   DECLARE_DEVICE_VIEW(2DR8, HeatCapacity) // volumetric heat capacity (J/m^3/K)
   DECLARE_DEVICE_VIEW(2DR8, Temperature)  // layer temperature (K)
 
@@ -132,7 +131,8 @@ struct SurfaceDataBase {
     ALLOCATE_DEVICE_VIEW(Zi, Array2DR8, numLandunits, numLayers + 1)
     ALLOCATE_DEVICE_VIEW(Dz, Array2DR8, numLandunits, numLayers)
     ALLOCATE_DEVICE_VIEW(TotalDepth, Array1DR8, numLandunits)
-    ALLOCATE_DEVICE_VIEW(Tk, Array2DR8, numLandunits, numLayers)
+    ALLOCATE_DEVICE_VIEW(TkLayer, Array2DR8, numLandunits, numLayers)
+    ALLOCATE_DEVICE_VIEW(TkInterface, Array2DR8, numLandunits, numLayers)
     ALLOCATE_DEVICE_VIEW(HeatCapacity, Array2DR8, numLandunits, numLayers)
     ALLOCATE_DEVICE_VIEW(Temperature, Array2DR8, numLandunits, numLayers)
   }

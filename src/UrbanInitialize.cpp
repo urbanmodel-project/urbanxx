@@ -225,15 +225,15 @@ static void UrbanInitializeThermalProperties(UrbanType urban) {
   auto &cv_road_params = urban->urbanParams.cv.Road;
 
   // Access surface thermal properties
-  auto &tk_sunlit_wall = urban->sunlitWall.Tk;
+  auto &tk_sunlit_wall = urban->sunlitWall.TkLayer;
   auto &cv_sunlit_wall = urban->sunlitWall.HeatCapacity;
-  auto &tk_shaded_wall = urban->shadedWall.Tk;
+  auto &tk_shaded_wall = urban->shadedWall.TkLayer;
   auto &cv_shaded_wall = urban->shadedWall.HeatCapacity;
-  auto &tk_roof = urban->roof.Tk;
+  auto &tk_roof = urban->roof.TkLayer;
   auto &cv_roof = urban->roof.HeatCapacity;
-  auto &tk_pervious_road = urban->perviousRoad.Tk;
+  auto &tk_pervious_road = urban->perviousRoad.TkLayer;
   auto &cv_pervious_road = urban->perviousRoad.HeatCapacity;
-  auto &tk_impervious_road = urban->imperviousRoad.Tk;
+  auto &tk_impervious_road = urban->imperviousRoad.TkLayer;
   auto &cv_impervious_road = urban->imperviousRoad.HeatCapacity;
 
   // Copy thermal properties
@@ -318,7 +318,7 @@ static void UrbanInitializePerviousRoadSoils(UrbanType urban) {
   auto &tk_minerals = urban->perviousRoad.soil.TkMinerals;
   auto &tk_dry = urban->perviousRoad.soil.TkDry;
   auto &tk_saturated = urban->perviousRoad.soil.TkSaturated;
-  auto &tk_layer = urban->perviousRoad.soil.TkLayer;
+  auto &tkLayer = urban->perviousRoad.TkLayer;
   auto &cv_solids = urban->perviousRoad.soil.CvSolids;
   auto &water_liquid = urban->perviousRoad.soil.WaterLiquid;
   auto &water_ice = urban->perviousRoad.soil.WaterIce;
@@ -428,7 +428,7 @@ static void UrbanInitializePerviousRoadSoils(UrbanType urban) {
           tk_minerals(l, k) = tkmg;
           tk_dry(l, k) = tkdry;
           tk_saturated(l, k) = tksatu;
-          tk_layer(l, k) = tkdry; // Initially set to dry thermal conductivity
+          tkLayer(l, k) = tkdry; // Initially set to dry thermal conductivity
           cv_solids(l, k) = csol;
 
           // Initialize volumetric water content
