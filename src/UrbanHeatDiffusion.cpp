@@ -14,7 +14,7 @@ namespace URBANXX {
 template <typename ViewType>
 KOKKOS_INLINE_FUNCTION void ComputeSoilThermalConductivity(
     const int l, const int numSoilLayers, const ViewType &tk_minerals,
-    const ViewType &tk_dry, const ViewType &tk_layer, const ViewType &watsat,
+    const ViewType &tk_dry, const ViewType &tkLayer, const ViewType &watsat,
     const ViewType &water_liquid, const ViewType &water_ice, const ViewType &dz,
     const ViewType &temp) {
 
@@ -56,13 +56,13 @@ KOKKOS_INLINE_FUNCTION void ComputeSoilThermalConductivity(
 
       // Effective thermal conductivity
       // Linear interpolation between dry and saturated based on Kersten number
-      tk_layer(l, k) = dke * dksat + (1.0 - dke) * tk_dry(l, k);
+      tkLayer(l, k) = dke * dksat + (1.0 - dke) * tk_dry(l, k);
     } else {
       // Dry soil
-      tk_layer(l, k) = tk_dry(l, k);
+      tkLayer(l, k) = tk_dry(l, k);
     }
     if (k > NUM_LAYERS_ABV_BEDROCK - 1) {
-      tk_layer(l, k) = TK_BEDROCK;
+      tkLayer(l, k) = TK_BEDROCK;
     }
   }
 }
@@ -76,7 +76,7 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
   // Access soil property views
   auto tk_minerals = urban.perviousRoad.soil.TkMinerals;
   auto tk_dry = urban.perviousRoad.soil.TkDry;
-  auto tk_layer = urban.perviousRoad.soil.TkLayer;
+  auto tkLayer = urban.perviousRoad.TkLayer;
   auto watsat = urban.perviousRoad.soil.WatSat;
   auto water_liquid = urban.perviousRoad.soil.WaterLiquid;
   auto water_ice = urban.perviousRoad.soil.WaterIce;
@@ -88,8 +88,8 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
       "ComputeHeatDiffusion", numLandunits, KOKKOS_LAMBDA(int l) {
         // Step 1: Compute thermal conductivity for pervious road soil layers
         ComputeSoilThermalConductivity(l, numSoilLayers, tk_minerals, tk_dry,
-                                       tk_layer, watsat, water_liquid,
-                                       water_ice, dz, temp);
+                                       tkLayer, watsat, water_liquid, water_ice,
+                                       dz, temp);
 
         // TODO: Add remaining heat diffusion steps:
         // Step 2: Setup tridiagonal system for heat conduction equation
