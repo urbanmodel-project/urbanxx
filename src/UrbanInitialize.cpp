@@ -201,15 +201,15 @@ static void UrbanInitializeThermalProperties(UrbanType urban) {
   auto &cv_road_params = urban->urbanParams.cv.Road;
 
   // Access surface thermal properties
-  auto &tk_sunlit_wall = urban->sunlitWall.ThermalConductivity;
+  auto &tk_sunlit_wall = urban->sunlitWall.Tk;
   auto &cv_sunlit_wall = urban->sunlitWall.HeatCapacity;
-  auto &tk_shaded_wall = urban->shadedWall.ThermalConductivity;
+  auto &tk_shaded_wall = urban->shadedWall.Tk;
   auto &cv_shaded_wall = urban->shadedWall.HeatCapacity;
-  auto &tk_roof = urban->roof.ThermalConductivity;
+  auto &tk_roof = urban->roof.Tk;
   auto &cv_roof = urban->roof.HeatCapacity;
-  auto &tk_pervious_road = urban->perviousRoad.ThermalConductivity;
+  auto &tk_pervious_road = urban->perviousRoad.Tk;
   auto &cv_pervious_road = urban->perviousRoad.HeatCapacity;
-  auto &tk_impervious_road = urban->imperviousRoad.ThermalConductivity;
+  auto &tk_impervious_road = urban->imperviousRoad.Tk;
   auto &cv_impervious_road = urban->imperviousRoad.HeatCapacity;
 
   // Copy thermal properties
