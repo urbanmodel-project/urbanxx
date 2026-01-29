@@ -170,9 +170,9 @@ struct PerviousRoadDataType : SnowCoveredSurfaceData {
   // Inherits all fields from SnowCoveredSurfaceData and SurfaceDataBase
   // Also includes soil data for pervious road
   PerviousRoadDataType(int numLandunits, int numRadBands, int numRadTypes,
-                       int numLayers, int numSoilLayers)
+                       int numSoilLayers)
       : SnowCoveredSurfaceData(numLandunits, numRadBands, numRadTypes,
-                               numLayers),
+                               numSoilLayers),
         soil(numLandunits, numSoilLayers) {}
 };
 

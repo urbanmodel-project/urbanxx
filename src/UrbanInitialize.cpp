@@ -124,6 +124,7 @@ KOKKOS_INLINE_FUNCTION void ComputeVertDiscretizationForRoad(
 static void UrbanInitializeVerticalDiscretization(UrbanType urban) {
   const int numLandunits = urban->numLandunits;
   const int numUrbanLayers = urban->numUrbanLayers;
+  const int numSoilLayers = urban->numSoilLayers;
 
   // Access vertical discretization views
   auto &thick_wall = urban->urbanParams.building.WallThickness;
@@ -180,16 +181,16 @@ static void UrbanInitializeVerticalDiscretization(UrbanType urban) {
         depth_roof(l) = thick_roof(l);
 
         // Pervious road - exponential discretization
-        ComputeVertDiscretizationForRoad(numUrbanLayers, l, zc_pervious_road,
+        ComputeVertDiscretizationForRoad(numSoilLayers, l, zc_pervious_road,
                                          dz_pervious_road, zi_pervious_road,
                                          scalez, zecoeff);
-        depth_pervious_road(l) = zc_pervious_road(l, numUrbanLayers);
+        depth_pervious_road(l) = zi_pervious_road(l, numSoilLayers);
 
         // Impervious road - exponential discretization
         ComputeVertDiscretizationForRoad(numUrbanLayers, l, zc_impervious_road,
                                          dz_impervious_road, zi_impervious_road,
                                          scalez, zecoeff);
-        depth_impervious_road(l) = zc_impervious_road(l, numUrbanLayers);
+        depth_impervious_road(l) = zi_impervious_road(l, numUrbanLayers);
       });
   Kokkos::fence();
 }
