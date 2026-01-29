@@ -1,6 +1,6 @@
 #include "Urban.h"
 #include "private/DataTypesImpl.h"
-#include "private/UrbanConstants.h"
+#include "private/UrbanThermalFunctions.h"
 #include "private/UrbanTypeImpl.h"
 #include "private/UrbanValidation.h"
 
@@ -459,6 +459,65 @@ static void UrbanInitializePerviousRoadSoils(UrbanType urban) {
   Kokkos::fence();
 }
 
+static void UrbanInitializeInterfaceThermalProperties(UrbanType urban) {
+  const int numLandunits = urban->numLandunits;
+  const int numUrbanLayers = urban->numUrbanLayers;
+
+  // Access impervious road views
+  auto &imperv_tkLayer = urban->imperviousRoad.TkLayer;
+  auto &imperv_tkInterface = urban->imperviousRoad.TkInterface;
+  auto &imperv_zc = urban->imperviousRoad.Zc;
+  auto &imperv_zi = urban->imperviousRoad.Zi;
+  auto &imperv_numActiveLayers = urban->imperviousRoad.NumberOfActiveLayers;
+
+  // Access sunlit wall views
+  auto &sunlit_tkLayer = urban->sunlitWall.TkLayer;
+  auto &sunlit_tkInterface = urban->sunlitWall.TkInterface;
+  auto &sunlit_zc = urban->sunlitWall.Zc;
+  auto &sunlit_zi = urban->sunlitWall.Zi;
+
+  // Access shaded wall views
+  auto &shaded_tkLayer = urban->shadedWall.TkLayer;
+  auto &shaded_tkInterface = urban->shadedWall.TkInterface;
+  auto &shaded_zc = urban->shadedWall.Zc;
+  auto &shaded_zi = urban->shadedWall.Zi;
+
+  // Access roof views
+  auto &roof_tkLayer = urban->roof.TkLayer;
+  auto &roof_tkInterface = urban->roof.TkInterface;
+  auto &roof_zc = urban->roof.Zc;
+  auto &roof_zi = urban->roof.Zi;
+
+  // Compute interface thermal conductivity for all surfaces
+  Kokkos::parallel_for(
+      "UrbanInitializeInterfaceThermalProperties", numLandunits,
+      KOKKOS_LAMBDA(int l) {
+        // Impervious road: variable active layers based on density class
+        ComputeInterfaceThermalConductivity(
+            l, numUrbanLayers, imperv_numActiveLayers(l), imperv_tkLayer,
+            imperv_tkInterface, imperv_zc, imperv_zi,
+            imperv_tkLayer(l, numUrbanLayers - 1));
+
+        // Sunlit wall: all urban layers are active
+        ComputeInterfaceThermalConductivity(
+            l, numUrbanLayers, numUrbanLayers, sunlit_tkLayer,
+            sunlit_tkInterface, sunlit_zc, sunlit_zi,
+            sunlit_tkLayer(l, numUrbanLayers - 1));
+
+        // Shaded wall: all urban layers are active
+        ComputeInterfaceThermalConductivity(
+            l, numUrbanLayers, numUrbanLayers, shaded_tkLayer,
+            shaded_tkInterface, shaded_zc, shaded_zi,
+            shaded_tkLayer(l, numUrbanLayers - 1));
+
+        // Roof: all urban layers are active
+        ComputeInterfaceThermalConductivity(
+            l, numUrbanLayers, numUrbanLayers, roof_tkLayer, roof_tkInterface,
+            roof_zc, roof_zi, roof_tkLayer(l, numUrbanLayers - 1));
+      });
+  Kokkos::fence();
+}
+
 extern "C" {
 // Public setup function that performs all initialization steps
 void UrbanSetup(UrbanType urban, UrbanErrorCode *status) {
@@ -473,6 +532,7 @@ void UrbanSetup(UrbanType urban, UrbanErrorCode *status) {
     UrbanInitializeTemperature(urban);
     UrbanInitializeVerticalDiscretization(urban);
     UrbanInitializeThermalProperties(urban);
+    UrbanInitializeInterfaceThermalProperties(urban);
     UrbanInitializePerviousRoadSoils(urban);
 
     *status = URBAN_SUCCESS;
