@@ -88,8 +88,6 @@ KOKKOS_INLINE_FUNCTION void ComputeInterfaceThermalConductivity(
       // Inactive layers set to fill value
       tkInterface(l, k) = tkFillValue;
     }
-    if (l == 0)
-      printf("tkInterface(%d,%d) = %18.16f\n", l, k, tkInterface(l, k));
   }
 
   // Last interface value set to fill value
@@ -101,33 +99,83 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
 
   const int numLandunits = urban.numLandunits;
   const int numSoilLayers = urban.numSoilLayers;
+  const int numUrbanLayers = urban.numUrbanLayers;
 
-  // Access soil property views
-  auto tk_minerals = urban.perviousRoad.soil.TkMinerals;
-  auto tk_dry = urban.perviousRoad.soil.TkDry;
-  auto tkLayer = urban.perviousRoad.TkLayer;
-  auto tkInterface = urban.perviousRoad.TkInterface;
-  auto watsat = urban.perviousRoad.soil.WatSat;
-  auto water_liquid = urban.perviousRoad.soil.WaterLiquid;
-  auto water_ice = urban.perviousRoad.soil.WaterIce;
-  auto dz = urban.perviousRoad.Dz;
-  auto zc = urban.perviousRoad.Zc;
-  auto zi = urban.perviousRoad.Zi;
-  auto temp = urban.perviousRoad.Temperature;
+  // Access pervious road soil property views
+  auto perv_tk_minerals = urban.perviousRoad.soil.TkMinerals;
+  auto perv_tk_dry = urban.perviousRoad.soil.TkDry;
+  auto perv_tkLayer = urban.perviousRoad.TkLayer;
+  auto perv_tkInterface = urban.perviousRoad.TkInterface;
+  auto perv_watsat = urban.perviousRoad.soil.WatSat;
+  auto perv_water_liquid = urban.perviousRoad.soil.WaterLiquid;
+  auto perv_water_ice = urban.perviousRoad.soil.WaterIce;
+  auto perv_dz = urban.perviousRoad.Dz;
+  auto perv_zc = urban.perviousRoad.Zc;
+  auto perv_zi = urban.perviousRoad.Zi;
+  auto perv_temp = urban.perviousRoad.Temperature;
+
+  // Access impervious road views
+  auto imperv_tkLayer = urban.imperviousRoad.TkLayer;
+  auto imperv_tkInterface = urban.imperviousRoad.TkInterface;
+  auto imperv_zc = urban.imperviousRoad.Zc;
+  auto imperv_zi = urban.imperviousRoad.Zi;
+  auto imperv_numActiveLayers = urban.imperviousRoad.NumberOfActiveLayers;
+
+  // Access sunlit wall views
+  auto sunlit_tkLayer = urban.sunlitWall.TkLayer;
+  auto sunlit_tkInterface = urban.sunlitWall.TkInterface;
+  auto sunlit_zc = urban.sunlitWall.Zc;
+  auto sunlit_zi = urban.sunlitWall.Zi;
+
+  // Access shaded wall views
+  auto shaded_tkLayer = urban.shadedWall.TkLayer;
+  auto shaded_tkInterface = urban.shadedWall.TkInterface;
+  auto shaded_zc = urban.shadedWall.Zc;
+  auto shaded_zi = urban.shadedWall.Zi;
+
+  // Access roof views
+  auto roof_tkLayer = urban.roof.TkLayer;
+  auto roof_tkInterface = urban.roof.TkInterface;
+  auto roof_zc = urban.roof.Zc;
+  auto roof_zi = urban.roof.Zi;
 
   // Single parallel kernel over all landunits
   Kokkos::parallel_for(
       "ComputeHeatDiffusion", numLandunits, KOKKOS_LAMBDA(int l) {
         // Step 1: Compute thermal conductivity for pervious road soil layers
-        ComputeSoilThermalConductivity(l, numSoilLayers, tk_minerals, tk_dry,
-                                       tkLayer, watsat, water_liquid, water_ice,
-                                       dz, temp);
+        ComputeSoilThermalConductivity(
+            l, numSoilLayers, perv_tk_minerals, perv_tk_dry, perv_tkLayer,
+            perv_watsat, perv_water_liquid, perv_water_ice, perv_dz, perv_temp);
 
         // Step 2: Compute thermal conductivity at layer interfaces
-        // For pervious road, all soil layers are active (numActiveLayers =
-        // numSoilLayers) and inactive interfaces are set to 0.0
+
+        // Pervious road: all soil layers are active
         ComputeInterfaceThermalConductivity(l, numSoilLayers, numSoilLayers,
-                                            tkLayer, tkInterface, zc, zi, 0.0);
+                                            perv_tkLayer, perv_tkInterface,
+                                            perv_zc, perv_zi, 0.0);
+
+        // Impervious road: variable active layers based on density class
+        ComputeInterfaceThermalConductivity(
+            l, numUrbanLayers, imperv_numActiveLayers(l), imperv_tkLayer,
+            imperv_tkInterface, imperv_zc, imperv_zi,
+            imperv_tkLayer(l, numUrbanLayers - 1));
+
+        // Sunlit wall: all urban layers are active
+        ComputeInterfaceThermalConductivity(
+            l, numUrbanLayers, numUrbanLayers, sunlit_tkLayer,
+            sunlit_tkInterface, sunlit_zc, sunlit_zi,
+            sunlit_tkLayer(l, numUrbanLayers - 1));
+
+        // Shaded wall: all urban layers are active
+        ComputeInterfaceThermalConductivity(
+            l, numUrbanLayers, numUrbanLayers, shaded_tkLayer,
+            shaded_tkInterface, shaded_zc, shaded_zi,
+            shaded_tkLayer(l, numUrbanLayers - 1));
+
+        // Roof: all urban layers are active
+        ComputeInterfaceThermalConductivity(
+            l, numUrbanLayers, numUrbanLayers, roof_tkLayer, roof_tkInterface,
+            roof_zc, roof_zi, roof_tkLayer(l, numUrbanLayers - 1));
 
         // TODO: Add remaining heat diffusion steps:
         // Step 3: Setup tridiagonal system for heat conduction equation
