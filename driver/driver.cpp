@@ -5,6 +5,10 @@
 #include <Urban.h>
 #include <UrbanMacros.h>
 
+// Constants
+const int NUM_LEVELS = 5;
+const int NUM_URBAN_DENSITY_CLASSES = 3;
+
 // Helper function to allocate memory with error checking
 static double* AllocateArray(int size, const char* name) {
   double *arr = (double *)malloc(size * sizeof(double));
@@ -208,23 +212,23 @@ void SetThermalConductivity(UrbanType urban, int numLandunits, int mpi_rank) {
   double *tkWall = AllocateArray(totalSize, "tkWall");
   double *tkRoof = AllocateArray(totalSize, "tkRoof");
 
-  // Thermal conductivity values for 5 levels across 3 urban density classes
+  // Thermal conductivity values for NUM_LEVELS levels across NUM_URBAN_DENSITY_CLASSES urban density classes
   // [layer][urban_density_class]: 0=Tall Building District, 1=High Density, 2=Medium Density
-  double tkRoadLevels[5][3] = {
+  double tkRoadLevels[NUM_LEVELS][NUM_URBAN_DENSITY_CLASSES] = {
     {1.89999997615814, 1.66999995708466, 1.66999995708466},
     {0.560000002384186, 0.560000002384186, 0.560000002384186},
     {0.360000014305115, 0.0, 0.0},
     {0.0, 0.0, 0.0},
     {0.0, 0.0, 0.0}
   };
-  double tkWallLevels[5][3] = {
+  double tkWallLevels[NUM_LEVELS][NUM_URBAN_DENSITY_CLASSES] = {
     {1.44716906547546, 1.06582415103912, 0.970157384872437},
     {1.44716906547546, 1.06582415103912, 0.970157384872437},
     {1.44716906547546, 1.06582415103912, 0.970157384872437},
     {1.44716906547546, 1.06582415103912, 0.970157384872437},
     {1.44716906547546, 1.06582415103912, 0.970157384872437}
   };
-  double tkRoofLevels[5][3] = {
+  double tkRoofLevels[NUM_LEVELS][NUM_URBAN_DENSITY_CLASSES] = {
     {0.503093481063843, 0.094768725335598, 0.127733826637268},
     {0.503093481063843, 0.094768725335598, 0.127733826637268},
     {0.503093481063843, 0.094768725335598, 0.127733826637268},
@@ -233,9 +237,9 @@ void SetThermalConductivity(UrbanType urban, int numLandunits, int mpi_rank) {
   };
 
   int idx = 0;
-  for (int layer = 0; layer < 5; ++layer) {
+  for (int layer = 0; layer < NUM_LEVELS; ++layer) {
     for (int i = 0; i < numLandunits; ++i) {
-      const int urban_density_class = i % 3;  // 0: Tall Building District, 1: High Density, 2: Medium Density
+      const int urban_density_class = i % NUM_URBAN_DENSITY_CLASSES;  // 0: Tall Building District, 1: High Density, 2: Medium Density
       tkRoad[idx] = tkRoadLevels[layer][urban_density_class];
       tkWall[idx] = tkWallLevels[layer][urban_density_class];
       tkRoof[idx] = tkRoofLevels[layer][urban_density_class];
@@ -266,23 +270,23 @@ void SetHeatCapacity(UrbanType urban, int numLandunits, int mpi_rank) {
   double *cvWall = AllocateArray(totalSize, "cvWall");
   double *cvRoof = AllocateArray(totalSize, "cvRoof");
 
-  // Heat capacity values for 5 levels across 3 urban density classes
+  // Heat capacity values for NUM_LEVELS levels across NUM_URBAN_DENSITY_CLASSES urban density classes
   // [layer][urban_density_class]: 0=Tall Building District, 1=High Density, 2=Medium Density
-  double cvRoadLevels[5][3] = {
+  double cvRoadLevels[NUM_LEVELS][NUM_URBAN_DENSITY_CLASSES] = {
     {2100000.0, 2060470.625, 2060470.625},
     {1773000.0, 1712294.75, 1712294.75},
     {1545600.0, 0.0, 0.0},
     {0.0, 0.0, 0.0},
     {0.0, 0.0, 0.0}
   };
-  double cvWallLevels[5][3] = {
+  double cvWallLevels[NUM_LEVELS][NUM_URBAN_DENSITY_CLASSES] = {
     {1079394.75, 957632.8125, 899827.1875},
     {1079394.75, 957632.8125, 899827.1875},
     {1079394.75, 957632.8125, 899827.1875},
     {1079394.75, 957632.8125, 899827.1875},
     {1079394.75, 957632.8125, 899827.1875}
   };
-  double cvRoofLevels[5][3] = {
+  double cvRoofLevels[NUM_LEVELS][NUM_URBAN_DENSITY_CLASSES] = {
     {570998.0, 646213.375, 862451.375},
     {570998.0, 646213.375, 862451.375},
     {570998.0, 646213.375, 862451.375},
@@ -291,9 +295,9 @@ void SetHeatCapacity(UrbanType urban, int numLandunits, int mpi_rank) {
   };
 
   int idx = 0;
-  for (int layer = 0; layer < 5; ++layer) {
+  for (int layer = 0; layer < NUM_LEVELS; ++layer) {
     for (int i = 0; i < numLandunits; ++i) {
-      const int urban_density_class = i % 3;  // 0: Tall Building District, 1: High Density, 2: Medium Density
+      const int urban_density_class = i % NUM_URBAN_DENSITY_CLASSES;  // 0: Tall Building District, 1: High Density, 2: Medium Density
       cvRoad[idx] = cvRoadLevels[layer][urban_density_class];
       cvWall[idx] = cvWallLevels[layer][urban_density_class];
       cvRoof[idx] = cvRoofLevels[layer][urban_density_class];
