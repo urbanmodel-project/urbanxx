@@ -13,7 +13,8 @@ namespace URBANXX {
 
 // Macro to allocate a single view
 #define ALLOCATE_VIEW(viewname, type, ...)                                     \
-  viewname = type(#viewname, __VA_ARGS__);
+  viewname = type(#viewname, __VA_ARGS__);                                     \
+  Kokkos::deep_copy(viewname, 0.0);
 
 #define ALLOCATE_DEVICE_VIEW(viewname, type, ...)                              \
   ALLOCATE_VIEW(viewname, type, __VA_ARGS__)
