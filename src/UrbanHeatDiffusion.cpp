@@ -28,6 +28,8 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
   auto perv_zc = urban.perviousRoad.Zc;
   auto perv_zi = urban.perviousRoad.Zi;
   auto perv_temp = urban.perviousRoad.Temperature;
+  auto perv_cv_solids = urban.perviousRoad.soil.CvSolids;
+  auto perv_cv_times_dz = urban.perviousRoad.CvTimesDz;
 
   // Single parallel kernel over all landunits
   Kokkos::parallel_for(
@@ -47,11 +49,17 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
                                             perv_tkLayer, perv_tkInterface,
                                             perv_zc, perv_zi, 0.0);
 
+        // Step 3: Compute heat capacity times layer thickness for pervious road
+        ComputeSoilHeatCapacityTimesDz(l, numSoilLayers, perv_cv_solids,
+                                       perv_watsat, perv_water_liquid,
+                                       perv_water_ice, perv_dz,
+                                       perv_cv_times_dz);
+
         // TODO: Add remaining heat diffusion steps:
-        // Step 3: Setup tridiagonal system for heat conduction equation
-        // Step 4: Apply boundary conditions (surface flux, bottom temperature)
-        // Step 5: Solve tridiagonal system for new temperatures
-        // Step 6: Compute ground heat flux for roof, wall, and road surfaces
+        // Step 4: Setup tridiagonal system for heat conduction equation
+        // Step 5: Apply boundary conditions (surface flux, bottom temperature)
+        // Step 6: Solve tridiagonal system for new temperatures
+        // Step 7: Compute ground heat flux for roof, wall, and road surfaces
       });
   Kokkos::fence();
 }
