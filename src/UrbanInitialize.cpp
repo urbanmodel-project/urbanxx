@@ -35,6 +35,7 @@ static void UrbanInitializeTemperature(UrbanType urban) {
 
   const int numLandunits = urban->numLandunits;
   const int numUrbanLayers = urban->numUrbanLayers;
+  const int numSoilLayers = urban->numSoilLayers;
 
   // Temperature initialization constants
   constexpr Real TEMP_ROOF_INIT = 292.0;
@@ -53,13 +54,17 @@ static void UrbanInitializeTemperature(UrbanType urban) {
         sunlitWallTemp(l) = TEMP_WALL_INIT;
         shadedWallTemp(l) = TEMP_WALL_INIT;
 
-        // Initialize layer temperatures for all urban surfaces
+        // Initialize layer temperatures for urban surfaces (numUrbanLayers)
         for (int k = 0; k < numUrbanLayers; ++k) {
           roofLayerTemp(l, k) = TEMP_ROOF_INIT;
           imperviousRoadLayerTemp(l, k) = TEMP_ROAD_INIT;
-          perviousRoadLayerTemp(l, k) = TEMP_ROAD_INIT;
           sunlitWallLayerTemp(l, k) = TEMP_WALL_INIT;
           shadedWallLayerTemp(l, k) = TEMP_WALL_INIT;
+        }
+
+        // Initialize pervious road layer temperatures (numSoilLayers)
+        for (int k = 0; k < numSoilLayers; ++k) {
+          perviousRoadLayerTemp(l, k) = TEMP_ROAD_INIT;
         }
 
         // Initialize canyon air properties
@@ -440,11 +445,7 @@ static void UrbanInitializePerviousRoadSoils(UrbanType urban) {
           constexpr Real denice = SHR_CONST_RHOICE;
           constexpr Real denh2o = SHR_CONST_RHOWATER;
 
-          // Note: For soil layers, we use the corresponding urban layer
-          // temperature if k < numUrbanLayers, otherwise use the last urban
-          // layer temperature
-          const int temp_idx = (k < numUrbanLayers) ? k : (numUrbanLayers - 1);
-          const Real layer_temp = temp(l, temp_idx);
+          const Real layer_temp = temp(l, k);
 
           if (layer_temp <= tfrz) {
             water_ice(l, k) = dz(l, k) * denice * water_vol(l, k);
