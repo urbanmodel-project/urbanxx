@@ -50,10 +50,9 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
                                             perv_zc, perv_zi, 0.0);
 
         // Step 3: Compute heat capacity times layer thickness for pervious road
-        ComputeSoilHeatCapacityTimesDz(l, numSoilLayers, perv_cv_solids,
-                                       perv_watsat, perv_water_liquid,
-                                       perv_water_ice, perv_dz,
-                                       perv_cv_times_dz);
+        ComputeSoilHeatCapacityTimesDz(
+            l, numSoilLayers, perv_cv_solids, perv_watsat, perv_water_liquid,
+            perv_water_ice, perv_dz, perv_cv_times_dz);
 
         // TODO: Add remaining heat diffusion steps:
         // Step 4: Setup tridiagonal system for heat conduction equation

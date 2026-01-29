@@ -97,23 +97,27 @@ KOKKOS_INLINE_FUNCTION void ComputeInterfaceThermalConductivity(
 
 // Compute heat capacity times layer thickness for pervious road soil layers
 // Based on ELM SoilTemperatureMod.F90
-// cv(c,j) = csol(c,j)*(1-watsat(c,j))*dz(c,j) + (h2osoi_ice(c,j)*cpice + h2osoi_liq(c,j)*cpliq)
+// cv(c,j) = csol(c,j)*(1-watsat(c,j))*dz(c,j) + (h2osoi_ice(c,j)*cpice +
+// h2osoi_liq(c,j)*cpliq)
 template <typename ViewType>
 KOKKOS_INLINE_FUNCTION void ComputeSoilHeatCapacityTimesDz(
     const int l, const int numLayers, const ViewType &cv_solids,
     const ViewType &watsat, const ViewType &water_liquid,
     const ViewType &water_ice, const ViewType &dz, const ViewType &cvTimesDz) {
 
-  constexpr Real cpice = SHR_CONST_CPICE;   // Specific heat of ice (J/kg/K)
-  constexpr Real cpliq = SHR_CONST_CPFW;    // Specific heat of liquid water (J/kg/K)
+  constexpr Real cpice = SHR_CONST_CPICE; // Specific heat of ice (J/kg/K)
+  constexpr Real cpliq =
+      SHR_CONST_CPFW; // Specific heat of liquid water (J/kg/K)
 
   for (int k = 0; k < numLayers; ++k) {
     // Heat capacity of soil solids component
-    const Real cv_solid_component = cv_solids(l, k) * (1.0 - watsat(l, k)) * dz(l, k);
-    
+    const Real cv_solid_component =
+        cv_solids(l, k) * (1.0 - watsat(l, k)) * dz(l, k);
+
     // Heat capacity of water components (ice + liquid)
-    const Real cv_water_component = water_ice(l, k) * cpice + water_liquid(l, k) * cpliq;
-    
+    const Real cv_water_component =
+        water_ice(l, k) * cpice + water_liquid(l, k) * cpliq;
+
     // Total heat capacity times layer thickness
     cvTimesDz(l, k) = cv_solid_component + cv_water_component;
   }
