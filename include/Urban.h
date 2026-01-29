@@ -106,6 +106,20 @@ URBAN_EXTERN void UrbanSetHeatCapacityRoof(UrbanType urban,
                                            const int size[2],
                                            UrbanErrorCode *status);
 
+// Soil property setter functions for pervious road
+URBAN_EXTERN void UrbanSetSandPerviousRoad(UrbanType urban,
+                                           const double *values,
+                                           const int size[2],
+                                           UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetClayPerviousRoad(UrbanType urban,
+                                           const double *values,
+                                           const int size[2],
+                                           UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetOrganicPerviousRoad(UrbanType urban,
+                                              const double *values,
+                                              const int size[2],
+                                              UrbanErrorCode *status);
+
 // Height parameter setter functions
 URBAN_EXTERN void UrbanSetForcHgtT(UrbanType urban, const double *values,
                                    int length, UrbanErrorCode *status);

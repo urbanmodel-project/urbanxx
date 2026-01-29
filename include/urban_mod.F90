@@ -178,6 +178,31 @@ module urban_mod
       integer(c_int) :: status
     end subroutine UrbanSetHeatCapacityRoof
 
+    ! Soil property setter functions for pervious road
+    subroutine UrbanSetSandPerviousRoad(urban, values, size, status) bind(C, name="UrbanSetSandPerviousRoad")
+      import :: c_ptr, c_int, UrbanType
+      type(UrbanType), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), dimension(2) :: size
+      integer(c_int) :: status
+    end subroutine UrbanSetSandPerviousRoad
+
+    subroutine UrbanSetClayPerviousRoad(urban, values, size, status) bind(C, name="UrbanSetClayPerviousRoad")
+      import :: c_ptr, c_int, UrbanType
+      type(UrbanType), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), dimension(2) :: size
+      integer(c_int) :: status
+    end subroutine UrbanSetClayPerviousRoad
+
+    subroutine UrbanSetOrganicPerviousRoad(urban, values, size, status) bind(C, name="UrbanSetOrganicPerviousRoad")
+      import :: c_ptr, c_int, UrbanType
+      type(UrbanType), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), dimension(2) :: size
+      integer(c_int) :: status
+    end subroutine UrbanSetOrganicPerviousRoad
+
     ! Height parameter setter functions
     subroutine UrbanSetForcHgtT(urban, values, length, status) bind(C, name="UrbanSetForcHgtT")
       import :: c_ptr, c_int, UrbanType
