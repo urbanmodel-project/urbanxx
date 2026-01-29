@@ -12,14 +12,11 @@
 
 namespace URBANXX {
 
-constexpr Real GRAVITY = 9.80616;
 constexpr Real VKC = 0.4;
 constexpr Real ZETAM =
     1.574; // transition point of flux-gradient relation (wind profile)
 constexpr Real ZETAT =
     0.465; // transition point of flux-gradient relation (temperature profile)
-constexpr Real CPAIR = 1004.64; // specific heat of dry air [J/kg/K]
-constexpr Real SHR_CONST_TKFRZ = 273.15;
 
 KOKKOS_INLINE_FUNCTION
 void QSat(Real T, Real p, Real &es, Real &esdT, Real &qs, Real &qsdT) {
