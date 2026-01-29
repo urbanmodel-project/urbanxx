@@ -232,13 +232,14 @@ void SetThermalConductivity(UrbanType urban, int numLandunits, int mpi_rank) {
     {0.503093481063843, 0.094768725335598, 0.127733826637268}
   };
 
-  for (int i = 0; i < numLandunits; ++i) {
-    const int urban_density_class = i % 3;  // 0: Tall Building District, 1: High Density, 2: Medium Density
-    for (int layer = 0; layer < 5; ++layer) {
-      int idx = i * NUM_LEVELS + layer;
+  int idx = 0;
+  for (int layer = 0; layer < 5; ++layer) {
+    for (int i = 0; i < numLandunits; ++i) {
+      const int urban_density_class = i % 3;  // 0: Tall Building District, 1: High Density, 2: Medium Density
       tkRoad[idx] = tkRoadLevels[layer][urban_density_class];
       tkWall[idx] = tkWallLevels[layer][urban_density_class];
       tkRoof[idx] = tkRoofLevels[layer][urban_density_class];
+      ++idx;
     }
   }
 
@@ -289,13 +290,14 @@ void SetHeatCapacity(UrbanType urban, int numLandunits, int mpi_rank) {
     {570998.0, 646213.375, 862451.375}
   };
 
-  for (int i = 0; i < numLandunits; ++i) {
-    const int urban_density_class = i % 3;  // 0: Tall Building District, 1: High Density, 2: Medium Density
-    for (int layer = 0; layer < 5; ++layer) {
-      int idx = i * NUM_LEVELS + layer;
+  int idx = 0;
+  for (int layer = 0; layer < 5; ++layer) {
+    for (int i = 0; i < numLandunits; ++i) {
+      const int urban_density_class = i % 3;  // 0: Tall Building District, 1: High Density, 2: Medium Density
       cvRoad[idx] = cvRoadLevels[layer][urban_density_class];
       cvWall[idx] = cvWallLevels[layer][urban_density_class];
       cvRoof[idx] = cvRoofLevels[layer][urban_density_class];
+      ++idx;
     }
   }
 
@@ -328,15 +330,15 @@ void SetSoilProperties(UrbanType urban, int numLandunits, int mpi_rank) {
   double organicLevels[10] = {25.2229820327902, 25.700711396596, 22.091324741929, 18.1150405358844,
                               14.5211498497041, 11.4998502546828, 9.04501744160207, 7.08594278159189,
                               0.0, 0.0};
-
-  for (int i = 0; i < numLandunits; ++i) {
-    for (int layer = 0; layer < NUM_SOIL_LEVELS; ++layer) {
-      int idx = i * NUM_SOIL_LEVELS + layer;
+  int idx = 0;
+  for (int layer = 0; layer < NUM_SOIL_LEVELS; ++layer) {
+    for (int i = 0; i < numLandunits; ++i) {
       // Use layer 9 (10th layer) values for layers 10-14 (11th-15th)
       int srcLayer = (layer < 10) ? layer : 9;
       sand[idx] = sandLevels[srcLayer];
       clay[idx] = clayLevels[srcLayer];
       organic[idx] = organicLevels[srcLayer];
+      ++idx;
     }
   }
 
