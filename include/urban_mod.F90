@@ -128,6 +128,16 @@ module urban_mod
       integer(c_int) :: status
     end subroutine UrbanSetEmissivityRoof
 
+    ! Number of active layers setter function
+    subroutine UrbanSetNumberOfActiveLayersImperviousRoad(urban, values, &
+      length, status) bind(C, name="UrbanSetNumberOfActiveLayersImperviousRoad")
+      import :: c_ptr, c_int, UrbanType
+      type(UrbanType), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetNumberOfActiveLayersImperviousRoad
+
     ! Thermal conductivity setter functions
     subroutine UrbanSetThermalConductivityRoad(urban, values, size, status) bind(C, name="UrbanSetThermalConductivityRoad")
       import :: c_ptr, c_int, UrbanType

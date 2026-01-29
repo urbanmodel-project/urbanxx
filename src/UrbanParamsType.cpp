@@ -168,7 +168,49 @@ void UrbanSetEmissivityRoof(UrbanType urban, const double *values, int length,
   SetView1D(urban->urbanParams.emissivity.Roof, values, length, status);
 }
 
-// Thermal conductivity setter functions
+// Number of active layers setter function
+void UrbanSetNumberOfActiveLayersImperviousRoad(UrbanType urban,
+                                                const double *values,
+                                                int length,
+                                                UrbanErrorCode *status) {
+  using namespace URBANXX;
+
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  try {
+    auto &view = urban->imperviousRoad.NumberOfActiveLayers;
+
+    // Check if the length matches the view extent
+    if (length != static_cast<int>(view.extent(0))) {
+      *status = URBAN_ERR_SIZE_MISMATCH;
+      return;
+    }
+
+    // Validate that all values are within valid range [1, numUrbanLayers]
+    const int maxLayers = urban->numUrbanLayers;
+    for (int i = 0; i < length; ++i) {
+      const int numLayers = static_cast<int>(values[i]);
+      if (numLayers < 1 || numLayers > maxLayers) {
+        *status = URBAN_ERR_INVALID_ARGUMENT;
+        return;
+      }
+    }
+
+    // Create a host mirror and copy integer values from double array
+    auto host_view = Kokkos::create_mirror_view(view);
+    for (int i = 0; i < length; ++i) {
+      host_view(i) = static_cast<I4>(values[i]);
+    }
+
+    // Deep copy from host to device
+    Kokkos::deep_copy(view, host_view);
+
+    *status = URBAN_SUCCESS;
+  } catch (...) {
+    *status = URBAN_ERR_INTERNAL;
+  }
+} // Thermal conductivity setter functions
 void UrbanSetThermalConductivityRoad(UrbanType urban, const double *values,
                                      const int size[2],
                                      UrbanErrorCode *status) {
