@@ -47,13 +47,14 @@ struct SoilDataType {
                       TkLayer) // thermal conductivity of each layer [W/m-K]
   DECLARE_DEVICE_VIEW(2DR8, CvSolids) // heat capacity, soil solids [J/m^3/K]
   DECLARE_DEVICE_VIEW(2DR8,
-                      WatSat)            // volumetric soil water at
-                                         // saturation (porosity) [-]
-  DECLARE_DEVICE_VIEW(2DR8, LiquidWater) // liquid water [kg/m^2]
-  DECLARE_DEVICE_VIEW(2DR8, IceWater)    // ice lens [kg/m^2]
-  DECLARE_DEVICE_VIEW(2DR8, Sand)        // soil texture: percent sand [-]
-  DECLARE_DEVICE_VIEW(2DR8, Clay)        // soil texture: percent clay [-]
-  DECLARE_DEVICE_VIEW(2DR8, Organic)     // organic matter [kg/m³]
+                      WatSat)                // volumetric soil water at
+                                             // saturation (porosity) [-]
+  DECLARE_DEVICE_VIEW(2DR8, WaterLiquid)     // liquid water [kg/m^2]
+  DECLARE_DEVICE_VIEW(2DR8, WaterIce)        // ice lens [kg/m^2]
+  DECLARE_DEVICE_VIEW(2DR8, WaterVolumetric) // volumetric water content [-]
+  DECLARE_DEVICE_VIEW(2DR8, Sand)            // soil texture: percent sand [-]
+  DECLARE_DEVICE_VIEW(2DR8, Clay)            // soil texture: percent clay [-]
+  DECLARE_DEVICE_VIEW(2DR8, Organic)         // organic matter [kg/m³]
 
   SoilDataType(int numLandunits, int numSoilLayers) {
     ALLOCATE_DEVICE_VIEW(TkMinerals, Array2DR8, numLandunits, numSoilLayers)
@@ -62,8 +63,10 @@ struct SoilDataType {
     ALLOCATE_DEVICE_VIEW(WatSat, Array2DR8, numLandunits, numSoilLayers)
     ALLOCATE_DEVICE_VIEW(TkSaturated, Array2DR8, numLandunits, numSoilLayers)
     ALLOCATE_DEVICE_VIEW(TkLayer, Array2DR8, numLandunits, numSoilLayers)
-    ALLOCATE_DEVICE_VIEW(LiquidWater, Array2DR8, numLandunits, numSoilLayers)
-    ALLOCATE_DEVICE_VIEW(IceWater, Array2DR8, numLandunits, numSoilLayers)
+    ALLOCATE_DEVICE_VIEW(WaterLiquid, Array2DR8, numLandunits, numSoilLayers)
+    ALLOCATE_DEVICE_VIEW(WaterIce, Array2DR8, numLandunits, numSoilLayers)
+    ALLOCATE_DEVICE_VIEW(WaterVolumetric, Array2DR8, numLandunits,
+                         numSoilLayers)
     ALLOCATE_DEVICE_VIEW(Sand, Array2DR8, numLandunits, numSoilLayers)
     ALLOCATE_DEVICE_VIEW(Clay, Array2DR8, numLandunits, numSoilLayers)
     ALLOCATE_DEVICE_VIEW(Organic, Array2DR8, numLandunits, numSoilLayers)
