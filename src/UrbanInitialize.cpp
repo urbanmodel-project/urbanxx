@@ -226,15 +226,15 @@ static void UrbanInitializeThermalProperties(UrbanType urban) {
 
   // Access surface thermal properties
   auto &tk_sunlit_wall = urban->sunlitWall.TkLayer;
-  auto &cv_sunlit_wall = urban->sunlitWall.HeatCapacity;
+  auto &cv_sunlit_wall = urban->sunlitWall.Cv;
   auto &tk_shaded_wall = urban->shadedWall.TkLayer;
-  auto &cv_shaded_wall = urban->shadedWall.HeatCapacity;
+  auto &cv_shaded_wall = urban->shadedWall.Cv;
   auto &tk_roof = urban->roof.TkLayer;
-  auto &cv_roof = urban->roof.HeatCapacity;
+  auto &cv_roof = urban->roof.Cv;
   auto &tk_pervious_road = urban->perviousRoad.TkLayer;
-  auto &cv_pervious_road = urban->perviousRoad.HeatCapacity;
+  auto &cv_pervious_road = urban->perviousRoad.Cv;
   auto &tk_impervious_road = urban->imperviousRoad.TkLayer;
-  auto &cv_impervious_road = urban->imperviousRoad.HeatCapacity;
+  auto &cv_impervious_road = urban->imperviousRoad.Cv;
 
   // Copy thermal properties
   Kokkos::parallel_for(
