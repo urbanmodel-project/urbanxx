@@ -78,6 +78,10 @@ URBAN_EXTERN void UrbanSetEmissivityWall(UrbanType urban, const double *values,
 URBAN_EXTERN void UrbanSetEmissivityRoof(UrbanType urban, const double *values,
                                          int length, UrbanErrorCode *status);
 
+// Number of active layers setter function
+URBAN_EXTERN void UrbanSetNumberOfActiveLayersImperviousRoad(
+    UrbanType urban, const double *values, int length, UrbanErrorCode *status);
+
 // Thermal conductivity setter functions
 URBAN_EXTERN void UrbanSetThermalConductivityRoad(UrbanType urban,
                                                   const double *values,

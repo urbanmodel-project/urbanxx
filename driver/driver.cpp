@@ -201,6 +201,26 @@ void SetEmissivity(UrbanType urban, int numLandunits, int mpi_rank) {
   }
 }
 
+void SetNumberOfActiveLayersImperviousRoad(UrbanType urban, int numLandunits, int mpi_rank) {
+  UrbanErrorCode ierr;
+
+  // Number of active layers for each urban density class
+  // 0=Tall Building District, 1=High Density, 2=Medium Density
+  int nlevImproadClasses[NUM_URBAN_DENSITY_CLASSES] = {3, 2, 2};
+
+  double *numActiveLayers = AllocateArray(numLandunits, "numActiveLayers");
+  for (int i = 0; i < numLandunits; ++i) {
+    const int urban_density_class = i % NUM_URBAN_DENSITY_CLASSES;
+    numActiveLayers[i] = static_cast<double>(nlevImproadClasses[urban_density_class]);
+  }
+  UrbanCall(UrbanSetNumberOfActiveLayersImperviousRoad(urban, numActiveLayers, numLandunits, &ierr), &ierr);
+  free(numActiveLayers);
+  
+  if (mpi_rank == 0) {
+    std::cout << "Set number of active layers for impervious road (3, 2, 2 for density classes)" << std::endl;
+  }
+}
+
 void SetThermalConductivity(UrbanType urban, int numLandunits, int mpi_rank) {
   UrbanErrorCode ierr;
 
@@ -503,6 +523,7 @@ void SetUrbanParameters(UrbanType urban, int numLandunits, int mpi_rank) {
   SetBuildingTemperature(urban, numLandunits, mpi_rank);
   SetAlbedo(urban, numLandunits, mpi_rank);
   SetEmissivity(urban, numLandunits, mpi_rank);
+  SetNumberOfActiveLayersImperviousRoad(urban, numLandunits, mpi_rank);
   SetThermalConductivity(urban, numLandunits, mpi_rank);
   SetHeatCapacity(urban, numLandunits, mpi_rank);
   SetSoilProperties(urban, numLandunits, mpi_rank);

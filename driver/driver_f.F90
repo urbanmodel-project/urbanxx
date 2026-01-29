@@ -384,6 +384,35 @@ contains
     deallocate(emissivityRoof)
   end subroutine SetEmissivity
 
+  subroutine SetNumberOfActiveLayersImperviousRoad(urban, numLandunits, mpi_rank)
+    type(UrbanType), intent(in) :: urban
+    integer(c_int), intent(in) :: numLandunits
+    integer, intent(in) :: mpi_rank
+    integer(c_int) :: status, i, urban_density_class
+    integer(c_int), parameter :: NUM_URBAN_DENSITY_CLASSES = 3
+    integer(c_int), dimension(3) :: nlevImproadClasses
+    real(c_double), allocatable, target :: numActiveLayers(:)
+
+    ! Number of active layers for each urban density class
+    ! 0=Tall Building District, 1=High Density, 2=Medium Density
+    nlevImproadClasses = (/ 3, 2, 2 /)
+
+    allocate(numActiveLayers(numLandunits))
+    do i = 1, numLandunits
+      urban_density_class = mod(i-1, NUM_URBAN_DENSITY_CLASSES) + 1
+      numActiveLayers(i) = real(nlevImproadClasses(urban_density_class), c_double)
+    end do
+    call UrbanSetNumberOfActiveLayersImperviousRoad(urban, &
+      c_loc(numActiveLayers), numLandunits, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+
+    if (mpi_rank == 0) then
+      write(*,*) 'Set number of active layers for impervious road (3, 2, 2 for density classes)'
+    end if
+
+    deallocate(numActiveLayers)
+  end subroutine SetNumberOfActiveLayersImperviousRoad
+
   subroutine SetThermalConductivity(urban, numLandunits, mpi_rank)
     type(UrbanType), intent(in) :: urban
     integer(c_int), intent(in) :: numLandunits
@@ -724,6 +753,7 @@ contains
     call SetBuildingTemperature(urban, numLandunits, mpi_rank)
     call SetAlbedo(urban, numLandunits, mpi_rank)
     call SetEmissivity(urban, numLandunits, mpi_rank)
+    call SetNumberOfActiveLayersImperviousRoad(urban, numLandunits, mpi_rank)
     call SetThermalConductivity(urban, numLandunits, mpi_rank)
     call SetHeatCapacity(urban, numLandunits, mpi_rank)
     call SetSoilProperties(urban, numLandunits, mpi_rank)

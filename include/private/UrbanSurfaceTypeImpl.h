@@ -150,11 +150,14 @@ struct SnowCoveredSurfaceData : SurfaceDataBase {
 };
 
 struct ImperviousRoadDataType : SnowCoveredSurfaceData {
+  DECLARE_DEVICE_VIEW(1DI4, NumberOfActiveLayers) // number of active layers
   // Inherits all fields from SnowCoveredSurfaceData and SurfaceDataBase
   ImperviousRoadDataType(int numLandunits, int numRadBands, int numRadTypes,
                          int numLayers)
       : SnowCoveredSurfaceData(numLandunits, numRadBands, numRadTypes,
-                               numLayers) {}
+                               numLayers) {
+    ALLOCATE_DEVICE_VIEW(NumberOfActiveLayers, Array1DI4, numLandunits)
+  }
 };
 
 struct PerviousRoadDataType : SnowCoveredSurfaceData {
