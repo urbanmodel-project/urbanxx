@@ -392,7 +392,7 @@ void SetAtmosphericForcing(UrbanType urban, int numLandunits, int mpi_rank) {
   const double COSZEN = 7.9054122593736065E-003;
   const double SNOW = 0.0;
   const double LWDOWN = 432.79580327766450;
-  const double SWDOWN = 1.0;
+  const double SWDOWN = 0.0;
 
   // Allocate arrays
   double *atmTemp = AllocateArray(numLandunits, "atmTemp");
