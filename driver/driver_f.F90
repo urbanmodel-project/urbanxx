@@ -651,7 +651,7 @@ contains
     real(c_double), parameter :: COSZEN = 7.9054122593736065d-3
     real(c_double), parameter :: SNOW = 0.0d0
     real(c_double), parameter :: LWDOWN = 432.79580327766450d0
-    real(c_double), parameter :: SWDOWN = 1.0d0
+    real(c_double), parameter :: SWDOWN = 0.0d0
 
     ! Allocate arrays
     allocate(atmTemp(numLandunits))
