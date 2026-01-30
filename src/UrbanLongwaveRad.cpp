@@ -260,12 +260,14 @@ void ComputeNetLongwave(URBANXX::_p_UrbanType &urban) {
   auto &tempPerRoad = urban.perviousRoad.EffectiveSurfTemp;
 
   // Access net longwave radiation fields (to be updated)
+  auto &netLwRoof = urban.roof.NetLongRad;
   auto &netLwSunlitWall = urban.sunlitWall.NetLongRad;
   auto &netLwShadedWall = urban.shadedWall.NetLongRad;
   auto &netLwImpRoad = urban.imperviousRoad.NetLongRad;
   auto &netLwPerRoad = urban.perviousRoad.NetLongRad;
 
   // Access upward longwave radiation fields (to be updated)
+  auto &upLwRoof = urban.roof.UpwardLongRad;
   auto &upLwSunlitWall = urban.sunlitWall.UpwardLongRad;
   auto &upLwShadedWall = urban.shadedWall.UpwardLongRad;
   auto &upLwImpRoad = urban.imperviousRoad.UpwardLongRad;
@@ -276,6 +278,13 @@ void ComputeNetLongwave(URBANXX::_p_UrbanType &urban) {
 
   Kokkos::parallel_for(
       "ComputeNetLongwave", numLandunits, KOKKOS_LAMBDA(const int l) {
+        // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        // Computation for roof
+        // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        upLwRoof(l) = emissRoof(l) * STEBOL * Kokkos::pow(tempRoof(l), 4.0) +
+                      (1.0 - emissRoof(l)) * forcLRad(l);
+        netLwRoof(l) = upLwRoof(l) - forcLRad(l);
+
         // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         // Computations for roads
         // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
