@@ -12,6 +12,30 @@
 
 namespace URBANXX {
 
+// Lightweight struct to group saturation humidity views for a surface
+struct SurfaceQsatData {
+  const Array1DR8 &temp;
+  const Array1DR8 &es;
+  const Array1DR8 &esdt;
+  const Array1DR8 &qs;
+  const Array1DR8 &qsdt;
+};
+
+// Lightweight struct to group canyon air and urban geometry data
+struct CanyonAirData {
+  Real hwrVal;
+  Real forcQ;
+  Real forcRho;
+  Real wtRoadPerv;
+  Real wtRoof;
+};
+
+// Lightweight struct to group surface temperature and humidity scalars
+struct SurfaceTempHumidData {
+  Real qRoof, qRoadImperv, qRoadPerv;
+  Real tRoof, tRoadImperv, tRoadPerv, tSunwall, tShadewall;
+};
+
 constexpr Real VKC = 0.4;
 constexpr Real ZETAM =
     1.574; // transition point of flux-gradient relation (wind profile)
@@ -384,91 +408,80 @@ void ComputeSurfaceQsat(int l, Real p, const Array1DR8 &temp,
 
 // Compute saturation humidity for all urban surfaces
 KOKKOS_INLINE_FUNCTION
-void ComputeQsatForSurfaces(int l, Real forcP,
-                            const URBANXX::_p_UrbanType &urban) {
+void ComputeQsatForSurfaces(int l, Real forcP, const SurfaceQsatData &roof,
+                            const SurfaceQsatData &sunwall,
+                            const SurfaceQsatData &shadewall,
+                            const SurfaceQsatData &improad,
+                            const SurfaceQsatData &perroad) {
   // Roof
-  ComputeSurfaceQsat(l, forcP, urban.roof.EffectiveSurfTemp, urban.roof.Es,
-                     urban.roof.EsdT, urban.roof.Qs, urban.roof.QsdT);
+  ComputeSurfaceQsat(l, forcP, roof.temp, roof.es, roof.esdt, roof.qs,
+                     roof.qsdt);
 
   // Sunlit wall
-  ComputeSurfaceQsat(l, forcP, urban.sunlitWall.EffectiveSurfTemp,
-                     urban.sunlitWall.Es, urban.sunlitWall.EsdT,
-                     urban.sunlitWall.Qs, urban.sunlitWall.QsdT);
+  ComputeSurfaceQsat(l, forcP, sunwall.temp, sunwall.es, sunwall.esdt,
+                     sunwall.qs, sunwall.qsdt);
 
   // Shaded wall
-  ComputeSurfaceQsat(l, forcP, urban.shadedWall.EffectiveSurfTemp,
-                     urban.shadedWall.Es, urban.shadedWall.EsdT,
-                     urban.shadedWall.Qs, urban.shadedWall.QsdT);
+  ComputeSurfaceQsat(l, forcP, shadewall.temp, shadewall.es, shadewall.esdt,
+                     shadewall.qs, shadewall.qsdt);
 
   // Impervious road
-  ComputeSurfaceQsat(l, forcP, urban.imperviousRoad.EffectiveSurfTemp,
-                     urban.imperviousRoad.Es, urban.imperviousRoad.EsdT,
-                     urban.imperviousRoad.Qs, urban.imperviousRoad.QsdT);
+  ComputeSurfaceQsat(l, forcP, improad.temp, improad.es, improad.esdt,
+                     improad.qs, improad.qsdt);
 
   // Pervious road
-  ComputeSurfaceQsat(l, forcP, urban.perviousRoad.EffectiveSurfTemp,
-                     urban.perviousRoad.Es, urban.perviousRoad.EsdT,
-                     urban.perviousRoad.Qs, urban.perviousRoad.QsdT);
+  ComputeSurfaceQsat(l, forcP, perroad.temp, perroad.es, perroad.esdt,
+                     perroad.qs, perroad.qsdt);
 }
 
 // Compute new air temperature and humidity in the canyon
 KOKKOS_INLINE_FUNCTION
 void ComputeNewTafAndQaf(int l, Real canyonWind, Real thm, Real rahu, Real rawu,
-                         const URBANXX::_p_UrbanType &urban, Real qaf,
+                         const CanyonAirData &canyon,
+                         const SurfaceTempHumidData &surfaces, Real qaf,
                          Real &tafNew, Real &qafNew) {
 
-  const Real hwrVal = urban.urbanParams.CanyonHwr(l);
-
-  const Real qRoof = urban.roof.Qs(l);
-  const Real qRoadImperv = urban.imperviousRoad.Qs(l);
-  const Real qRoadPerv = urban.perviousRoad.Qs(l);
   const Real qSunwall = 0.0;
   const Real qShadewall = 0.0;
 
-  const Real tRoof = urban.roof.EffectiveSurfTemp(l);
-  const Real tRoadImperv = urban.imperviousRoad.EffectiveSurfTemp(l);
-  const Real tRoadPerv = urban.perviousRoad.EffectiveSurfTemp(l);
-  const Real tSunwall = urban.sunlitWall.EffectiveSurfTemp(l);
-  const Real tShadewall = urban.shadedWall.EffectiveSurfTemp(l);
-
-  const Real forcQ = urban.atmosphereData.ForcSpcHumd(l);
-  const Real forcRho = urban.atmosphereData.ForcRho(l);
-  Real canyonResistance = CPAIR * forcRho / (11.8 + 4.2 * canyonWind);
-
-  const Real wtRoadPerv = urban.urbanParams.FracPervRoadOfTotalRoad(l);
-  const Real wtRoof = urban.urbanParams.WtRoof(l);
+  Real canyonResistance = CPAIR * canyon.forcRho / (11.8 + 4.2 * canyonWind);
 
   const Real fwetRoof = 0.0;
-  const Real wtusRoof = wtRoof / canyonResistance;
-  const Real wtuqRoof = fwetRoof * wtRoof / canyonResistance;
+  const Real wtusRoof = canyon.wtRoof / canyonResistance;
+  const Real wtuqRoof = fwetRoof * canyon.wtRoof / canyonResistance;
 
-  const Real wtusRoadPerv = wtRoadPerv * (1.0 - wtRoof) / canyonResistance;
-  const Real wtuqRoadPerv = wtRoadPerv * (1.0 - wtRoof) / canyonResistance;
+  const Real wtusRoadPerv =
+      canyon.wtRoadPerv * (1.0 - canyon.wtRoof) / canyonResistance;
+  const Real wtuqRoadPerv =
+      canyon.wtRoadPerv * (1.0 - canyon.wtRoof) / canyonResistance;
 
-  const Real fwetRoadImperv = (qaf > qRoadImperv) ? 1.0 : 0.0;
+  const Real fwetRoadImperv = (qaf > surfaces.qRoadImperv) ? 1.0 : 0.0;
   const Real wtusRoadImperv =
-      (1.0 - wtRoadPerv) * (1.0 - wtRoof) / canyonResistance;
-  const Real wtuqRoadImperv =
-      fwetRoadImperv * (1.0 - wtRoadPerv) * (1.0 - wtRoof) / canyonResistance;
+      (1.0 - canyon.wtRoadPerv) * (1.0 - canyon.wtRoof) / canyonResistance;
+  const Real wtuqRoadImperv = fwetRoadImperv * (1.0 - canyon.wtRoadPerv) *
+                              (1.0 - canyon.wtRoof) / canyonResistance;
 
-  const Real wtusSunwall = hwrVal * (1.0 - wtRoof) / canyonResistance;
+  const Real wtusSunwall =
+      canyon.hwrVal * (1.0 - canyon.wtRoof) / canyonResistance;
   const Real wtuqSunwall = 0.0;
 
-  const Real wtusShadewall = hwrVal * (1.0 - wtRoof) / canyonResistance;
+  const Real wtusShadewall =
+      canyon.hwrVal * (1.0 - canyon.wtRoof) / canyonResistance;
   const Real wtuqShadewall = 0.0;
 
-  const Real tafNumer = thm / rahu + tRoof * wtusRoof +
-                        tRoadPerv * wtusRoadPerv +
-                        tRoadImperv * wtusRoadImperv + tSunwall * wtusSunwall +
-                        tShadewall * wtusShadewall;
+  const Real tafNumer = thm / rahu + surfaces.tRoof * wtusRoof +
+                        surfaces.tRoadPerv * wtusRoadPerv +
+                        surfaces.tRoadImperv * wtusRoadImperv +
+                        surfaces.tSunwall * wtusSunwall +
+                        surfaces.tShadewall * wtusShadewall;
 
   const Real tafDenom = 1.0 / rahu + wtusRoof + wtusRoadPerv + wtusRoadImperv +
                         wtusSunwall + wtusShadewall;
 
-  const Real qafNumer = forcQ / rawu + qRoof * wtuqRoof +
-                        qRoadPerv * wtuqRoadPerv +
-                        qRoadImperv * wtuqRoadImperv + qSunwall * wtuqSunwall +
-                        qShadewall * wtuqShadewall;
+  const Real qafNumer = canyon.forcQ / rawu + surfaces.qRoof * wtuqRoof +
+                        surfaces.qRoadPerv * wtuqRoadPerv +
+                        surfaces.qRoadImperv * wtuqRoadImperv +
+                        qSunwall * wtuqSunwall + qShadewall * wtuqShadewall;
 
   const Real qafDenom = 1.0 / rawu + wtuqRoof + wtuqRoadPerv + wtuqRoadImperv +
                         wtuqSunwall + wtuqShadewall;
@@ -552,7 +565,28 @@ void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
 
         // Get atmospheric pressure and compute saturation humidity for surfaces
         const Real forcP = forcPress(l);
-        ComputeQsatForSurfaces(l, forcP, urban);
+
+        // Prepare surface data for qsat computation
+        SurfaceQsatData roofQsat = {urban.roof.EffectiveSurfTemp, urban.roof.Es,
+                                    urban.roof.EsdT, urban.roof.Qs,
+                                    urban.roof.QsdT};
+        SurfaceQsatData sunwallQsat = {
+            urban.sunlitWall.EffectiveSurfTemp, urban.sunlitWall.Es,
+            urban.sunlitWall.EsdT, urban.sunlitWall.Qs, urban.sunlitWall.QsdT};
+        SurfaceQsatData shadewallQsat = {
+            urban.shadedWall.EffectiveSurfTemp, urban.shadedWall.Es,
+            urban.shadedWall.EsdT, urban.shadedWall.Qs, urban.shadedWall.QsdT};
+        SurfaceQsatData improadQsat = {
+            urban.imperviousRoad.EffectiveSurfTemp, urban.imperviousRoad.Es,
+            urban.imperviousRoad.EsdT, urban.imperviousRoad.Qs,
+            urban.imperviousRoad.QsdT};
+        SurfaceQsatData perroadQsat = {
+            urban.perviousRoad.EffectiveSurfTemp, urban.perviousRoad.Es,
+            urban.perviousRoad.EsdT, urban.perviousRoad.Qs,
+            urban.perviousRoad.QsdT};
+
+        ComputeQsatForSurfaces(l, forcP, roofQsat, sunwallQsat, shadewallQsat,
+                               improadQsat, perroadQsat);
 
         // Compute canyon wind speed
         Real canyonUWind;
@@ -576,9 +610,24 @@ void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
               std::pow(canyonUWind, 2.0) + std::pow(ustar, 2.0);
           Real canyonWind = std::pow(canyonWindPow2, 0.5);
 
+          // Prepare canyon and surface data
+          CanyonAirData canyonData = {
+              hwrVal, forcQ, forcRho(l),
+              urban.urbanParams.FracPervRoadOfTotalRoad(l),
+              urban.urbanParams.WtRoof(l)};
+          SurfaceTempHumidData surfaceData = {
+              urban.roof.Qs(l),
+              urban.imperviousRoad.Qs(l),
+              urban.perviousRoad.Qs(l),
+              urban.roof.EffectiveSurfTemp(l),
+              urban.imperviousRoad.EffectiveSurfTemp(l),
+              urban.perviousRoad.EffectiveSurfTemp(l),
+              urban.sunlitWall.EffectiveSurfTemp(l),
+              urban.shadedWall.EffectiveSurfTemp(l)};
+
           Real tafNew, qafNew;
-          ComputeNewTafAndQaf(l, canyonWind, thm, rahu, rawu, urban, qaf,
-                              tafNew, qafNew);
+          ComputeNewTafAndQaf(l, canyonWind, thm, rahu, rawu, canyonData,
+                              surfaceData, qaf, tafNew, qafNew);
           taf = tafNew;
           qaf = qafNew;
 
