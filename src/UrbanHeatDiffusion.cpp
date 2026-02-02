@@ -17,19 +17,19 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
   const int numUrbanLayers = urban.numUrbanLayers;
 
   // Access pervious road soil property views
-  auto perv_tk_minerals = urban.perviousRoad.soil.TkMinerals;
-  auto perv_tk_dry = urban.perviousRoad.soil.TkDry;
-  auto perv_tkLayer = urban.perviousRoad.TkLayer;
-  auto perv_tkInterface = urban.perviousRoad.TkInterface;
-  auto perv_watsat = urban.perviousRoad.soil.WatSat;
-  auto perv_water_liquid = urban.perviousRoad.soil.WaterLiquid;
-  auto perv_water_ice = urban.perviousRoad.soil.WaterIce;
-  auto perv_dz = urban.perviousRoad.Dz;
-  auto perv_zc = urban.perviousRoad.Zc;
-  auto perv_zi = urban.perviousRoad.Zi;
-  auto perv_temp = urban.perviousRoad.Temperature;
-  auto perv_cv_solids = urban.perviousRoad.soil.CvSolids;
-  auto perv_cv_times_dz = urban.perviousRoad.CvTimesDz;
+  auto &perv_tk_minerals = urban.perviousRoad.soil.TkMinerals;
+  auto &perv_tk_dry = urban.perviousRoad.soil.TkDry;
+  auto &perv_tkLayer = urban.perviousRoad.TkLayer;
+  auto &perv_tkInterface = urban.perviousRoad.TkInterface;
+  auto &perv_watsat = urban.perviousRoad.soil.WatSat;
+  auto &perv_water_liquid = urban.perviousRoad.soil.WaterLiquid;
+  auto &perv_water_ice = urban.perviousRoad.soil.WaterIce;
+  auto &perv_dz = urban.perviousRoad.Dz;
+  auto &perv_zc = urban.perviousRoad.Zc;
+  auto &perv_zi = urban.perviousRoad.Zi;
+  auto &perv_temp = urban.perviousRoad.Temperature;
+  auto &perv_cv_solids = urban.perviousRoad.soil.CvSolids;
+  auto &perv_cv_times_dz = urban.perviousRoad.CvTimesDz;
 
   // Single parallel kernel over all landunits
   Kokkos::parallel_for(
