@@ -623,6 +623,56 @@ void ComputeFluxDerivatives(const SurfaceFluxConductances &condcs,
                            (condcs.shadewall.wtuqUnscl / wtq_sum);
 }
 
+// Compute sensible and latent heat fluxes for a surface
+KOKKOS_INLINE_FUNCTION
+void ComputeSurfaceHeatFluxes(Real taf, Real qaf, Real tSurf, Real qSurf,
+                              Real forcRho, Real wtusUnscl, Real wtuqUnscl,
+                              Real &eflxShGrnd, Real &qflxEvapSoil,
+                              Real &qflxTranEvap) {
+  // Temperature and humidity differences (canyon air - surface)
+  const Real dth = taf - tSurf;
+  const Real dqh = qaf - qSurf;
+
+  // Sensible heat flux (W/m²) [+ to atmosphere]
+  eflxShGrnd = -forcRho * CPAIR * wtusUnscl * dth;
+
+  // Latent heat flux (mm H₂O/s) [+ to atmosphere]
+  qflxEvapSoil = -forcRho * wtuqUnscl * dqh;
+
+  // Default: no transpiration (overridden for pervious road)
+  qflxTranEvap = 0.0;
+}
+
+// Compute sensible and latent heat fluxes for pervious road with
+// partitioning between soil evaporation and transpiration
+KOKKOS_INLINE_FUNCTION
+void ComputePerviousRoadHeatFluxes(Real taf, Real qaf, Real tSurf, Real qSurf,
+                                   Real forcRho, Real wtusUnscl, Real wtuqUnscl,
+                                   Real &eflxShGrnd, Real &qflxEvapSoil,
+                                   Real &qflxTranEvap) {
+  // Temperature and humidity differences (canyon air - surface)
+  const Real dth = taf - tSurf;
+  const Real dqh = qaf - qSurf;
+
+  // Sensible heat flux (W/m²) [+ to atmosphere]
+  eflxShGrnd = -forcRho * CPAIR * wtusUnscl * dth;
+
+  // Latent heat flux - partition between soil evaporation and transpiration
+  // If dew (dqh > 0), assign to soil evaporation
+  // For now, we don't have snow fraction or soil moisture data,
+  // so we use simplified logic
+  if (dqh > 0.0) {
+    // Condensation/dew - assign to soil
+    qflxEvapSoil = -forcRho * wtuqUnscl * dqh;
+    qflxTranEvap = 0.0;
+  } else {
+    // Evaporation - for now assign to soil
+    // TODO: Add soil moisture availability check to partition to transpiration
+    qflxEvapSoil = -forcRho * wtuqUnscl * dqh;
+    qflxTranEvap = 0.0;
+  }
+}
+
 // Compute surface fluxes for all urban surfaces
 void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
   const int numLandunits = urban.numLandunits;
@@ -827,6 +877,50 @@ void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
         urban.sunlitWall.Cgrndl(l) = derivs.cgrndlSunwall;
         urban.shadedWall.Cgrnds(l) = derivs.cgrndsShadewall;
         urban.shadedWall.Cgrndl(l) = derivs.cgrndlShadewall;
+
+        // Compute and store surface heat fluxes
+        // Roof
+        ComputeSurfaceHeatFluxes(
+            taf, qaf, urban.roof.EffectiveSurfTemp(l), urban.roof.Qs(l),
+            forcRho(l), condcs.roof.wtusUnscl, condcs.roof.wtuqUnscl,
+            urban.roof.EflxShGrnd(l), urban.roof.QflxEvapSoil(l),
+            urban.roof.QflxTranEvap(l));
+
+        // Impervious road
+        ComputeSurfaceHeatFluxes(
+            taf, qaf, urban.imperviousRoad.EffectiveSurfTemp(l),
+            urban.imperviousRoad.Qs(l), forcRho(l), condcs.roadImperv.wtusUnscl,
+            condcs.roadImperv.wtuqUnscl, urban.imperviousRoad.EflxShGrnd(l),
+            urban.imperviousRoad.QflxEvapSoil(l),
+            urban.imperviousRoad.QflxTranEvap(l));
+
+        // Pervious road (with partitioning logic)
+        ComputePerviousRoadHeatFluxes(
+            taf, qaf, urban.perviousRoad.EffectiveSurfTemp(l),
+            urban.perviousRoad.Qs(l), forcRho(l), condcs.roadPerv.wtusUnscl,
+            condcs.roadPerv.wtuqUnscl, urban.perviousRoad.EflxShGrnd(l),
+            urban.perviousRoad.QflxEvapSoil(l),
+            urban.perviousRoad.QflxTranEvap(l));
+
+        // Sunlit wall (no evaporation - walls don't have evap views)
+        {
+          Real qflxEvapSoilDummy, qflxTranEvapDummy;
+          ComputeSurfaceHeatFluxes(
+              taf, qaf, urban.sunlitWall.EffectiveSurfTemp(l), 0.0, forcRho(l),
+              condcs.sunwall.wtusUnscl, condcs.sunwall.wtuqUnscl,
+              urban.sunlitWall.EflxShGrnd(l), qflxEvapSoilDummy,
+              qflxTranEvapDummy);
+        }
+
+        // Shaded wall (no evaporation - walls don't have evap views)
+        {
+          Real qflxEvapSoilDummy, qflxTranEvapDummy;
+          ComputeSurfaceHeatFluxes(
+              taf, qaf, urban.shadedWall.EffectiveSurfTemp(l), 0.0, forcRho(l),
+              condcs.shadewall.wtusUnscl, condcs.shadewall.wtuqUnscl,
+              urban.shadedWall.EflxShGrnd(l), qflxEvapSoilDummy,
+              qflxTranEvapDummy);
+        }
 
         // Store taf and qaf back to arrays
         Taf(l) = taf;

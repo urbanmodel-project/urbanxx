@@ -31,6 +31,8 @@ constexpr double SHR_CONST_CPICE =
     2.11727e3; // specific heat of fresh ice ~ J/kg/K
 constexpr double SHR_CONST_CPFW =
     4.188e3; // specific heat of fresh h2o ~ J/kg/K
+constexpr double SHR_CONST_LATVAP =
+    2.501e6; // latent heat of evaporation [J/kg]
 
 constexpr double SHR_CONST_TKFRZ = 273.15; // freezing temperature of water [K]
 constexpr double STEBOL =
