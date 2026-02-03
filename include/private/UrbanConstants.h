@@ -45,6 +45,9 @@ constexpr double TKWATER = 0.57;   // thermal conductivity of water [W/m-K]
 constexpr double TKICE = 2.29;     // thermal conductivity of ice [W/m-K]
 constexpr double TK_BEDROCK = 3.0; // thermal conductivity of bedrock [W/m-K]
 
+constexpr double CRANK_NICONSON_FACTOR =
+    0.5; // Crank-Nicholson weighting factor
+
 } // namespace URBANXX
 
 #endif // URBAN_CONSTANTS_H
