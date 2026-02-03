@@ -48,6 +48,24 @@ struct SurfaceFluxDerivatives {
   Real cgrndsShadewall, cgrndlShadewall;
 };
 
+// Lightweight struct to store flux conductances for a single surface
+struct SurfaceConductances {
+  Real wtus;      // Sensible heat conductance (scaled) (m/s)
+  Real wtuq;      // Latent heat conductance (scaled) (m/s)
+  Real wtusUnscl; // Sensible heat conductance (unscaled) (m/s)
+  Real wtuqUnscl; // Latent heat conductance (unscaled) (m/s)
+};
+
+// Lightweight struct to store intermediate flux conductances for all surfaces
+// These are saved from the iteration and used to compute derivatives
+struct SurfaceFluxConductances {
+  SurfaceConductances roof;
+  SurfaceConductances roadPerv;
+  SurfaceConductances roadImperv;
+  SurfaceConductances sunwall;
+  SurfaceConductances shadewall;
+};
+
 constexpr Real VKC = 0.4;
 constexpr Real ZETAM =
     1.574; // transition point of flux-gradient relation (wind profile)
@@ -452,7 +470,7 @@ void ComputeNewTafAndQaf(Real canyonWind, Real thm, Real rahu, Real rawu,
                          const CanyonAirData &canyon,
                          const SurfaceTempHumidData &surfaces, Real qaf,
                          Real &tafNew, Real &qafNew,
-                         SurfaceFluxDerivatives &derivs) {
+                         SurfaceFluxConductances &condcs) {
 
   const Real qSunwall = 0.0;
   const Real qShadewall = 0.0;
@@ -512,75 +530,97 @@ void ComputeNewTafAndQaf(Real canyonWind, Real thm, Real rahu, Real rawu,
   tafNew = tafNumer / tafDenom;
   qafNew = qafNumer / qafDenom;
 
-  Real wtas = 1.0 / rahu;
-  Real wtaq = 1.0 / rawu;
-  Real wts_sum = 0.0;
-  Real wtq_sum = 0.0;
+  // Store conductances for later derivative computation
+  condcs.roof.wtus = wtusRoof;
+  condcs.roof.wtuq = wtuqRoof;
+  condcs.roof.wtusUnscl = wtusRoofUnscl;
+  condcs.roof.wtuqUnscl = wtuqRoofUnscl;
 
-  wts_sum = wtas + wtusRoof + wtusRoadPerv + wtusRoadImperv + wtusSunwall +
-            wtusShadewall;
-  wtq_sum = wtaq + wtuqRoof + wtuqRoadPerv + wtuqRoadImperv + wtuqSunwall +
-            wtuqShadewall;
+  condcs.roadPerv.wtus = wtusRoadPerv;
+  condcs.roadPerv.wtuq = wtuqRoadPerv;
+  condcs.roadPerv.wtusUnscl = wtusRoadPervUnscl;
+  condcs.roadPerv.wtuqUnscl = wtuqRoadPervUnscl;
+
+  condcs.roadImperv.wtus = wtusRoadImperv;
+  condcs.roadImperv.wtuq = wtuqRoadImperv;
+  condcs.roadImperv.wtusUnscl = wtusRoadImpervUnscl;
+  condcs.roadImperv.wtuqUnscl = wtuqRoadImpervUnscl;
+
+  condcs.sunwall.wtus = wtusSunwall;
+  condcs.sunwall.wtuq = wtuqSunwall;
+  condcs.sunwall.wtusUnscl = wtusSunwallUnscl;
+  condcs.sunwall.wtuqUnscl = wtuqSunwallUnscl;
+
+  condcs.shadewall.wtus = wtusShadewall;
+  condcs.shadewall.wtuq = wtuqShadewall;
+  condcs.shadewall.wtusUnscl = wtusShadewallUnscl;
+  condcs.shadewall.wtuqUnscl = wtuqShadewallUnscl;
+}
+
+// Compute flux derivatives after iteration has converged
+KOKKOS_INLINE_FUNCTION
+void ComputeFluxDerivatives(const SurfaceFluxConductances &condcs,
+                            const SurfaceTempHumidData &surfaces, Real forcRho,
+                            Real rahu, Real rawu,
+                            SurfaceFluxDerivatives &derivs) {
+  // Compute resistance terms and sums from conductances
+  const Real wtas = 1.0 / rahu;
+  const Real wtaq = 1.0 / rawu;
+  const Real wts_sum = wtas + condcs.roof.wtus + condcs.roadPerv.wtus +
+                       condcs.roadImperv.wtus + condcs.sunwall.wtus +
+                       condcs.shadewall.wtus;
+  const Real wtq_sum = wtaq + condcs.roof.wtuq + condcs.roadPerv.wtuq +
+                       condcs.roadImperv.wtuq + condcs.sunwall.wtuq +
+                       condcs.shadewall.wtuq;
 
   const Real dQdTRoof = surfaces.dQdTRoof;
-  Real cgrndsRoof =
-      canyon.forcRho * CPAIR *
-      (wtas + wtusRoadPerv + wtusRoadImperv + wtusSunwall + wtusShadewall) *
-      (wtusRoofUnscl / wts_sum);
-  Real cgrndlRoof =
-      canyon.forcRho *
-      (wtaq + wtuqRoadPerv + wtuqRoadImperv + wtuqSunwall + wtuqShadewall) *
-      (wtuqRoofUnscl / wtq_sum) * dQdTRoof;
+  derivs.cgrndsRoof = forcRho * CPAIR *
+                      (wtas + condcs.roadPerv.wtus + condcs.roadImperv.wtus +
+                       condcs.sunwall.wtus + condcs.shadewall.wtus) *
+                      (condcs.roof.wtusUnscl / wts_sum);
+  derivs.cgrndlRoof = forcRho *
+                      (wtaq + condcs.roadPerv.wtuq + condcs.roadImperv.wtuq +
+                       condcs.sunwall.wtuq + condcs.shadewall.wtuq) *
+                      (condcs.roof.wtuqUnscl / wtq_sum) * dQdTRoof;
 
   const Real dQdTRoadPerv = surfaces.dQdTRoadPerv;
-  Real cgrndsRoadPerv =
-      canyon.forcRho * CPAIR *
-      (wtas + wtusRoof + wtusRoadImperv + wtusSunwall + wtusShadewall) *
-      (wtusRoadPervUnscl / wts_sum);
-  Real cgrndlRoadPerv =
-      canyon.forcRho *
-      (wtaq + wtuqRoof + wtuqRoadImperv + wtuqSunwall + wtuqShadewall) *
-      (wtuqRoadPervUnscl / wtq_sum) * dQdTRoadPerv;
+  derivs.cgrndsRoadPerv = forcRho * CPAIR *
+                          (wtas + condcs.roof.wtus + condcs.roadImperv.wtus +
+                           condcs.sunwall.wtus + condcs.shadewall.wtus) *
+                          (condcs.roadPerv.wtusUnscl / wts_sum);
+  derivs.cgrndlRoadPerv = forcRho *
+                          (wtaq + condcs.roof.wtuq + condcs.roadImperv.wtuq +
+                           condcs.sunwall.wtuq + condcs.shadewall.wtuq) *
+                          (condcs.roadPerv.wtuqUnscl / wtq_sum) * dQdTRoadPerv;
 
   const Real dQdTRoadImperv = surfaces.dQdTRoadImperv;
-  Real cgrndsRoadImperv =
-      canyon.forcRho * CPAIR *
-      (wtas + wtusRoof + wtusRoadPerv + wtusSunwall + wtusShadewall) *
-      (wtusRoadImpervUnscl / wts_sum);
-  Real cgrndlRoadImperv =
-      canyon.forcRho *
-      (wtaq + wtuqRoof + wtuqRoadPerv + wtuqSunwall + wtuqShadewall) *
-      (wtuqRoadImpervUnscl / wtq_sum) * dQdTRoadImperv;
+  derivs.cgrndsRoadImperv = forcRho * CPAIR *
+                            (wtas + condcs.roof.wtus + condcs.roadPerv.wtus +
+                             condcs.sunwall.wtus + condcs.shadewall.wtus) *
+                            (condcs.roadImperv.wtusUnscl / wts_sum);
+  derivs.cgrndlRoadImperv = forcRho *
+                            (wtaq + condcs.roof.wtuq + condcs.roadPerv.wtuq +
+                             condcs.sunwall.wtuq + condcs.shadewall.wtuq) *
+                            (condcs.roadImperv.wtuqUnscl / wtq_sum) *
+                            dQdTRoadImperv;
 
-  Real cgrndsSunwall =
-      canyon.forcRho * CPAIR *
-      (wtas + wtusRoof + wtusRoadPerv + wtusRoadImperv + wtusShadewall) *
-      (wtusSunwallUnscl / wts_sum);
-  Real cgrndlSunwall =
-      canyon.forcRho *
-      (wtaq + wtuqRoof + wtuqRoadPerv + wtuqRoadImperv + wtuqShadewall) *
-      (wtuqSunwallUnscl / wtq_sum);
+  derivs.cgrndsSunwall = forcRho * CPAIR *
+                         (wtas + condcs.roof.wtus + condcs.roadPerv.wtus +
+                          condcs.roadImperv.wtus + condcs.shadewall.wtus) *
+                         (condcs.sunwall.wtusUnscl / wts_sum);
+  derivs.cgrndlSunwall = forcRho *
+                         (wtaq + condcs.roof.wtuq + condcs.roadPerv.wtuq +
+                          condcs.roadImperv.wtuq + condcs.shadewall.wtuq) *
+                         (condcs.sunwall.wtuqUnscl / wtq_sum);
 
-  Real cgrndsShadewall =
-      canyon.forcRho * CPAIR *
-      (wtas + wtusRoof + wtusRoadPerv + wtusRoadImperv + wtusSunwall) *
-      (wtusShadewallUnscl / wts_sum);
-  Real cgrndlShadewall =
-      canyon.forcRho *
-      (wtaq + wtuqRoof + wtuqRoadPerv + wtuqRoadImperv + wtuqSunwall) *
-      (wtuqShadewallUnscl / wtq_sum);
-
-  // Store derivatives to output struct
-  derivs.cgrndsRoof = cgrndsRoof;
-  derivs.cgrndlRoof = cgrndlRoof;
-  derivs.cgrndsRoadPerv = cgrndsRoadPerv;
-  derivs.cgrndlRoadPerv = cgrndlRoadPerv;
-  derivs.cgrndsRoadImperv = cgrndsRoadImperv;
-  derivs.cgrndlRoadImperv = cgrndlRoadImperv;
-  derivs.cgrndsSunwall = cgrndsSunwall;
-  derivs.cgrndlSunwall = cgrndlSunwall;
-  derivs.cgrndsShadewall = cgrndsShadewall;
-  derivs.cgrndlShadewall = cgrndlShadewall;
+  derivs.cgrndsShadewall = forcRho * CPAIR *
+                           (wtas + condcs.roof.wtus + condcs.roadPerv.wtus +
+                            condcs.roadImperv.wtus + condcs.sunwall.wtus) *
+                           (condcs.shadewall.wtusUnscl / wts_sum);
+  derivs.cgrndlShadewall = forcRho *
+                           (wtaq + condcs.roof.wtuq + condcs.roadPerv.wtuq +
+                            condcs.roadImperv.wtuq + condcs.sunwall.wtuq) *
+                           (condcs.shadewall.wtuqUnscl / wtq_sum);
 }
 
 // Compute surface fluxes for all urban surfaces
@@ -688,6 +728,7 @@ void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
 
         // Iteration loop to compute friction velocity and surface fluxes
         Real fm = 0.0;
+        SurfaceFluxConductances condcs;
         for (int iter = 0; iter < 3; ++iter) {
           Real ustar;
           Real temp1, temp12m;
@@ -722,24 +763,10 @@ void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
               urban.shadedWall.EffectiveSurfTemp(l)};
 
           Real tafNew, qafNew;
-          SurfaceFluxDerivatives derivs;
           ComputeNewTafAndQaf(canyonWind, thm, rahu, rawu, canyonData,
-                              surfaceData, qaf, tafNew, qafNew, derivs);
+                              surfaceData, qaf, tafNew, qafNew, condcs);
           taf = tafNew;
           qaf = qafNew;
-
-          // Store flux derivatives to views (for implicit heat diffusion
-          // solver)
-          urban.roof.Cgrnds(l) = derivs.cgrndsRoof;
-          urban.roof.Cgrndl(l) = derivs.cgrndlRoof;
-          urban.perviousRoad.Cgrnds(l) = derivs.cgrndsRoadPerv;
-          urban.perviousRoad.Cgrndl(l) = derivs.cgrndlRoadPerv;
-          urban.imperviousRoad.Cgrnds(l) = derivs.cgrndsRoadImperv;
-          urban.imperviousRoad.Cgrndl(l) = derivs.cgrndlRoadImperv;
-          urban.sunlitWall.Cgrnds(l) = derivs.cgrndsSunwall;
-          urban.sunlitWall.Cgrndl(l) = derivs.cgrndlSunwall;
-          urban.shadedWall.Cgrnds(l) = derivs.cgrndsShadewall;
-          urban.shadedWall.Cgrndl(l) = derivs.cgrndlShadewall;
 
           const Real dth = thm - taf;
           const Real dqh = forcQ - qaf;
@@ -762,6 +789,44 @@ void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
           }
           obu = zldis / zeta;
         }
+
+        // Compute flux derivatives after iteration has converged
+        // Need final rahu and rawu from last iteration
+        Real ustar;
+        Real temp1, temp12m;
+        Real temp2, temp22m;
+        FrictionVelocity(2, forcHgtUVal, zDTownVal, z0TownVal, obu, ur, um,
+                         ustar, temp1, temp12m, temp2, temp22m, fm);
+        Real rahu = 1.0 / (temp1 * ustar);
+        Real rawu = 1.0 / (temp2 * ustar);
+
+        SurfaceTempHumidData surfaceData = {
+            urban.roof.Qs(l),
+            urban.imperviousRoad.Qs(l),
+            urban.perviousRoad.Qs(l),
+            urban.roof.QsdT(l),
+            urban.imperviousRoad.QsdT(l),
+            urban.perviousRoad.QsdT(l),
+            urban.roof.EffectiveSurfTemp(l),
+            urban.imperviousRoad.EffectiveSurfTemp(l),
+            urban.perviousRoad.EffectiveSurfTemp(l),
+            urban.sunlitWall.EffectiveSurfTemp(l),
+            urban.shadedWall.EffectiveSurfTemp(l)};
+        SurfaceFluxDerivatives derivs;
+        ComputeFluxDerivatives(condcs, surfaceData, forcRho(l), rahu, rawu,
+                               derivs);
+
+        // Store flux derivatives to views (for implicit heat diffusion solver)
+        urban.roof.Cgrnds(l) = derivs.cgrndsRoof;
+        urban.roof.Cgrndl(l) = derivs.cgrndlRoof;
+        urban.perviousRoad.Cgrnds(l) = derivs.cgrndsRoadPerv;
+        urban.perviousRoad.Cgrndl(l) = derivs.cgrndlRoadPerv;
+        urban.imperviousRoad.Cgrnds(l) = derivs.cgrndsRoadImperv;
+        urban.imperviousRoad.Cgrndl(l) = derivs.cgrndlRoadImperv;
+        urban.sunlitWall.Cgrnds(l) = derivs.cgrndsSunwall;
+        urban.sunlitWall.Cgrndl(l) = derivs.cgrndlSunwall;
+        urban.shadedWall.Cgrnds(l) = derivs.cgrndsShadewall;
+        urban.shadedWall.Cgrndl(l) = derivs.cgrndlShadewall;
 
         // Store taf and qaf back to arrays
         Taf(l) = taf;
