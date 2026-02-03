@@ -174,15 +174,22 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
         const Real dtime = 30.0 * 60.0; // seconds
         int level;
 
+        //
+        // Compute factors and interface fluxes for pervious road
+        //
+
         // Top layer
         level = 0;
-        factPervRoad[level] = dtime / perv_cv_times_dz(l, level);
 
         const Real capr =
             0.34; // Turing factor to turn first layer T into surface T
         const Real dz1 = perv_zc(l, level) - perv_zi(l, level);
-        const Real dz2 = perv_zi(l, level + 1) - perv_zi(l, level);
+        const Real dz2 = perv_zc(l, level + 1) - perv_zi(l, level);
         const Real dz_eff = 0.5 * (dz1 + capr * dz2);
+
+        factPervRoad[level] =
+            dtime / perv_cv_times_dz(l, level) * perv_dz(l, level) / dz_eff;
+
         fnPervRoad[level] = perv_tkLayer(l, level) *
                             (perv_temp(l, level + 1) - perv_temp(l, level)) /
                             (perv_zc(l, level + 1) - perv_zc(l, level));
@@ -200,6 +207,31 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
         factPervRoad[level] = dtime / perv_cv_times_dz(l, level);
         fnPervRoad[level] = 0.0;
 
+        //
+        // Compute RHS vector for pervious road
+        //
+
+        // Top layer
+        level = 0;
+        rPervRoad[level] =
+            perv_temp(l, level) +
+            factPervRoad[level] *
+                (perv_EflxGnet - perv_DEflxGnet_DTemp * perv_temp(l, level) +
+                 CRANK_NICONSON_FACTOR * fnPervRoad[level]);
+
+        // Internal layers
+        for (level = 1; level < numSoilLayers - 1; ++level) {
+          rPervRoad[level] = perv_temp(l, level) +
+                             factPervRoad[level] * CRANK_NICONSON_FACTOR *
+                                 (fnPervRoad[level] - fnPervRoad[level - 1]);
+        }
+
+        // Bottom layer
+        level = numSoilLayers - 1;
+        rPervRoad[level] = perv_temp(l, level) -
+                           CRANK_NICONSON_FACTOR * factPervRoad[level - 1] *
+                               fnPervRoad[level] +
+                           factPervRoad[level] * fnPervRoad[level];
         // TODO: Add remaining heat diffusion steps:
         // Step 5: Setup tridiagonal system for heat conduction equation
         // Step 6: Apply boundary conditions (surface flux, bottom temperature)
