@@ -98,6 +98,8 @@ struct SurfaceDataBase {
                       Cgrnds) // d(sensible heat flux)/dT for implicit solver
   DECLARE_DEVICE_VIEW(1DR8,
                       Cgrndl) // d(latent heat flux)/dT for implicit solver
+  DECLARE_DEVICE_VIEW(1DR8, EflxShGrnd) // sensible heat flux from ground
+                                        // (W/m**2) [+ to atm]
 
   // Saturation humidity variables
   DECLARE_DEVICE_VIEW(1DR8, Es)   // saturation vapor pressure (Pa)
@@ -133,6 +135,7 @@ struct SurfaceDataBase {
     ALLOCATE_DEVICE_VIEW(NetShortRad, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(Cgrnds, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(Cgrndl, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(EflxShGrnd, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(Es, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(EsdT, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(Qs, Array1DR8, numLandunits)
@@ -154,6 +157,10 @@ struct SnowCoveredSurfaceData : SurfaceDataBase {
   DECLARE_DEVICE_VIEW(3DR8, SnowAlbedo) // snow albedo
   DECLARE_DEVICE_VIEW(3DR8,
                       AlbedoWithSnowEffects) // albedo including snow effects
+  DECLARE_DEVICE_VIEW(1DR8,
+                      QflxEvapSoil) // soil evaporation (mm H2O/s) (+ = to atm)
+  DECLARE_DEVICE_VIEW(1DR8, QflxTranEvap) // vegetation evaporation (mm H2O/s)
+                                          // (+ = to atm)
 
   SnowCoveredSurfaceData(int numLandunits, int numRadBands, int numRadTypes,
                          int numLayers)
@@ -162,6 +169,8 @@ struct SnowCoveredSurfaceData : SurfaceDataBase {
                          numRadTypes)
     ALLOCATE_DEVICE_VIEW(AlbedoWithSnowEffects, Array3DR8, numLandunits,
                          numRadBands, numRadTypes)
+    ALLOCATE_DEVICE_VIEW(QflxEvapSoil, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(QflxTranEvap, Array1DR8, numLandunits)
   }
 };
 
