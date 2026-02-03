@@ -33,6 +33,7 @@ struct CanyonAirData {
 // Lightweight struct to group surface temperature and humidity scalars
 struct SurfaceTempHumidData {
   Real qRoof, qRoadImperv, qRoadPerv;
+  Real dQdTRoof, dQdTRoadImperv, dQdTRoadPerv;
   Real tRoof, tRoadImperv, tRoadPerv, tSunwall, tShadewall;
 };
 
@@ -448,26 +449,36 @@ void ComputeNewTafAndQaf(int l, Real canyonWind, Real thm, Real rahu, Real rawu,
 
   const Real fwetRoof = 0.0;
   const Real wtusRoof = canyon.wtRoof / canyonResistance;
+  const Real wtusRoofUnscl = 1.0 / canyonResistance;
   const Real wtuqRoof = fwetRoof * canyon.wtRoof / canyonResistance;
+  const Real wtuqRoofUnscl = fwetRoof / canyonResistance;
 
   const Real wtusRoadPerv =
       canyon.wtRoadPerv * (1.0 - canyon.wtRoof) / canyonResistance;
+  const Real wtusRoadPervUnscl = 1.0 / canyonResistance;
   const Real wtuqRoadPerv =
       canyon.wtRoadPerv * (1.0 - canyon.wtRoof) / canyonResistance;
+  const Real wtuqRoadPervUnscl = 1.0 / canyonResistance;
 
   const Real fwetRoadImperv = (qaf > surfaces.qRoadImperv) ? 1.0 : 0.0;
   const Real wtusRoadImperv =
       (1.0 - canyon.wtRoadPerv) * (1.0 - canyon.wtRoof) / canyonResistance;
+  const Real wtusRoadImpervUnscl = 1.0 / canyonResistance;
   const Real wtuqRoadImperv = fwetRoadImperv * (1.0 - canyon.wtRoadPerv) *
                               (1.0 - canyon.wtRoof) / canyonResistance;
+  const Real wtuqRoadImpervUnscl = 1.0 / canyonResistance;
 
   const Real wtusSunwall =
       canyon.hwrVal * (1.0 - canyon.wtRoof) / canyonResistance;
+  const Real wtusSunwallUnscl = 1.0 / canyonResistance;
   const Real wtuqSunwall = 0.0;
+  const Real wtuqSunwallUnscl = 0.0;
 
   const Real wtusShadewall =
       canyon.hwrVal * (1.0 - canyon.wtRoof) / canyonResistance;
+  const Real wtusShadewallUnscl = 1.0 / canyonResistance;
   const Real wtuqShadewall = 0.0;
+  const Real wtuqShadewallUnscl = 0.0;
 
   const Real tafNumer = thm / rahu + surfaces.tRoof * wtusRoof +
                         surfaces.tRoadPerv * wtusRoadPerv +
@@ -488,6 +499,64 @@ void ComputeNewTafAndQaf(int l, Real canyonWind, Real thm, Real rahu, Real rawu,
 
   tafNew = tafNumer / tafDenom;
   qafNew = qafNumer / qafDenom;
+
+  Real wtas = 1.0 / rahu;
+  Real wtaq = 1.0 / rawu;
+  Real wts_sum = 0.0;
+  Real wtq_sum = 0.0;
+
+  wts_sum = wtas + wtusRoof + wtusRoadPerv + wtusRoadImperv + wtusSunwall +
+            wtusShadewall;
+  wtq_sum = wtaq + wtuqRoof + wtuqRoadPerv + wtuqRoadImperv + wtuqSunwall +
+            wtuqShadewall;
+
+  const Real dQdTRoof = surfaces.dQdTRoof;
+  Real cgrndsRoof =
+      canyon.forcRho * CPAIR *
+      (wtas + wtusRoadPerv + wtusRoadImperv + wtusSunwall + wtusShadewall) *
+      (wtusRoofUnscl / wts_sum);
+  Real cgrndlRoof =
+      canyon.forcRho *
+      (wtaq + wtuqRoadPerv + wtuqRoadImperv + wtuqSunwall + wtuqShadewall) *
+      (wtuqRoofUnscl / wtq_sum) * dQdTRoof;
+
+  const Real dQdTRoadPerv = surfaces.dQdTRoadPerv;
+  Real cgrndsRoadPerv =
+      canyon.forcRho * CPAIR *
+      (wtas + wtusRoof + wtusRoadImperv + wtusSunwall + wtusShadewall) *
+      (wtusRoadPervUnscl / wts_sum);
+  Real cgrndlRoadPerv =
+      canyon.forcRho *
+      (wtaq + wtuqRoof + wtuqRoadImperv + wtuqSunwall + wtuqShadewall) *
+      (wtuqRoadPervUnscl / wtq_sum) * dQdTRoadPerv;
+
+  const Real dQdTRoadImperv = surfaces.dQdTRoadImperv;
+  Real cgrndsRoadImperv =
+      canyon.forcRho * CPAIR *
+      (wtas + wtusRoof + wtusRoadPerv + wtusSunwall + wtusShadewall) *
+      (wtusRoadImpervUnscl / wts_sum);
+  Real cgrndlRoadImperv =
+      canyon.forcRho *
+      (wtaq + wtuqRoof + wtuqRoadPerv + wtuqSunwall + wtuqShadewall) *
+      (wtuqRoadImpervUnscl / wtq_sum) * dQdTRoadImperv;
+
+  Real cgrndsSunwall =
+      canyon.forcRho * CPAIR *
+      (wtas + wtusRoof + wtusRoadPerv + wtusRoadImperv + wtusShadewall) *
+      (wtusSunwallUnscl / wts_sum);
+  Real cgrndlSunwall =
+      canyon.forcRho *
+      (wtaq + wtuqRoof + wtuqRoadPerv + wtuqRoadImperv + wtuqShadewall) *
+      (wtuqSunwallUnscl / wtq_sum);
+
+  Real cgrndsShadewall =
+      canyon.forcRho * CPAIR *
+      (wtas + wtusRoof + wtusRoadPerv + wtusRoadImperv + wtusSunwall) *
+      (wtusShadewallUnscl / wts_sum);
+  Real cgrndlShadewall =
+      canyon.forcRho *
+      (wtaq + wtuqRoof + wtuqRoadPerv + wtuqRoadImperv + wtuqSunwall) *
+      (wtuqShadewallUnscl / wtq_sum);
 }
 
 // Compute surface fluxes for all urban surfaces
@@ -619,6 +688,9 @@ void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
               urban.roof.Qs(l),
               urban.imperviousRoad.Qs(l),
               urban.perviousRoad.Qs(l),
+              urban.roof.QsdT(l),
+              urban.imperviousRoad.QsdT(l),
+              urban.perviousRoad.QsdT(l),
               urban.roof.EffectiveSurfTemp(l),
               urban.imperviousRoad.EffectiveSurfTemp(l),
               urban.perviousRoad.EffectiveSurfTemp(l),
