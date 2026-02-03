@@ -448,7 +448,7 @@ void ComputeQsatForSurfaces(int l, Real forcP, const SurfaceQsatData &roof,
 
 // Compute new air temperature and humidity in the canyon
 KOKKOS_INLINE_FUNCTION
-void ComputeNewTafAndQaf(int l, Real canyonWind, Real thm, Real rahu, Real rawu,
+void ComputeNewTafAndQaf(Real canyonWind, Real thm, Real rahu, Real rawu,
                          const CanyonAirData &canyon,
                          const SurfaceTempHumidData &surfaces, Real qaf,
                          Real &tafNew, Real &qafNew,
@@ -723,7 +723,7 @@ void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
 
           Real tafNew, qafNew;
           SurfaceFluxDerivatives derivs;
-          ComputeNewTafAndQaf(l, canyonWind, thm, rahu, rawu, canyonData,
+          ComputeNewTafAndQaf(canyonWind, thm, rahu, rawu, canyonData,
                               surfaceData, qaf, tafNew, qafNew, derivs);
           taf = tafNew;
           qaf = qafNew;
