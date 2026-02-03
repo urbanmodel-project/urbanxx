@@ -34,6 +34,8 @@ constexpr double SHR_CONST_CPFW =
 constexpr double SHR_CONST_LATVAP =
     2.501e6; // latent heat of evaporation [J/kg]
 
+constexpr double CSOL_BEDROCK = 2.0e6; // heat capacity of bedrock [J/m^3/K]
+
 constexpr double SHR_CONST_TKFRZ = 273.15; // freezing temperature of water [K]
 constexpr double STEBOL =
     5.670374419e-8; // Stefan-Boltzmann constant [W/m^2/K^4]
