@@ -76,23 +76,24 @@ KOKKOS_INLINE_FUNCTION void ComputeInterfaceThermalConductivity(
     const ViewType &tkLayer, const ViewType &tkInterface, const ViewType &zc,
     const ViewType &zi, const Real tkFillValue) {
 
-  for (int k = 0; k < numLayers - 1; ++k) {
-    if (k < numActiveLayers - 1) {
+  for (int k = 0; k < numLayers; ++k) {
+    if (k < numActiveLayers) {
       // Harmonic average of layer thermal conductivities
       // tk(j) = thk(j)*thk(j+1)*(z(j+1)-z(j)) /
       //         (thk(j)*(z(j+1)-zi(j))+thk(j+1)*(zi(j)-z(j)))
-      tkInterface(l, k) = tkLayer(l, k) * tkLayer(l, k + 1) *
-                          (zc(l, k + 1) - zc(l, k)) /
-                          (tkLayer(l, k) * (zc(l, k + 1) - zi(l, k + 1)) +
-                           tkLayer(l, k + 1) * (zi(l, k + 1) - zc(l, k)));
+      if (k < numLayers - 1) {
+        tkInterface(l, k) = tkLayer(l, k) * tkLayer(l, k + 1) *
+                            (zc(l, k + 1) - zc(l, k)) /
+                            (tkLayer(l, k) * (zc(l, k + 1) - zi(l, k + 1)) +
+                             tkLayer(l, k + 1) * (zi(l, k + 1) - zc(l, k)));
+      } else {
+        tkInterface(l, k) = tkLayer(l, k);
+      }
     } else {
       // Inactive layers set to fill value
       tkInterface(l, k) = tkFillValue;
     }
   }
-
-  // Last interface value set to fill value
-  tkInterface(l, numLayers - 1) = tkFillValue;
 }
 
 // Compute heat capacity times layer thickness for pervious road soil layers
@@ -119,7 +120,11 @@ KOKKOS_INLINE_FUNCTION void ComputeSoilHeatCapacityTimesDz(
         water_ice(l, k) * cpice + water_liquid(l, k) * cpliq;
 
     // Total heat capacity times layer thickness
-    cvTimesDz(l, k) = cv_solid_component + cv_water_component;
+    if (k < 10) {
+      cvTimesDz(l, k) = cv_solid_component + cv_water_component;
+    } else {
+      cvTimesDz(l, k) = cv_solid_component;
+    }
   }
 }
 
