@@ -455,6 +455,7 @@ static void UrbanInitializePerviousRoadSoils(UrbanType urban) {
             water_vol(l, k) = Kokkos::fmin(0.3, watsat_mixed);
           } else {
             water_vol(l, k) = 0.0;
+            cv_solids(l, k) = CSOL_BEDROCK;
           }
 
           // Initialize liquid and ice water based on layer temperature
