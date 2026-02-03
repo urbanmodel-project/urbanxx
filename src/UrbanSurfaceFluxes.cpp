@@ -37,6 +37,17 @@ struct SurfaceTempHumidData {
   Real tRoof, tRoadImperv, tRoadPerv, tSunwall, tShadewall;
 };
 
+// Lightweight struct to store surface flux derivatives for implicit solver
+// These are derivatives of heat fluxes w.r.t. surface temperature (Jacobian
+// terms)
+struct SurfaceFluxDerivatives {
+  Real cgrndsRoof, cgrndlRoof;
+  Real cgrndsRoadPerv, cgrndlRoadPerv;
+  Real cgrndsRoadImperv, cgrndlRoadImperv;
+  Real cgrndsSunwall, cgrndlSunwall;
+  Real cgrndsShadewall, cgrndlShadewall;
+};
+
 constexpr Real VKC = 0.4;
 constexpr Real ZETAM =
     1.574; // transition point of flux-gradient relation (wind profile)
@@ -440,7 +451,8 @@ KOKKOS_INLINE_FUNCTION
 void ComputeNewTafAndQaf(int l, Real canyonWind, Real thm, Real rahu, Real rawu,
                          const CanyonAirData &canyon,
                          const SurfaceTempHumidData &surfaces, Real qaf,
-                         Real &tafNew, Real &qafNew) {
+                         Real &tafNew, Real &qafNew,
+                         SurfaceFluxDerivatives &derivs) {
 
   const Real qSunwall = 0.0;
   const Real qShadewall = 0.0;
@@ -557,6 +569,18 @@ void ComputeNewTafAndQaf(int l, Real canyonWind, Real thm, Real rahu, Real rawu,
       canyon.forcRho *
       (wtaq + wtuqRoof + wtuqRoadPerv + wtuqRoadImperv + wtuqSunwall) *
       (wtuqShadewallUnscl / wtq_sum);
+
+  // Store derivatives to output struct
+  derivs.cgrndsRoof = cgrndsRoof;
+  derivs.cgrndlRoof = cgrndlRoof;
+  derivs.cgrndsRoadPerv = cgrndsRoadPerv;
+  derivs.cgrndlRoadPerv = cgrndlRoadPerv;
+  derivs.cgrndsRoadImperv = cgrndsRoadImperv;
+  derivs.cgrndlRoadImperv = cgrndlRoadImperv;
+  derivs.cgrndsSunwall = cgrndsSunwall;
+  derivs.cgrndlSunwall = cgrndlSunwall;
+  derivs.cgrndsShadewall = cgrndsShadewall;
+  derivs.cgrndlShadewall = cgrndlShadewall;
 }
 
 // Compute surface fluxes for all urban surfaces
@@ -698,10 +722,24 @@ void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
               urban.shadedWall.EffectiveSurfTemp(l)};
 
           Real tafNew, qafNew;
+          SurfaceFluxDerivatives derivs;
           ComputeNewTafAndQaf(l, canyonWind, thm, rahu, rawu, canyonData,
-                              surfaceData, qaf, tafNew, qafNew);
+                              surfaceData, qaf, tafNew, qafNew, derivs);
           taf = tafNew;
           qaf = qafNew;
+
+          // Store flux derivatives to views (for implicit heat diffusion
+          // solver)
+          urban.roof.Cgrnds(l) = derivs.cgrndsRoof;
+          urban.roof.Cgrndl(l) = derivs.cgrndlRoof;
+          urban.perviousRoad.Cgrnds(l) = derivs.cgrndsRoadPerv;
+          urban.perviousRoad.Cgrndl(l) = derivs.cgrndlRoadPerv;
+          urban.imperviousRoad.Cgrnds(l) = derivs.cgrndsRoadImperv;
+          urban.imperviousRoad.Cgrndl(l) = derivs.cgrndlRoadImperv;
+          urban.sunlitWall.Cgrnds(l) = derivs.cgrndsSunwall;
+          urban.sunlitWall.Cgrndl(l) = derivs.cgrndlSunwall;
+          urban.shadedWall.Cgrnds(l) = derivs.cgrndsShadewall;
+          urban.shadedWall.Cgrndl(l) = derivs.cgrndlShadewall;
 
           const Real dth = thm - taf;
           const Real dqh = forcQ - qaf;

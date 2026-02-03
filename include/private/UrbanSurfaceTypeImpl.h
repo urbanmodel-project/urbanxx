@@ -94,6 +94,10 @@ struct SurfaceDataBase {
   DECLARE_DEVICE_VIEW(1DR8, NetLongRad)        // net longwave radiation
   DECLARE_DEVICE_VIEW(1DR8, UpwardLongRad)     // upward longwave radiation
   DECLARE_DEVICE_VIEW(1DR8, NetShortRad)       // net shortwave radiation
+  DECLARE_DEVICE_VIEW(1DR8,
+                      Cgrnds) // d(sensible heat flux)/dT for implicit solver
+  DECLARE_DEVICE_VIEW(1DR8,
+                      Cgrndl) // d(latent heat flux)/dT for implicit solver
 
   // Saturation humidity variables
   DECLARE_DEVICE_VIEW(1DR8, Es)   // saturation vapor pressure (Pa)
@@ -127,6 +131,8 @@ struct SurfaceDataBase {
     ALLOCATE_DEVICE_VIEW(NetLongRad, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(UpwardLongRad, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(NetShortRad, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(Cgrnds, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(Cgrndl, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(Es, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(EsdT, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(Qs, Array1DR8, numLandunits)
