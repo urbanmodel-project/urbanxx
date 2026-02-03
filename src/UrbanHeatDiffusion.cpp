@@ -163,6 +163,43 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
                 shadewall_Cgrnds(l), shadewall_Cgrndl(l), wall_emiss(l),
                 shadewall_Temp(l));
 
+        Real factPervRoad[NUM_SOIL_LAYERS];
+        Real fnPervRoad[NUM_SOIL_LAYERS];
+        Real aPervRoad[NUM_SOIL_LAYERS];
+        Real bPervRoad[NUM_SOIL_LAYERS];
+        Real cPervRoad[NUM_SOIL_LAYERS];
+        Real rPervRoad[NUM_SOIL_LAYERS];
+        Real newTempPervRoad[NUM_SOIL_LAYERS];
+
+        const Real dtime = 30.0 * 60.0; // seconds
+        int level;
+
+        // Top layer
+        level = 0;
+        factPervRoad[level] = dtime / perv_cv_times_dz(l, level);
+
+        const Real capr =
+            0.34; // Turing factor to turn first layer T into surface T
+        const Real dz1 = perv_zc(l, level) - perv_zi(l, level);
+        const Real dz2 = perv_zi(l, level + 1) - perv_zi(l, level);
+        const Real dz_eff = 0.5 * (dz1 + capr * dz2);
+        fnPervRoad[level] = perv_tkLayer(l, level) *
+                            (perv_temp(l, level + 1) - perv_temp(l, level)) /
+                            (perv_zc(l, level + 1) - perv_zc(l, level));
+
+        // Internal layers
+        for (level = 1; level < numSoilLayers - 1; ++level) {
+          factPervRoad[level] = dtime / perv_cv_times_dz(l, level);
+          fnPervRoad[level] = perv_tkLayer(l, level) *
+                              (perv_temp(l, level + 1) - perv_temp(l, level)) /
+                              (perv_zc(l, level + 1) - perv_zc(l, level));
+        }
+
+        // Bottom layer
+        level = numSoilLayers - 1;
+        factPervRoad[level] = dtime / perv_cv_times_dz(l, level);
+        fnPervRoad[level] = 0.0;
+
         // TODO: Add remaining heat diffusion steps:
         // Step 5: Setup tridiagonal system for heat conduction equation
         // Step 6: Apply boundary conditions (surface flux, bottom temperature)
