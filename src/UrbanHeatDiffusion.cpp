@@ -30,6 +30,15 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
   auto &perv_temp = urban.perviousRoad.Temperature;
   auto &perv_cv_solids = urban.perviousRoad.soil.CvSolids;
   auto &perv_cv_times_dz = urban.perviousRoad.CvTimesDz;
+  auto &perv_netLw = urban.perviousRoad.NetLongRad;
+  auto &perv_netSw = urban.perviousRoad.NetShortRad;
+  auto &perv_EflxShGrnd = urban.perviousRoad.EflxShGrnd;
+  auto &perv_QflxEvapSoil = urban.perviousRoad.QflxEvapSoil;
+  auto &perv_QflxTranEvap = urban.perviousRoad.QflxTranEvap;
+  auto &perv_Cgrndl = urban.perviousRoad.Cgrndl;
+  auto &perv_Cgrnds = urban.perviousRoad.Cgrnds;
+  auto &perv_Temp = urban.perviousRoad.EffectiveSurfTemp;
+  auto &perv_emiss = urban.urbanParams.emissivity.PerviousRoad;
 
   // Single parallel kernel over all landunits
   Kokkos::parallel_for(
@@ -53,6 +62,17 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
         ComputeSoilHeatCapacityTimesDz(
             l, numSoilLayers, perv_cv_solids, perv_watsat, perv_water_liquid,
             perv_water_ice, perv_dz, perv_cv_times_dz);
+
+        const Real perv_EflxGnet =
+            perv_netSw(l) - perv_netLw(l) -
+            (perv_EflxShGrnd(l) + perv_QflxEvapSoil(l) * SHR_CONST_LATVAP +
+             perv_QflxTranEvap(l) * SHR_CONST_LATVAP);
+
+        const Real perv_Cgrnd =
+            perv_Cgrnds(l) + perv_Cgrndl(l) * SHR_CONST_LATVAP;
+        const Real perv_DlwrdDTemp =
+            4.0 * perv_emiss(l) * STEBOL * Kokkos::pow(perv_Temp(l), 3.0);
+        const Real perv_DEflxGnet_DTemp = -perv_Cgrnd - perv_DlwrdDTemp;
 
         // TODO: Add remaining heat diffusion steps:
         // Step 4: Setup tridiagonal system for heat conduction equation
