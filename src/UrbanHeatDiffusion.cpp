@@ -28,6 +28,34 @@ Real ComputeGroundNetEnergyFluxDerivative(Real cgrnds, Real cgrndl, Real emiss,
   return -cgrnd - dlwrdDTemp;
 }
 
+// Solve tridiagonal system using Thomas algorithm
+// Solves: a[i]*x[i-1] + b[i]*x[i] + c[i]*x[i+1] = r[i]
+// for i = 0 to n-1
+// Note: a[0] and c[n-1] are not used
+KOKKOS_INLINE_FUNCTION
+void SolveTridiagonal(int n, const Real *a, const Real *b, const Real *c,
+                      const Real *r, Real *x) {
+  // Working arrays for modified coefficients
+  Real cp[NUM_SOIL_LAYERS]; // Modified upper diagonal
+  Real rp[NUM_SOIL_LAYERS]; // Modified right-hand side
+
+  // Forward elimination
+  cp[0] = c[0] / b[0];
+  rp[0] = r[0] / b[0];
+
+  for (int i = 1; i < n; i++) {
+    const Real denom = b[i] - a[i] * cp[i - 1];
+    cp[i] = c[i] / denom;
+    rp[i] = (r[i] - a[i] * rp[i - 1]) / denom;
+  }
+
+  // Back substitution
+  x[n - 1] = rp[n - 1];
+  for (int i = n - 2; i >= 0; i--) {
+    x[i] = rp[i] - cp[i] * x[i + 1];
+  }
+}
+
 // Compute 1D heat diffusion for all urban surfaces
 void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
 
@@ -190,14 +218,14 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
         factPervRoad[level] =
             dtime / perv_cv_times_dz(l, level) * perv_dz(l, level) / dz_eff;
 
-        fnPervRoad[level] = perv_tkLayer(l, level) *
+        fnPervRoad[level] = perv_tkInterface(l, level) *
                             (perv_temp(l, level + 1) - perv_temp(l, level)) /
                             (perv_zc(l, level + 1) - perv_zc(l, level));
 
         // Internal layers
         for (level = 1; level < numSoilLayers - 1; ++level) {
           factPervRoad[level] = dtime / perv_cv_times_dz(l, level);
-          fnPervRoad[level] = perv_tkLayer(l, level) *
+          fnPervRoad[level] = perv_tkInterface(l, level) *
                               (perv_temp(l, level + 1) - perv_temp(l, level)) /
                               (perv_zc(l, level + 1) - perv_zc(l, level));
         }
@@ -225,26 +253,28 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
         aPervRoad[level] = 0.0;
         bPervRoad[level] = 1.0 +
                            (1.0 - CRANK_NICONSON_FACTOR) * factPervRoad[level] *
-                               perv_tkLayer(l, level) / dzp -
+                               perv_tkInterface(l, level) / dzp -
                            factPervRoad[level] * perv_DEflxGnet_DTemp;
         cPervRoad[level] = -(1.0 - CRANK_NICONSON_FACTOR) *
-                           factPervRoad[level] * perv_tkLayer(l, level) / dzp;
+                           factPervRoad[level] * perv_tkInterface(l, level) /
+                           dzp;
         // Internal layers
         for (level = 1; level < numSoilLayers - 1; ++level) {
           rPervRoad[level] = perv_temp(l, level) +
                              factPervRoad[level] * CRANK_NICONSON_FACTOR *
                                  (fnPervRoad[level] - fnPervRoad[level - 1]);
-          dzp = perv_zc(l, level + 1) - perv_zc(l, level);
           dzm = perv_zc(l, level) - perv_zc(l, level - 1);
+          dzp = perv_zc(l, level + 1) - perv_zc(l, level);
           aPervRoad[level] = -(1.0 - CRANK_NICONSON_FACTOR) *
-                             factPervRoad[level] * perv_tkLayer(l, level - 1) /
-                             dzm;
+                             factPervRoad[level] *
+                             perv_tkInterface(l, level - 1) / dzm;
           bPervRoad[level] = 1.0 + (1.0 - CRANK_NICONSON_FACTOR) *
                                        factPervRoad[level] *
-                                       (perv_tkLayer(l, level - 1) / dzm +
-                                        perv_tkLayer(l, level) / dzp);
+                                       (perv_tkInterface(l, level) / dzp +
+                                        perv_tkInterface(l, level - 1) / dzm);
           cPervRoad[level] = -(1.0 - CRANK_NICONSON_FACTOR) *
-                             factPervRoad[level] * perv_tkLayer(l, level) / dzp;
+                             factPervRoad[level] * perv_tkInterface(l, level) /
+                             dzp;
         }
 
         // Bottom layer
@@ -262,11 +292,18 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
                                      perv_tkLayer(l, level - 1) / dzm;
         cPervRoad[level] = 0.0;
 
+        // Step 5: Solve tridiagonal system for new temperatures
+        SolveTridiagonal(numSoilLayers, aPervRoad, bPervRoad, cPervRoad,
+                         rPervRoad, newTempPervRoad);
+
+        // Step 6: Update pervious road temperature
+        for (int j = 0; j < numSoilLayers; ++j) {
+          perv_temp(l, j) = newTempPervRoad[j];
+        }
+
         // TODO: Add remaining heat diffusion steps:
-        // Step 5: Setup tridiagonal system for heat conduction equation
-        // Step 6: Apply boundary conditions (surface flux, bottom temperature)
-        // Step 7: Solve tridiagonal system for new temperatures
-        // Step 8: Update surface temperatures
+        // Step 7: Solve for impervious road, roof, and walls
+        // Step 8: Update surface temperatures for all surfaces
       });
   Kokkos::fence();
 }
