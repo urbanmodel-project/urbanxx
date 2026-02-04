@@ -314,9 +314,6 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
         // Step 6: Update pervious road temperature
         for (int j = 0; j < numSoilLayers; ++j) {
           perv_temp(l, j) = newTempPervRoad[j];
-          if (l == 0)
-            printf("Perv Road: layer %d, new temp = %18.16f\n", j,
-                   newTempPervRoad[j]);
         }
 
         //
@@ -432,9 +429,6 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
         // Update impervious road temperature
         for (int j = 0; j < numSoilLayers; ++j) {
           imperv_temp(l, j) = newTempImpervRoad[j];
-          if (l == 0)
-            printf("Imp Road: layer %d, new temp = %18.16f\n", j,
-                   newTempImpervRoad[j]);
         }
 
         // TODO: Add remaining heat diffusion:
