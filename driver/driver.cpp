@@ -224,31 +224,46 @@ void SetNumberOfActiveLayersImperviousRoad(UrbanType urban, int numLandunits, in
 void SetThermalConductivity(UrbanType urban, int numLandunits, int mpi_rank) {
   UrbanErrorCode ierr;
 
-  const int NUM_LEVELS = 5;
-  int size2D[2] = {numLandunits, NUM_LEVELS};
-  int totalSize = numLandunits * NUM_LEVELS;
+  const int NUM_ROAD_LEVELS = 15;
+  const int NUM_URBAN_LEVELS = 5;
+  int size2D_road[2] = {numLandunits, NUM_ROAD_LEVELS};
+  int size2D_urban[2] = {numLandunits, NUM_URBAN_LEVELS};
+  int totalSizeRoad = numLandunits * NUM_ROAD_LEVELS;
+  int totalSizeUrban = numLandunits * NUM_URBAN_LEVELS;
 
-  double *tkRoad = AllocateArray(totalSize, "tkRoad");
-  double *tkWall = AllocateArray(totalSize, "tkWall");
-  double *tkRoof = AllocateArray(totalSize, "tkRoof");
+  double *tkRoad = AllocateArray(totalSizeRoad, "tkRoad");
+  double *tkWall = AllocateArray(totalSizeUrban, "tkWall");
+  double *tkRoof = AllocateArray(totalSizeUrban, "tkRoof");
 
-  // Thermal conductivity values for NUM_LEVELS levels across NUM_URBAN_DENSITY_CLASSES urban density classes
+  // Thermal conductivity values for road (15 levels) across NUM_URBAN_DENSITY_CLASSES urban density classes
   // [layer][urban_density_class]: 0=Tall Building District, 1=High Density, 2=Medium Density
-  double tkRoadLevels[NUM_LEVELS][NUM_URBAN_DENSITY_CLASSES] = {
-    {1.89999997615814, 1.66999995708466, 1.66999995708466},
-    {0.560000002384186, 0.560000002384186, 0.560000002384186},
-    {0.360000014305115, 0.0, 0.0},
-    {0.0, 0.0, 0.0},
-    {0.0, 0.0, 0.0}
+  // Active layers use specified values, inactive layers use bedrock thermal conductivity (3.0 W/m-K)
+  const double TK_BEDROCK = 3.0;  // thermal conductivity of bedrock [W/m-K]
+  double tkRoadLevels[NUM_ROAD_LEVELS][NUM_URBAN_DENSITY_CLASSES] = {
+    {1.8999999761581421, 1.6699999570846558, 1.6699999570846558},
+    {0.56000000238418579, 0.56000000238418579, 0.56000000238418579},
+    {0.36000001430511475, 0.21664454245689402, 0.21664454245689402},
+    {0.21572236500511191, 0.21572236500511191, 0.21572236500511191},
+    {0.21389214262493184, 0.21389214262493184, 0.21389214262493184},
+    {0.21208052418425166, 0.21208052418425166, 0.21208052418425166},
+    {0.21028722745802339, 0.21028722745802339, 0.21028722745802339},
+    {0.21028722745802339, 0.21028722745802339, 0.21028722745802339},
+    {0.21298402568603625, 0.21298402568603625, 0.21298402568603625},
+    {0.21664454245689402, 0.21664454245689402, 0.21664454245689402},
+    {TK_BEDROCK, TK_BEDROCK, TK_BEDROCK},
+    {TK_BEDROCK, TK_BEDROCK, TK_BEDROCK},
+    {TK_BEDROCK, TK_BEDROCK, TK_BEDROCK},
+    {TK_BEDROCK, TK_BEDROCK, TK_BEDROCK},
+    {TK_BEDROCK, TK_BEDROCK, TK_BEDROCK}
   };
-  double tkWallLevels[NUM_LEVELS][NUM_URBAN_DENSITY_CLASSES] = {
+  double tkWallLevels[NUM_URBAN_LEVELS][NUM_URBAN_DENSITY_CLASSES] = {
     {1.44716906547546, 1.06582415103912, 0.970157384872437},
     {1.44716906547546, 1.06582415103912, 0.970157384872437},
     {1.44716906547546, 1.06582415103912, 0.970157384872437},
     {1.44716906547546, 1.06582415103912, 0.970157384872437},
     {1.44716906547546, 1.06582415103912, 0.970157384872437}
   };
-  double tkRoofLevels[NUM_LEVELS][NUM_URBAN_DENSITY_CLASSES] = {
+  double tkRoofLevels[NUM_URBAN_LEVELS][NUM_URBAN_DENSITY_CLASSES] = {
     {0.503093481063843, 0.094768725335598, 0.127733826637268},
     {0.503093481063843, 0.094768725335598, 0.127733826637268},
     {0.503093481063843, 0.094768725335598, 0.127733826637268},
@@ -256,20 +271,30 @@ void SetThermalConductivity(UrbanType urban, int numLandunits, int mpi_rank) {
     {0.503093481063843, 0.094768725335598, 0.127733826637268}
   };
 
+  // Fill road array
   int idx = 0;
-  for (int layer = 0; layer < NUM_LEVELS; ++layer) {
+  for (int layer = 0; layer < NUM_ROAD_LEVELS; ++layer) {
     for (int i = 0; i < numLandunits; ++i) {
-      const int urban_density_class = i % NUM_URBAN_DENSITY_CLASSES;  // 0: Tall Building District, 1: High Density, 2: Medium Density
+      const int urban_density_class = i % NUM_URBAN_DENSITY_CLASSES;
       tkRoad[idx] = tkRoadLevels[layer][urban_density_class];
+      ++idx;
+    }
+  }
+
+  // Fill wall and roof arrays
+  idx = 0;
+  for (int layer = 0; layer < NUM_URBAN_LEVELS; ++layer) {
+    for (int i = 0; i < numLandunits; ++i) {
+      const int urban_density_class = i % NUM_URBAN_DENSITY_CLASSES;
       tkWall[idx] = tkWallLevels[layer][urban_density_class];
       tkRoof[idx] = tkRoofLevels[layer][urban_density_class];
       ++idx;
     }
   }
 
-  UrbanCall(UrbanSetThermalConductivityRoad(urban, tkRoad, size2D, &ierr), &ierr);
-  UrbanCall(UrbanSetThermalConductivityWall(urban, tkWall, size2D, &ierr), &ierr);
-  UrbanCall(UrbanSetThermalConductivityRoof(urban, tkRoof, size2D, &ierr), &ierr);
+  UrbanCall(UrbanSetThermalConductivityRoad(urban, tkRoad, size2D_road, &ierr), &ierr);
+  UrbanCall(UrbanSetThermalConductivityWall(urban, tkWall, size2D_urban, &ierr), &ierr);
+  UrbanCall(UrbanSetThermalConductivityRoof(urban, tkRoof, size2D_urban, &ierr), &ierr);
 
   double *tkArrays[] = {tkRoad, tkWall, tkRoof};
   FreeArrays(tkArrays, 3);
@@ -282,31 +307,46 @@ void SetThermalConductivity(UrbanType urban, int numLandunits, int mpi_rank) {
 void SetHeatCapacity(UrbanType urban, int numLandunits, int mpi_rank) {
   UrbanErrorCode ierr;
 
-  const int NUM_LEVELS = 5;
-  int size2D[2] = {numLandunits, NUM_LEVELS};
-  int totalSize = numLandunits * NUM_LEVELS;
+  const int NUM_ROAD_LEVELS = 15;
+  const int NUM_URBAN_LEVELS = 5;
+  int size2D_road[2] = {numLandunits, NUM_ROAD_LEVELS};
+  int size2D_urban[2] = {numLandunits, NUM_URBAN_LEVELS};
+  int totalSizeRoad = numLandunits * NUM_ROAD_LEVELS;
+  int totalSizeUrban = numLandunits * NUM_URBAN_LEVELS;
 
-  double *cvRoad = AllocateArray(totalSize, "cvRoad");
-  double *cvWall = AllocateArray(totalSize, "cvWall");
-  double *cvRoof = AllocateArray(totalSize, "cvRoof");
+  double *cvRoad = AllocateArray(totalSizeRoad, "cvRoad");
+  double *cvWall = AllocateArray(totalSizeUrban, "cvWall");
+  double *cvRoof = AllocateArray(totalSizeUrban, "cvRoof");
 
-  // Heat capacity values for NUM_LEVELS levels across NUM_URBAN_DENSITY_CLASSES urban density classes
+  // Heat capacity values for road (15 levels) across NUM_URBAN_DENSITY_CLASSES urban density classes
   // [layer][urban_density_class]: 0=Tall Building District, 1=High Density, 2=Medium Density
-  double cvRoadLevels[NUM_LEVELS][NUM_URBAN_DENSITY_CLASSES] = {
+  // Active layers use specified values, inactive layers use bedrock heat capacity (2.0e6 J/m^3/K)
+  const double CV_BEDROCK = 2.0e6;  // heat capacity of bedrock [J/m^3/K]
+  double cvRoadLevels[NUM_ROAD_LEVELS][NUM_URBAN_DENSITY_CLASSES] = {
     {2100000.0, 2060470.625, 2060470.625},
     {1773000.0, 1712294.75, 1712294.75},
-    {1545600.0, 0.0, 0.0},
-    {0.0, 0.0, 0.0},
-    {0.0, 0.0, 0.0}
+    {1545600.0, CV_BEDROCK, CV_BEDROCK},  // Layer 2: only active for density class 0
+    {CV_BEDROCK, CV_BEDROCK, CV_BEDROCK},  // Remaining layers use bedrock
+    {CV_BEDROCK, CV_BEDROCK, CV_BEDROCK},
+    {CV_BEDROCK, CV_BEDROCK, CV_BEDROCK},
+    {CV_BEDROCK, CV_BEDROCK, CV_BEDROCK},
+    {CV_BEDROCK, CV_BEDROCK, CV_BEDROCK},
+    {CV_BEDROCK, CV_BEDROCK, CV_BEDROCK},
+    {CV_BEDROCK, CV_BEDROCK, CV_BEDROCK},
+    {CV_BEDROCK, CV_BEDROCK, CV_BEDROCK},
+    {CV_BEDROCK, CV_BEDROCK, CV_BEDROCK},
+    {CV_BEDROCK, CV_BEDROCK, CV_BEDROCK},
+    {CV_BEDROCK, CV_BEDROCK, CV_BEDROCK},
+    {CV_BEDROCK, CV_BEDROCK, CV_BEDROCK}
   };
-  double cvWallLevels[NUM_LEVELS][NUM_URBAN_DENSITY_CLASSES] = {
+  double cvWallLevels[NUM_URBAN_LEVELS][NUM_URBAN_DENSITY_CLASSES] = {
     {1079394.75, 957632.8125, 899827.1875},
     {1079394.75, 957632.8125, 899827.1875},
     {1079394.75, 957632.8125, 899827.1875},
     {1079394.75, 957632.8125, 899827.1875},
     {1079394.75, 957632.8125, 899827.1875}
   };
-  double cvRoofLevels[NUM_LEVELS][NUM_URBAN_DENSITY_CLASSES] = {
+  double cvRoofLevels[NUM_URBAN_LEVELS][NUM_URBAN_DENSITY_CLASSES] = {
     {570998.0, 646213.375, 862451.375},
     {570998.0, 646213.375, 862451.375},
     {570998.0, 646213.375, 862451.375},
@@ -314,20 +354,30 @@ void SetHeatCapacity(UrbanType urban, int numLandunits, int mpi_rank) {
     {570998.0, 646213.375, 862451.375}
   };
 
+  // Fill road array
   int idx = 0;
-  for (int layer = 0; layer < NUM_LEVELS; ++layer) {
+  for (int layer = 0; layer < NUM_ROAD_LEVELS; ++layer) {
     for (int i = 0; i < numLandunits; ++i) {
-      const int urban_density_class = i % NUM_URBAN_DENSITY_CLASSES;  // 0: Tall Building District, 1: High Density, 2: Medium Density
+      const int urban_density_class = i % NUM_URBAN_DENSITY_CLASSES;
       cvRoad[idx] = cvRoadLevels[layer][urban_density_class];
+      ++idx;
+    }
+  }
+
+  // Fill wall and roof arrays
+  idx = 0;
+  for (int layer = 0; layer < NUM_URBAN_LEVELS; ++layer) {
+    for (int i = 0; i < numLandunits; ++i) {
+      const int urban_density_class = i % NUM_URBAN_DENSITY_CLASSES;
       cvWall[idx] = cvWallLevels[layer][urban_density_class];
       cvRoof[idx] = cvRoofLevels[layer][urban_density_class];
       ++idx;
     }
   }
 
-  UrbanCall(UrbanSetHeatCapacityRoad(urban, cvRoad, size2D, &ierr), &ierr);
-  UrbanCall(UrbanSetHeatCapacityWall(urban, cvWall, size2D, &ierr), &ierr);
-  UrbanCall(UrbanSetHeatCapacityRoof(urban, cvRoof, size2D, &ierr), &ierr);
+  UrbanCall(UrbanSetHeatCapacityRoad(urban, cvRoad, size2D_road, &ierr), &ierr);
+  UrbanCall(UrbanSetHeatCapacityWall(urban, cvWall, size2D_urban, &ierr), &ierr);
+  UrbanCall(UrbanSetHeatCapacityRoof(urban, cvRoof, size2D_urban, &ierr), &ierr);
 
   double *cvArrays[] = {cvRoad, cvWall, cvRoof};
   FreeArrays(cvArrays, 3);
