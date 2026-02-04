@@ -54,8 +54,9 @@ struct CommonSurfaceProperties {
   DECLARE_DEVICE_VIEW(
       2DR8, Roof) // property value for roof material (landunit, level)
 
-  CommonSurfaceProperties(int numLandunits, int numUrbanLayers) {
-    ALLOCATE_DEVICE_VIEW(Road, Array2DR8, numLandunits, numUrbanLayers)
+  CommonSurfaceProperties(int numLandunits, int numRoadLayers,
+                          int numUrbanLayers) {
+    ALLOCATE_DEVICE_VIEW(Road, Array2DR8, numLandunits, numRoadLayers)
     ALLOCATE_DEVICE_VIEW(Wall, Array2DR8, numLandunits, numUrbanLayers)
     ALLOCATE_DEVICE_VIEW(Roof, Array2DR8, numLandunits, numUrbanLayers)
   }
@@ -133,9 +134,10 @@ struct UrbanParamsType {
   BuildingParameters building; // building parameters
 
   UrbanParamsType(int numLandunits, int numRadBands, int numRadTypes,
-                  int numUrbanLayers)
-      : viewFactor(numLandunits), tk(numLandunits, numUrbanLayers),
-        cv(numLandunits, numUrbanLayers),
+                  int numRoadLayers, int numUrbanLayers)
+      : viewFactor(numLandunits),
+        tk(numLandunits, numRoadLayers, numUrbanLayers),
+        cv(numLandunits, numRoadLayers, numUrbanLayers),
         albedo(numLandunits, numRadBands, numRadTypes),
         emissivity(numLandunits), heights(numLandunits),
         building(numLandunits) {
