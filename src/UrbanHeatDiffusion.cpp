@@ -213,17 +213,38 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
 
         // Top layer
         level = 0;
+        Real dzp, dzm;
+
         rPervRoad[level] =
             perv_temp(l, level) +
             factPervRoad[level] *
                 (perv_EflxGnet - perv_DEflxGnet_DTemp * perv_temp(l, level) +
                  CRANK_NICONSON_FACTOR * fnPervRoad[level]);
 
+        dzp = perv_zc(l, level + 1) - perv_zc(l, level);
+        aPervRoad[level] = 0.0;
+        bPervRoad[level] = 1.0 +
+                           (1.0 - CRANK_NICONSON_FACTOR) * factPervRoad[level] *
+                               perv_tkLayer(l, level) / dzp -
+                           factPervRoad[level] * perv_DEflxGnet_DTemp;
+        cPervRoad[level] = -(1.0 - CRANK_NICONSON_FACTOR) *
+                           factPervRoad[level] * perv_tkLayer(l, level) / dzp;
         // Internal layers
         for (level = 1; level < numSoilLayers - 1; ++level) {
           rPervRoad[level] = perv_temp(l, level) +
                              factPervRoad[level] * CRANK_NICONSON_FACTOR *
                                  (fnPervRoad[level] - fnPervRoad[level - 1]);
+          dzp = perv_zc(l, level + 1) - perv_zc(l, level);
+          dzm = perv_zc(l, level) - perv_zc(l, level - 1);
+          aPervRoad[level] = -(1.0 - CRANK_NICONSON_FACTOR) *
+                             factPervRoad[level] * perv_tkLayer(l, level - 1) /
+                             dzm;
+          bPervRoad[level] = 1.0 + (1.0 - CRANK_NICONSON_FACTOR) *
+                                       factPervRoad[level] *
+                                       (perv_tkLayer(l, level - 1) / dzm +
+                                        perv_tkLayer(l, level) / dzp);
+          cPervRoad[level] = -(1.0 - CRANK_NICONSON_FACTOR) *
+                             factPervRoad[level] * perv_tkLayer(l, level) / dzp;
         }
 
         // Bottom layer
@@ -232,6 +253,15 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
                            CRANK_NICONSON_FACTOR * factPervRoad[level - 1] *
                                fnPervRoad[level] +
                            factPervRoad[level] * fnPervRoad[level];
+        dzm = perv_zc(l, level) - perv_zc(l, level - 1);
+        aPervRoad[level] = -(1.0 - CRANK_NICONSON_FACTOR) *
+                           factPervRoad[level] * perv_tkLayer(l, level - 1) /
+                           dzm;
+        bPervRoad[level] = 1.0 + (1.0 - CRANK_NICONSON_FACTOR) *
+                                     factPervRoad[level] *
+                                     perv_tkLayer(l, level - 1) / dzm;
+        cPervRoad[level] = 0.0;
+
         // TODO: Add remaining heat diffusion steps:
         // Step 5: Setup tridiagonal system for heat conduction equation
         // Step 6: Apply boundary conditions (surface flux, bottom temperature)
