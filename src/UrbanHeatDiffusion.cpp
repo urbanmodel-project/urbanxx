@@ -99,6 +99,13 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
   auto &roof_emiss = urban.urbanParams.emissivity.Roof;
 
   // Access impervious road property views
+  auto &imperv_tkLayer = urban.imperviousRoad.TkLayer;
+  auto &imperv_tkInterface = urban.imperviousRoad.TkInterface;
+  auto &imperv_dz = urban.imperviousRoad.Dz;
+  auto &imperv_zc = urban.imperviousRoad.Zc;
+  auto &imperv_zi = urban.imperviousRoad.Zi;
+  auto &imperv_temp = urban.imperviousRoad.Temperature;
+  auto &imperv_cv_times_dz = urban.imperviousRoad.CvTimesDz;
   auto &imperv_netLw = urban.imperviousRoad.NetLongRad;
   auto &imperv_netSw = urban.imperviousRoad.NetShortRad;
   auto &imperv_EflxShGrnd = urban.imperviousRoad.EflxShGrnd;
@@ -198,6 +205,14 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
         Real cPervRoad[NUM_SOIL_LAYERS];
         Real rPervRoad[NUM_SOIL_LAYERS];
         Real newTempPervRoad[NUM_SOIL_LAYERS];
+
+        Real factImpervRoad[NUM_SOIL_LAYERS];
+        Real fnImpervRoad[NUM_SOIL_LAYERS];
+        Real aImpervRoad[NUM_SOIL_LAYERS];
+        Real bImpervRoad[NUM_SOIL_LAYERS];
+        Real cImpervRoad[NUM_SOIL_LAYERS];
+        Real rImpervRoad[NUM_SOIL_LAYERS];
+        Real newTempImpervRoad[NUM_SOIL_LAYERS];
 
         const Real dtime = 30.0 * 60.0; // seconds
         int level;
@@ -299,11 +314,134 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
         // Step 6: Update pervious road temperature
         for (int j = 0; j < numSoilLayers; ++j) {
           perv_temp(l, j) = newTempPervRoad[j];
+          if (l == 0)
+            printf("Perv Road: layer %d, new temp = %18.16f\n", j,
+                   newTempPervRoad[j]);
         }
 
-        // TODO: Add remaining heat diffusion steps:
-        // Step 7: Solve for impervious road, roof, and walls
-        // Step 8: Update surface temperatures for all surfaces
+        //
+        // Solve heat diffusion for impervious road
+        //
+
+        //
+        // Compute factors and interface fluxes for impervious road
+        //
+
+        // Top layer
+        level = 0;
+
+        const Real dz1_imperv = imperv_zc(l, level) - imperv_zi(l, level);
+        const Real dz2_imperv = imperv_zc(l, level + 1) - imperv_zi(l, level);
+        const Real dz_eff_imperv = 0.5 * (dz1_imperv + capr * dz2_imperv);
+
+        factImpervRoad[level] = dtime / imperv_cv_times_dz(l, level) *
+                                imperv_dz(l, level) / dz_eff_imperv;
+
+        fnImpervRoad[level] =
+            imperv_tkInterface(l, level) *
+            (imperv_temp(l, level + 1) - imperv_temp(l, level)) /
+            (imperv_zc(l, level + 1) - imperv_zc(l, level));
+
+        // Internal layers
+        for (level = 1; level < numSoilLayers - 1; ++level) {
+          factImpervRoad[level] = dtime / imperv_cv_times_dz(l, level);
+          fnImpervRoad[level] =
+              imperv_tkInterface(l, level) *
+              (imperv_temp(l, level + 1) - imperv_temp(l, level)) /
+              (imperv_zc(l, level + 1) - imperv_zc(l, level));
+        }
+
+        // Bottom layer
+        level = numSoilLayers - 1;
+        factImpervRoad[level] = dtime / imperv_cv_times_dz(l, level);
+        fnImpervRoad[level] = 0.0;
+
+        //
+        // Compute RHS vector for impervious road
+        //
+
+        // Top layer
+        level = 0;
+
+        rImpervRoad[level] =
+            imperv_temp(l, level) +
+            factImpervRoad[level] *
+                (imperv_EflxGnet -
+                 imperv_DEflxGnet_DTemp * imperv_temp(l, level) +
+                 CRANK_NICONSON_FACTOR * fnImpervRoad[level]);
+
+        dzp = imperv_zc(l, level + 1) - imperv_zc(l, level);
+        aImpervRoad[level] = 0.0;
+        bImpervRoad[level] = 1.0 +
+                             (1.0 - CRANK_NICONSON_FACTOR) *
+                                 factImpervRoad[level] *
+                                 imperv_tkInterface(l, level) / dzp -
+                             factImpervRoad[level] * imperv_DEflxGnet_DTemp;
+        cImpervRoad[level] = -(1.0 - CRANK_NICONSON_FACTOR) *
+                             factImpervRoad[level] *
+                             imperv_tkInterface(l, level) / dzp;
+
+        // Internal layers
+        for (level = 1; level < numSoilLayers - 1; ++level) {
+          rImpervRoad[level] =
+              imperv_temp(l, level) +
+              factImpervRoad[level] * CRANK_NICONSON_FACTOR *
+                  (fnImpervRoad[level] - fnImpervRoad[level - 1]);
+          dzm = imperv_zc(l, level) - imperv_zc(l, level - 1);
+          dzp = imperv_zc(l, level + 1) - imperv_zc(l, level);
+          aImpervRoad[level] = -(1.0 - CRANK_NICONSON_FACTOR) *
+                               factImpervRoad[level] *
+                               imperv_tkInterface(l, level - 1) / dzm;
+          bImpervRoad[level] =
+              1.0 + (1.0 - CRANK_NICONSON_FACTOR) * factImpervRoad[level] *
+                        (imperv_tkInterface(l, level) / dzp +
+                         imperv_tkInterface(l, level - 1) / dzm);
+          cImpervRoad[level] = -(1.0 - CRANK_NICONSON_FACTOR) *
+                               factImpervRoad[level] *
+                               imperv_tkInterface(l, level) / dzp;
+        }
+
+        // Bottom layer
+        level = numSoilLayers - 1;
+        rImpervRoad[level] = imperv_temp(l, level) -
+                             CRANK_NICONSON_FACTOR * factImpervRoad[level - 1] *
+                                 fnImpervRoad[level] +
+                             factImpervRoad[level] * fnImpervRoad[level];
+        dzm = imperv_zc(l, level) - imperv_zc(l, level - 1);
+        aImpervRoad[level] = -(1.0 - CRANK_NICONSON_FACTOR) *
+                             factImpervRoad[level] *
+                             imperv_tkInterface(l, level - 1) / dzm;
+        bImpervRoad[level] = 1.0 + (1.0 - CRANK_NICONSON_FACTOR) *
+                                       factImpervRoad[level] *
+                                       imperv_tkInterface(l, level - 1) / dzm;
+        cImpervRoad[level] = 0.0;
+
+        // Solve tridiagonal system for new temperatures
+        if (l == 0) {
+          printf("\nImpervious Road Tridiagonal System:\n");
+          for (int j = 0; j < numSoilLayers; ++j) {
+            printf("Layer %2d: a=%18.16f, b=%18.16f, c=%18.16f, r=%18.16f\n", j,
+                   aImpervRoad[j], bImpervRoad[j], cImpervRoad[j],
+                   rImpervRoad[j]);
+          }
+        }
+
+        SolveTridiagonal(numSoilLayers, aImpervRoad, bImpervRoad, cImpervRoad,
+                         rImpervRoad, newTempImpervRoad);
+
+        // Update impervious road temperature
+        for (int j = 0; j < numSoilLayers; ++j) {
+          imperv_temp(l, j) = newTempImpervRoad[j];
+          if (l == 0)
+            printf("Imp Road: layer %d, new temp = %18.16f\n", j,
+                   newTempImpervRoad[j]);
+        }
+
+        // TODO: Add remaining heat diffusion:
+        // - Roof (numUrbanLayers)
+        // - Sunlit wall (numUrbanLayers)
+        // - Shaded wall (numUrbanLayers)
+        // - Update surface temperatures for all surfaces
       });
   Kokkos::fence();
 }
