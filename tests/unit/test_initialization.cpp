@@ -44,27 +44,36 @@ protected:
     ASSERT_EQ(status, URBAN_SUCCESS);
 
     const int numUrbanLayers = 5;
-    const int totalSize = numLandunits * numUrbanLayers;
-    double thermal_cond[25];  // 5 * 5
-    double heat_cap[25];      // 5 * 5
-    for (int i = 0; i < totalSize; ++i) {
-      thermal_cond[i] = 1.0;
-      heat_cap[i] = 1500.0;
+    const int numSoilLayers = 15;
+    const int totalSizeUrban = numLandunits * numUrbanLayers;
+    const int totalSizeRoad = numLandunits * numSoilLayers;
+    double thermal_cond_urban[25];  // 5 * 5
+    double heat_cap_urban[25];      // 5 * 5
+    double thermal_cond_road[75];   // 5 * 15
+    double heat_cap_road[75];       // 5 * 15
+    for (int i = 0; i < totalSizeUrban; ++i) {
+      thermal_cond_urban[i] = 1.0;
+      heat_cap_urban[i] = 1500.0;
     }
-    const int size2D[2] = {numLandunits, numUrbanLayers};
+    for (int i = 0; i < totalSizeRoad; ++i) {
+      thermal_cond_road[i] = 1.0;
+      heat_cap_road[i] = 1500.0;
+    }
+    const int size2D_urban[2] = {numLandunits, numUrbanLayers};
+    const int size2D_road[2] = {numLandunits, numSoilLayers};
     
-    UrbanSetThermalConductivityRoad(urban, thermal_cond, size2D, &status);
+    UrbanSetThermalConductivityRoad(urban, thermal_cond_road, size2D_road, &status);
     ASSERT_EQ(status, URBAN_SUCCESS);
-    UrbanSetThermalConductivityWall(urban, thermal_cond, size2D, &status);
+    UrbanSetThermalConductivityWall(urban, thermal_cond_urban, size2D_urban, &status);
     ASSERT_EQ(status, URBAN_SUCCESS);
-    UrbanSetThermalConductivityRoof(urban, thermal_cond, size2D, &status);
+    UrbanSetThermalConductivityRoof(urban, thermal_cond_urban, size2D_urban, &status);
     ASSERT_EQ(status, URBAN_SUCCESS);
 
-    UrbanSetHeatCapacityRoad(urban, heat_cap, size2D, &status);
+    UrbanSetHeatCapacityRoad(urban, heat_cap_road, size2D_road, &status);
     ASSERT_EQ(status, URBAN_SUCCESS);
-    UrbanSetHeatCapacityWall(urban, heat_cap, size2D, &status);
+    UrbanSetHeatCapacityWall(urban, heat_cap_urban, size2D_urban, &status);
     ASSERT_EQ(status, URBAN_SUCCESS);
-    UrbanSetHeatCapacityRoof(urban, heat_cap, size2D, &status);
+    UrbanSetHeatCapacityRoof(urban, heat_cap_urban, size2D_urban, &status);
     ASSERT_EQ(status, URBAN_SUCCESS);
 
     // Set height parameters
