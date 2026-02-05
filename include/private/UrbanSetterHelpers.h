@@ -46,6 +46,43 @@ static void SetView3D(ViewType &view, const double *values, const int size[3],
   }
 }
 
+// Base template function for setting 2D views
+template <typename ViewType>
+static void SetView2D(ViewType &view, const double *values, const int size[2],
+                      UrbanErrorCode *status) {
+  using namespace URBANXX;
+
+  if (values == nullptr || size == nullptr || status == nullptr) {
+    if (status)
+      *status = URBAN_ERR_INVALID_ARGUMENT;
+    return;
+  }
+
+  try {
+    // Check if each dimension matches the view extent
+    if (size[0] != static_cast<int>(view.extent(0)) ||
+        size[1] != static_cast<int>(view.extent(1))) {
+      *status = URBAN_ERR_SIZE_MISMATCH;
+      return;
+    }
+
+    // Create an unmanaged host view from the input array
+    // Use the same layout as the target view for compatibility
+    using target_layout = typename ViewType::array_layout;
+    auto values_view =
+        Kokkos::View<const double **, target_layout, Kokkos::HostSpace,
+                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>(values, size[0],
+                                                              size[1]);
+
+    // Deep copy from the temporary host view to the target view
+    Kokkos::deep_copy(view, values_view);
+
+    *status = URBAN_SUCCESS;
+  } catch (...) {
+    *status = URBAN_ERR_INTERNAL;
+  }
+}
+
 // Base template function for setting 1D views
 template <typename ViewType>
 static void SetView1D(ViewType &view, const double *values, int length,

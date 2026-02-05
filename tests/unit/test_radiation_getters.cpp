@@ -87,19 +87,6 @@ protected:
     ASSERT_EQ(ierr, URBAN_SUCCESS);
     UrbanSetAlbedoPerviousRoad(urban, albedo_road, size, &ierr);
     ASSERT_EQ(ierr, URBAN_SUCCESS);
-    
-    // Set temperatures
-    double temp[5] = {290.0, 291.0, 292.0, 293.0, 294.0};
-    UrbanSetTemperatureRoof(urban, temp, numLandunits, &ierr);
-    ASSERT_EQ(ierr, URBAN_SUCCESS);
-    UrbanSetTemperatureSunlitWall(urban, temp, numLandunits, &ierr);
-    ASSERT_EQ(ierr, URBAN_SUCCESS);
-    UrbanSetTemperatureShadedWall(urban, temp, numLandunits, &ierr);
-    ASSERT_EQ(ierr, URBAN_SUCCESS);
-    UrbanSetTemperatureImperviousRoad(urban, temp, numLandunits, &ierr);
-    ASSERT_EQ(ierr, URBAN_SUCCESS);
-    UrbanSetTemperaturePerviousRoad(urban, temp, numLandunits, &ierr);
-    ASSERT_EQ(ierr, URBAN_SUCCESS);
   }
 
   void SetTestAtmosphericForcing() {

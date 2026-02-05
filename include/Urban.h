@@ -78,50 +78,51 @@ URBAN_EXTERN void UrbanSetEmissivityWall(UrbanType urban, const double *values,
 URBAN_EXTERN void UrbanSetEmissivityRoof(UrbanType urban, const double *values,
                                          int length, UrbanErrorCode *status);
 
+// Number of active layers setter function
+URBAN_EXTERN void UrbanSetNumberOfActiveLayersImperviousRoad(
+    UrbanType urban, const double *values, int length, UrbanErrorCode *status);
+
 // Thermal conductivity setter functions
 URBAN_EXTERN void UrbanSetThermalConductivityRoad(UrbanType urban,
                                                   const double *values,
-                                                  int length,
+                                                  const int size[2],
                                                   UrbanErrorCode *status);
 URBAN_EXTERN void UrbanSetThermalConductivityWall(UrbanType urban,
                                                   const double *values,
-                                                  int length,
+                                                  const int size[2],
                                                   UrbanErrorCode *status);
 URBAN_EXTERN void UrbanSetThermalConductivityRoof(UrbanType urban,
                                                   const double *values,
-                                                  int length,
+                                                  const int size[2],
                                                   UrbanErrorCode *status);
 
 // Heat capacity setter functions
 URBAN_EXTERN void UrbanSetHeatCapacityRoad(UrbanType urban,
-                                           const double *values, int length,
+                                           const double *values,
+                                           const int size[2],
                                            UrbanErrorCode *status);
 URBAN_EXTERN void UrbanSetHeatCapacityWall(UrbanType urban,
-                                           const double *values, int length,
+                                           const double *values,
+                                           const int size[2],
                                            UrbanErrorCode *status);
 URBAN_EXTERN void UrbanSetHeatCapacityRoof(UrbanType urban,
-                                           const double *values, int length,
+                                           const double *values,
+                                           const int size[2],
                                            UrbanErrorCode *status);
 
-// Temperature setter functions
-URBAN_EXTERN void UrbanSetTemperatureRoof(UrbanType urban, const double *values,
-                                          int length, UrbanErrorCode *status);
-URBAN_EXTERN void UrbanSetTemperatureImperviousRoad(UrbanType urban,
-                                                    const double *values,
-                                                    int length,
-                                                    UrbanErrorCode *status);
-URBAN_EXTERN void UrbanSetTemperaturePerviousRoad(UrbanType urban,
-                                                  const double *values,
-                                                  int length,
-                                                  UrbanErrorCode *status);
-URBAN_EXTERN void UrbanSetTemperatureSunlitWall(UrbanType urban,
-                                                const double *values,
-                                                int length,
-                                                UrbanErrorCode *status);
-URBAN_EXTERN void UrbanSetTemperatureShadedWall(UrbanType urban,
-                                                const double *values,
-                                                int length,
-                                                UrbanErrorCode *status);
+// Soil property setter functions for pervious road
+URBAN_EXTERN void UrbanSetSandPerviousRoad(UrbanType urban,
+                                           const double *values,
+                                           const int size[2],
+                                           UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetClayPerviousRoad(UrbanType urban,
+                                           const double *values,
+                                           const int size[2],
+                                           UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetOrganicPerviousRoad(UrbanType urban,
+                                              const double *values,
+                                              const int size[2],
+                                              UrbanErrorCode *status);
 
 // Height parameter setter functions
 URBAN_EXTERN void UrbanSetForcHgtT(UrbanType urban, const double *values,
@@ -137,9 +138,26 @@ URBAN_EXTERN void UrbanSetHtRoof(UrbanType urban, const double *values,
 URBAN_EXTERN void UrbanSetWindHgtCanyon(UrbanType urban, const double *values,
                                         int length, UrbanErrorCode *status);
 
-// Initialization functions
-URBAN_EXTERN void UrbanInitializeTemperature(UrbanType urban,
-                                             UrbanErrorCode *status);
+// Building parameter setter functions
+URBAN_EXTERN void UrbanSetBuildingMaxTemperature(UrbanType urban,
+                                                 const double *values,
+                                                 int length,
+                                                 UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetBuildingMinTemperature(UrbanType urban,
+                                                 const double *values,
+                                                 int length,
+                                                 UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetBuildingWallThickness(UrbanType urban,
+                                                const double *values,
+                                                int length,
+                                                UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetBuildingRoofThickness(UrbanType urban,
+                                                const double *values,
+                                                int length,
+                                                UrbanErrorCode *status);
+
+// Setup and initialization functions
+URBAN_EXTERN void UrbanSetup(UrbanType urban, UrbanErrorCode *status);
 
 // Time-stepping functions
 URBAN_EXTERN void UrbanAdvance(UrbanType urban, UrbanErrorCode *status);

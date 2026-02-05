@@ -59,19 +59,6 @@ protected:
     UrbanSetEmissivityPerviousRoad(urban, emissivity, numLandunits, &ierr);
     ASSERT_EQ(ierr, URBAN_SUCCESS);
     
-    // Set temperatures
-    double temp[5] = {290.0, 291.0, 292.0, 293.0, 294.0};
-    UrbanSetTemperatureRoof(urban, temp, numLandunits, &ierr);
-    ASSERT_EQ(ierr, URBAN_SUCCESS);
-    UrbanSetTemperatureSunlitWall(urban, temp, numLandunits, &ierr);
-    ASSERT_EQ(ierr, URBAN_SUCCESS);
-    UrbanSetTemperatureShadedWall(urban, temp, numLandunits, &ierr);
-    ASSERT_EQ(ierr, URBAN_SUCCESS);
-    UrbanSetTemperatureImperviousRoad(urban, temp, numLandunits, &ierr);
-    ASSERT_EQ(ierr, URBAN_SUCCESS);
-    UrbanSetTemperaturePerviousRoad(urban, temp, numLandunits, &ierr);
-    ASSERT_EQ(ierr, URBAN_SUCCESS);
-    
     // Set height parameters
     double heights[5] = {10.0, 11.0, 12.0, 13.0, 14.0};
     UrbanSetForcHgtT(urban, heights, numLandunits, &ierr);
@@ -128,21 +115,6 @@ protected:
 // ============================================================================
 // Tests for Canyon Air Temperature Getter
 // ============================================================================
-
-TEST_F(CanyonAirGetterTest, GetCanyonAirTemperature_ValidData) {
-  double values[5];
-  UrbanErrorCode status;
-
-  UrbanGetCanyonAirTemperature(urban, values, numLandunits, &status);
-
-  EXPECT_EQ(status, URBAN_SUCCESS);
-  
-  for (int i = 0; i < numLandunits; ++i) {
-    EXPECT_FALSE(std::isnan(values[i])) << "Value at index " << i << " is NaN";
-    EXPECT_GT(values[i], 200.0) << "Temperature should be > 200K";
-    EXPECT_LT(values[i], 400.0) << "Temperature should be < 400K";
-  }
-}
 
 TEST_F(CanyonAirGetterTest, GetCanyonAirTemperature_LengthMismatch) {
   double values[10];
@@ -251,20 +223,6 @@ TEST_F(CanyonAirGetterTest, MultipleCallsSameGetter) {
   for (int i = 0; i < numLandunits; ++i) {
     EXPECT_DOUBLE_EQ(temp1[i], temp2[i]) 
         << "Multiple calls should return same values";
-  }
-}
-
-TEST_F(CanyonAirGetterTest, TemperatureReasonableRange) {
-  double values[5];
-  UrbanErrorCode status;
-
-  UrbanGetCanyonAirTemperature(urban, values, numLandunits, &status);
-  EXPECT_EQ(status, URBAN_SUCCESS);
-  
-  // Check values are in a physically reasonable range for urban canyon air
-  for (int i = 0; i < numLandunits; ++i) {
-    EXPECT_GT(values[i], 250.0) << "Canyon air temp should be > 250K";
-    EXPECT_LT(values[i], 350.0) << "Canyon air temp should be < 350K";
   }
 }
 

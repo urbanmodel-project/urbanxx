@@ -4,7 +4,7 @@ module urban_mod
   implicit none
 
   ! Opaque handle type
-  type :: UrbanType
+  type, bind(C) :: UrbanType
     type(c_ptr) :: ptr = c_null_ptr
   end type UrbanType
 
@@ -128,96 +128,90 @@ module urban_mod
       integer(c_int) :: status
     end subroutine UrbanSetEmissivityRoof_C
 
+    ! Number of active layers setter function
+    subroutine UrbanSetNumberOfActiveLayersImperviousRoad(urban, values, &
+      length, status) bind(C, name="UrbanSetNumberOfActiveLayersImperviousRoad")
+      import :: c_ptr, c_int, UrbanType
+      type(UrbanType), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetNumberOfActiveLayersImperviousRoad
+
     ! Thermal conductivity setter functions
-    subroutine UrbanSetThermalConductivityRoad_C(urban, values, length, status) bind(C, name="UrbanSetThermalConductivityRoad")
+    subroutine UrbanSetThermalConductivityRoad_C(urban, values, size, status) bind(C, name="UrbanSetThermalConductivityRoad")
       import :: c_ptr, c_int
       type(c_ptr), value :: urban
       type(c_ptr), value :: values
-      integer(c_int), value :: length
+      integer(c_int), dimension(2) :: size
       integer(c_int) :: status
     end subroutine UrbanSetThermalConductivityRoad_C
 
-    subroutine UrbanSetThermalConductivityWall_C(urban, values, length, status) bind(C, name="UrbanSetThermalConductivityWall")
+    subroutine UrbanSetThermalConductivityWall_C(urban, values, size, status) bind(C, name="UrbanSetThermalConductivityWall")
       import :: c_ptr, c_int
       type(c_ptr), value :: urban
       type(c_ptr), value :: values
-      integer(c_int), value :: length
+      integer(c_int), dimension(2) :: size
       integer(c_int) :: status
     end subroutine UrbanSetThermalConductivityWall_C
 
-    subroutine UrbanSetThermalConductivityRoof_C(urban, values, length, status) bind(C, name="UrbanSetThermalConductivityRoof")
+    subroutine UrbanSetThermalConductivityRoof_C(urban, values, size, status) bind(C, name="UrbanSetThermalConductivityRoof")
       import :: c_ptr, c_int
       type(c_ptr), value :: urban
       type(c_ptr), value :: values
-      integer(c_int), value :: length
+      integer(c_int), dimension(2) :: size
       integer(c_int) :: status
     end subroutine UrbanSetThermalConductivityRoof_C
 
     ! Heat capacity setter functions
-    subroutine UrbanSetHeatCapacityRoad_C(urban, values, length, status) bind(C, name="UrbanSetHeatCapacityRoad")
+    subroutine UrbanSetHeatCapacityRoad_C(urban, values, size, status) bind(C, name="UrbanSetHeatCapacityRoad")
       import :: c_ptr, c_int
       type(c_ptr), value :: urban
       type(c_ptr), value :: values
-      integer(c_int), value :: length
+      integer(c_int), dimension(2) :: size
       integer(c_int) :: status
     end subroutine UrbanSetHeatCapacityRoad_C
 
-    subroutine UrbanSetHeatCapacityWall_C(urban, values, length, status) bind(C, name="UrbanSetHeatCapacityWall")
+    subroutine UrbanSetHeatCapacityWall_C(urban, values, size, status) bind(C, name="UrbanSetHeatCapacityWall")
       import :: c_ptr, c_int
       type(c_ptr), value :: urban
       type(c_ptr), value :: values
-      integer(c_int), value :: length
+      integer(c_int), dimension(2) :: size
       integer(c_int) :: status
     end subroutine UrbanSetHeatCapacityWall_C
 
-    subroutine UrbanSetHeatCapacityRoof_C(urban, values, length, status) bind(C, name="UrbanSetHeatCapacityRoof")
+    subroutine UrbanSetHeatCapacityRoof_C(urban, values, size, status) bind(C, name="UrbanSetHeatCapacityRoof")
       import :: c_ptr, c_int
       type(c_ptr), value :: urban
       type(c_ptr), value :: values
-      integer(c_int), value :: length
+      integer(c_int), dimension(2) :: size
       integer(c_int) :: status
     end subroutine UrbanSetHeatCapacityRoof_C
 
-    ! Temperature setter functions
-    subroutine UrbanSetTemperatureRoof_C(urban, values, length, status) bind(C, name="UrbanSetTemperatureRoof")
-      import :: c_ptr, c_int
-      type(c_ptr), value :: urban
+    ! Soil property setter functions for pervious road
+    subroutine UrbanSetSandPerviousRoad(urban, values, size, status) bind(C, name="UrbanSetSandPerviousRoad")
+      import :: c_ptr, c_int, UrbanType
+      type(UrbanType), value :: urban
       type(c_ptr), value :: values
-      integer(c_int), value :: length
+      integer(c_int), dimension(2) :: size
       integer(c_int) :: status
-    end subroutine UrbanSetTemperatureRoof_C
+    end subroutine UrbanSetSandPerviousRoad
 
-    subroutine UrbanSetTemperatureImperviousRoad_C(urban, values, length, status) bind(C, name="UrbanSetTemperatureImperviousRoad")
-      import :: c_ptr, c_int
-      type(c_ptr), value :: urban
+    subroutine UrbanSetClayPerviousRoad(urban, values, size, status) bind(C, name="UrbanSetClayPerviousRoad")
+      import :: c_ptr, c_int, UrbanType
+      type(UrbanType), value :: urban
       type(c_ptr), value :: values
-      integer(c_int), value :: length
+      integer(c_int), dimension(2) :: size
       integer(c_int) :: status
-    end subroutine UrbanSetTemperatureImperviousRoad_C
+    end subroutine UrbanSetClayPerviousRoad
 
-    subroutine UrbanSetTemperaturePerviousRoad_C(urban, values, length, status) bind(C, name="UrbanSetTemperaturePerviousRoad")
-      import :: c_ptr, c_int
-      type(c_ptr), value :: urban
+    subroutine UrbanSetOrganicPerviousRoad(urban, values, size, status) bind(C, name="UrbanSetOrganicPerviousRoad")
+      import :: c_ptr, c_int, UrbanType
+      type(UrbanType), value :: urban
       type(c_ptr), value :: values
-      integer(c_int), value :: length
+      integer(c_int), dimension(2) :: size
       integer(c_int) :: status
-    end subroutine UrbanSetTemperaturePerviousRoad_C
-
-    subroutine UrbanSetTemperatureSunlitWall_C(urban, values, length, status) bind(C, name="UrbanSetTemperatureSunlitWall")
-      import :: c_ptr, c_int
-      type(c_ptr), value :: urban
-      type(c_ptr), value :: values
-      integer(c_int), value :: length
-      integer(c_int) :: status
-    end subroutine UrbanSetTemperatureSunlitWall_C
-
-    subroutine UrbanSetTemperatureShadedWall_C(urban, values, length, status) bind(C, name="UrbanSetTemperatureShadedWall")
-      import :: c_ptr, c_int
-      type(c_ptr), value :: urban
-      type(c_ptr), value :: values
-      integer(c_int), value :: length
-      integer(c_int) :: status
-    end subroutine UrbanSetTemperatureShadedWall_C
+    end subroutine UrbanSetOrganicPerviousRoad
 
     ! Height parameter setter functions
     subroutine UrbanSetForcHgtT_C(urban, values, length, status) bind(C, name="UrbanSetForcHgtT")
@@ -268,12 +262,45 @@ module urban_mod
       integer(c_int) :: status
     end subroutine UrbanSetWindHgtCanyon_C
 
-    ! Initialization functions
-    subroutine UrbanInitializeTemperature_C(urban, status) bind(C, name="UrbanInitializeTemperature")
-      import :: c_ptr, c_int
-      type(c_ptr), value :: urban
+    ! Building parameter setter functions
+    subroutine UrbanSetBuildingMaxTemperature(urban, values, length, status) bind(C, name="UrbanSetBuildingMaxTemperature")
+      import :: c_ptr, c_int, UrbanType
+      type(UrbanType), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
       integer(c_int) :: status
-    end subroutine UrbanInitializeTemperature_C
+    end subroutine UrbanSetBuildingMaxTemperature
+
+    subroutine UrbanSetBuildingMinTemperature(urban, values, length, status) bind(C, name="UrbanSetBuildingMinTemperature")
+      import :: c_ptr, c_int, UrbanType
+      type(UrbanType), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetBuildingMinTemperature
+
+    subroutine UrbanSetBuildingWallThickness(urban, values, length, status) bind(C, name="UrbanSetBuildingWallThickness")
+      import :: c_ptr, c_int, UrbanType
+      type(UrbanType), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetBuildingWallThickness
+
+    subroutine UrbanSetBuildingRoofThickness(urban, values, length, status) bind(C, name="UrbanSetBuildingRoofThickness")
+      import :: c_ptr, c_int, UrbanType
+      type(UrbanType), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetBuildingRoofThickness
+
+    ! Setup and initialization functions
+    subroutine UrbanSetup(urban, status) bind(C, name="UrbanSetup")
+      import :: c_ptr, c_int, UrbanType
+      type(UrbanType), value :: urban
+      integer(c_int) :: status
+    end subroutine UrbanSetup
 
     ! Time-stepping functions
     subroutine UrbanAdvance_C(urban, status) bind(C, name="UrbanAdvance")
@@ -706,93 +733,53 @@ module urban_mod
     call UrbanSetEmissivityRoof_C(urban%ptr, values, length, status)
   end subroutine UrbanSetEmissivityRoof
 
-  subroutine UrbanSetThermalConductivityRoad(urban, values, length, status)
+  subroutine UrbanSetThermalConductivityRoad(urban, values, size, status)
     type(UrbanType), intent(in) :: urban
     type(c_ptr), value :: values
-    integer(c_int), value :: length
+    integer(c_int), dimension(2), intent(in) :: size
     integer(c_int), intent(out) :: status
-    call UrbanSetThermalConductivityRoad_C(urban%ptr, values, length, status)
+    call UrbanSetThermalConductivityRoad_C(urban%ptr, values, size, status)
   end subroutine UrbanSetThermalConductivityRoad
 
-  subroutine UrbanSetThermalConductivityWall(urban, values, length, status)
+  subroutine UrbanSetThermalConductivityWall(urban, values, size, status)
     type(UrbanType), intent(in) :: urban
     type(c_ptr), value :: values
-    integer(c_int), value :: length
+    integer(c_int), dimension(2), intent(in) :: size
     integer(c_int), intent(out) :: status
-    call UrbanSetThermalConductivityWall_C(urban%ptr, values, length, status)
+    call UrbanSetThermalConductivityWall_C(urban%ptr, values, size, status)
   end subroutine UrbanSetThermalConductivityWall
 
-  subroutine UrbanSetThermalConductivityRoof(urban, values, length, status)
+  subroutine UrbanSetThermalConductivityRoof(urban, values, size, status)
     type(UrbanType), intent(in) :: urban
     type(c_ptr), value :: values
-    integer(c_int), value :: length
+    integer(c_int), dimension(2), intent(in) :: size
     integer(c_int), intent(out) :: status
-    call UrbanSetThermalConductivityRoof_C(urban%ptr, values, length, status)
+    call UrbanSetThermalConductivityRoof_C(urban%ptr, values, size, status)
   end subroutine UrbanSetThermalConductivityRoof
 
-  subroutine UrbanSetHeatCapacityRoad(urban, values, length, status)
+  subroutine UrbanSetHeatCapacityRoad(urban, values, size, status)
     type(UrbanType), intent(in) :: urban
     type(c_ptr), value :: values
-    integer(c_int), value :: length
+    integer(c_int), dimension(2), intent(in) :: size
     integer(c_int), intent(out) :: status
-    call UrbanSetHeatCapacityRoad_C(urban%ptr, values, length, status)
+    call UrbanSetHeatCapacityRoad_C(urban%ptr, values, size, status)
   end subroutine UrbanSetHeatCapacityRoad
 
-  subroutine UrbanSetHeatCapacityWall(urban, values, length, status)
+  subroutine UrbanSetHeatCapacityWall(urban, values, size, status)
     type(UrbanType), intent(in) :: urban
     type(c_ptr), value :: values
-    integer(c_int), value :: length
+    integer(c_int), dimension(2), intent(in) :: size
     integer(c_int), intent(out) :: status
-    call UrbanSetHeatCapacityWall_C(urban%ptr, values, length, status)
+    call UrbanSetHeatCapacityWall_C(urban%ptr, values, size, status)
   end subroutine UrbanSetHeatCapacityWall
 
-  subroutine UrbanSetHeatCapacityRoof(urban, values, length, status)
+  subroutine UrbanSetHeatCapacityRoof(urban, values, size, status)
     type(UrbanType), intent(in) :: urban
     type(c_ptr), value :: values
-    integer(c_int), value :: length
+    integer(c_int), dimension(2), intent(in) :: size
     integer(c_int), intent(out) :: status
-    call UrbanSetHeatCapacityRoof_C(urban%ptr, values, length, status)
+    call UrbanSetHeatCapacityRoof_C(urban%ptr, values, size, status)
   end subroutine UrbanSetHeatCapacityRoof
-
-  subroutine UrbanSetTemperatureRoof(urban, values, length, status)
-    type(UrbanType), intent(in) :: urban
-    type(c_ptr), value :: values
-    integer(c_int), value :: length
-    integer(c_int), intent(out) :: status
-    call UrbanSetTemperatureRoof_C(urban%ptr, values, length, status)
-  end subroutine UrbanSetTemperatureRoof
-
-  subroutine UrbanSetTemperatureImperviousRoad(urban, values, length, status)
-    type(UrbanType), intent(in) :: urban
-    type(c_ptr), value :: values
-    integer(c_int), value :: length
-    integer(c_int), intent(out) :: status
-    call UrbanSetTemperatureImperviousRoad_C(urban%ptr, values, length, status)
-  end subroutine UrbanSetTemperatureImperviousRoad
-
-  subroutine UrbanSetTemperaturePerviousRoad(urban, values, length, status)
-    type(UrbanType), intent(in) :: urban
-    type(c_ptr), value :: values
-    integer(c_int), value :: length
-    integer(c_int), intent(out) :: status
-    call UrbanSetTemperaturePerviousRoad_C(urban%ptr, values, length, status)
-  end subroutine UrbanSetTemperaturePerviousRoad
-
-  subroutine UrbanSetTemperatureSunlitWall(urban, values, length, status)
-    type(UrbanType), intent(in) :: urban
-    type(c_ptr), value :: values
-    integer(c_int), value :: length
-    integer(c_int), intent(out) :: status
-    call UrbanSetTemperatureSunlitWall_C(urban%ptr, values, length, status)
-  end subroutine UrbanSetTemperatureSunlitWall
-
-  subroutine UrbanSetTemperatureShadedWall(urban, values, length, status)
-    type(UrbanType), intent(in) :: urban
-    type(c_ptr), value :: values
-    integer(c_int), value :: length
-    integer(c_int), intent(out) :: status
-    call UrbanSetTemperatureShadedWall_C(urban%ptr, values, length, status)
-  end subroutine UrbanSetTemperatureShadedWall
 
   subroutine UrbanSetForcHgtT(urban, values, length, status)
     type(UrbanType), intent(in) :: urban
@@ -841,12 +828,6 @@ module urban_mod
     integer(c_int), intent(out) :: status
     call UrbanSetWindHgtCanyon_C(urban%ptr, values, length, status)
   end subroutine UrbanSetWindHgtCanyon
-
-  subroutine UrbanInitializeTemperature(urban, status)
-    type(UrbanType), intent(in) :: urban
-    integer(c_int), intent(out) :: status
-    call UrbanInitializeTemperature_C(urban%ptr, status)
-  end subroutine UrbanInitializeTemperature
 
   subroutine UrbanAdvance(urban, status)
     type(UrbanType), intent(in) :: urban

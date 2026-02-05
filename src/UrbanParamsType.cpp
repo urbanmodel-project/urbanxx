@@ -168,54 +168,124 @@ void UrbanSetEmissivityRoof(UrbanType urban, const double *values, int length,
   SetView1D(urban->urbanParams.emissivity.Roof, values, length, status);
 }
 
-// Thermal conductivity setter functions
-void UrbanSetThermalConductivityRoad(UrbanType urban, const double *values,
-                                     int length, UrbanErrorCode *status) {
+// Number of active layers setter function
+void UrbanSetNumberOfActiveLayersImperviousRoad(UrbanType urban,
+                                                const double *values,
+                                                int length,
+                                                UrbanErrorCode *status) {
+  using namespace URBANXX;
+
   if (!ValidateInputsWithData(urban, values, status))
     return;
 
-  SetView1D(urban->urbanParams.tk.Road, values, length, status);
+  try {
+    auto &view = urban->imperviousRoad.NumberOfActiveLayers;
+
+    // Check if the length matches the view extent
+    if (length != static_cast<int>(view.extent(0))) {
+      *status = URBAN_ERR_SIZE_MISMATCH;
+      return;
+    }
+
+    // Validate that all values are within valid range [1, numUrbanLayers]
+    const int maxLayers = urban->numUrbanLayers;
+    for (int i = 0; i < length; ++i) {
+      const int numLayers = static_cast<int>(values[i]);
+      if (numLayers < 1 || numLayers > maxLayers) {
+        *status = URBAN_ERR_INVALID_ARGUMENT;
+        return;
+      }
+    }
+
+    // Create a host mirror and copy integer values from double array
+    auto host_view = Kokkos::create_mirror_view(view);
+    for (int i = 0; i < length; ++i) {
+      host_view(i) = static_cast<I4>(values[i]);
+    }
+
+    // Deep copy from host to device
+    Kokkos::deep_copy(view, host_view);
+
+    *status = URBAN_SUCCESS;
+  } catch (...) {
+    *status = URBAN_ERR_INTERNAL;
+  }
+} // Thermal conductivity setter functions
+void UrbanSetThermalConductivityRoad(UrbanType urban, const double *values,
+                                     const int size[2],
+                                     UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
+    return;
+
+  SetView2D(urban->urbanParams.tk.Road, values, size, status);
 }
 
 void UrbanSetThermalConductivityWall(UrbanType urban, const double *values,
-                                     int length, UrbanErrorCode *status) {
-  if (!ValidateInputsWithData(urban, values, status))
+                                     const int size[2],
+                                     UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
     return;
 
-  SetView1D(urban->urbanParams.tk.Wall, values, length, status);
+  SetView2D(urban->urbanParams.tk.Wall, values, size, status);
 }
 
 void UrbanSetThermalConductivityRoof(UrbanType urban, const double *values,
-                                     int length, UrbanErrorCode *status) {
-  if (!ValidateInputsWithData(urban, values, status))
+                                     const int size[2],
+                                     UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
     return;
 
-  SetView1D(urban->urbanParams.tk.Roof, values, length, status);
+  SetView2D(urban->urbanParams.tk.Roof, values, size, status);
 }
 
 // Heat capacity setter functions
-void UrbanSetHeatCapacityRoad(UrbanType urban, const double *values, int length,
-                              UrbanErrorCode *status) {
-  if (!ValidateInputsWithData(urban, values, status))
+void UrbanSetHeatCapacityRoad(UrbanType urban, const double *values,
+                              const int size[2], UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
     return;
 
-  SetView1D(urban->urbanParams.cv.Road, values, length, status);
+  SetView2D(urban->urbanParams.cv.Road, values, size, status);
 }
 
-void UrbanSetHeatCapacityWall(UrbanType urban, const double *values, int length,
-                              UrbanErrorCode *status) {
-  if (!ValidateInputsWithData(urban, values, status))
+void UrbanSetHeatCapacityWall(UrbanType urban, const double *values,
+                              const int size[2], UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
     return;
 
-  SetView1D(urban->urbanParams.cv.Wall, values, length, status);
+  SetView2D(urban->urbanParams.cv.Wall, values, size, status);
 }
 
-void UrbanSetHeatCapacityRoof(UrbanType urban, const double *values, int length,
-                              UrbanErrorCode *status) {
-  if (!ValidateInputsWithData(urban, values, status))
+void UrbanSetHeatCapacityRoof(UrbanType urban, const double *values,
+                              const int size[2], UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
     return;
 
-  SetView1D(urban->urbanParams.cv.Roof, values, length, status);
+  SetView2D(urban->urbanParams.cv.Roof, values, size, status);
+}
+
+// Soil property setter functions for pervious road
+void UrbanSetSandPerviousRoad(UrbanType urban, const double *values,
+                              const int size[2], UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
+    return;
+
+  SetView2D(urban->perviousRoad.soil.Sand, values, size, status);
+}
+
+void UrbanSetClayPerviousRoad(UrbanType urban, const double *values,
+                              const int size[2], UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
+    return;
+
+  SetView2D(urban->perviousRoad.soil.Clay, values, size, status);
+}
+
+void UrbanSetOrganicPerviousRoad(UrbanType urban, const double *values,
+                                 const int size[2], UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
+    return;
+
+  SetView2D(urban->perviousRoad.soil.Organic, values, size, status);
 }
 
 // Height parameter setter functions
@@ -265,6 +335,39 @@ void UrbanSetWindHgtCanyon(UrbanType urban, const double *values, int length,
     return;
 
   SetView1D(urban->urbanParams.heights.WindHgtCanyon, values, length, status);
+}
+
+// Building parameter setter functions
+void UrbanSetBuildingMaxTemperature(UrbanType urban, const double *values,
+                                    int length, UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  SetView1D(urban->urbanParams.building.MaxTemperature, values, length, status);
+}
+
+void UrbanSetBuildingMinTemperature(UrbanType urban, const double *values,
+                                    int length, UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  SetView1D(urban->urbanParams.building.MinTemperature, values, length, status);
+}
+
+void UrbanSetBuildingWallThickness(UrbanType urban, const double *values,
+                                   int length, UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  SetView1D(urban->urbanParams.building.WallThickness, values, length, status);
+}
+
+void UrbanSetBuildingRoofThickness(UrbanType urban, const double *values,
+                                   int length, UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  SetView1D(urban->urbanParams.building.RoofThickness, values, length, status);
 }
 
 } // extern "C"

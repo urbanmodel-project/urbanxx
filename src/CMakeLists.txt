@@ -3,12 +3,12 @@ set(URBAN_SOURCES
     Urban.cpp
     UrbanParamsType.cpp
     UrbanInitialize.cpp
-    UrbanTemperature.cpp
     UrbanRadiationGetters.cpp
     AtmosphereType.cpp
     UrbanLongwaveRad.cpp
     UrbanShortwaveRad.cpp
     UrbanSurfaceFluxes.cpp
+    UrbanHeatDiffusion.cpp
     KokkosWrappers.cpp
 )
 

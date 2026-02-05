@@ -103,31 +103,57 @@ TEST_F(ParameterSetterTest, SetEmissivity_ValidData) {
 
 // Test: Thermal conductivity setters
 TEST_F(ParameterSetterTest, SetThermalConductivity_ValidData) {
-  double values[10] = {0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4};
+  const int numUrbanLayers = 5;
+  const int numSoilLayers = 15;
+  const int totalSizeUrban = numLandunits * numUrbanLayers;
+  const int totalSizeRoad = numLandunits * numSoilLayers;
+  double values_urban[50];
+  double values_road[150];
+  for (int i = 0; i < totalSizeUrban; ++i) {
+    values_urban[i] = 0.5 + (i % numUrbanLayers) * 0.1;
+  }
+  for (int i = 0; i < totalSizeRoad; ++i) {
+    values_road[i] = 0.5 + (i % numSoilLayers) * 0.1;
+  }
+  const int size_urban[2] = {numLandunits, numUrbanLayers};
+  const int size_road[2] = {numLandunits, numSoilLayers};
   UrbanErrorCode status;
 
-  UrbanSetThermalConductivityRoad(urban, values, numLandunits, &status);
+  UrbanSetThermalConductivityRoad(urban, values_road, size_road, &status);
   EXPECT_EQ(status, URBAN_SUCCESS) << "UrbanSetThermalConductivityRoad should succeed";
 
-  UrbanSetThermalConductivityWall(urban, values, numLandunits, &status);
+  UrbanSetThermalConductivityWall(urban, values_urban, size_urban, &status);
   EXPECT_EQ(status, URBAN_SUCCESS) << "UrbanSetThermalConductivityWall should succeed";
 
-  UrbanSetThermalConductivityRoof(urban, values, numLandunits, &status);
+  UrbanSetThermalConductivityRoof(urban, values_urban, size_urban, &status);
   EXPECT_EQ(status, URBAN_SUCCESS) << "UrbanSetThermalConductivityRoof should succeed";
 }
 
 // Test: Heat capacity setters
 TEST_F(ParameterSetterTest, SetHeatCapacity_ValidData) {
-  double values[10] = {1000.0, 1100.0, 1200.0, 1300.0, 1400.0, 1500.0, 1600.0, 1700.0, 1800.0, 1900.0};
+  const int numUrbanLayers = 5;
+  const int numSoilLayers = 15;
+  const int totalSizeUrban = numLandunits * numUrbanLayers;
+  const int totalSizeRoad = numLandunits * numSoilLayers;
+  double values_urban[50];
+  double values_road[150];
+  for (int i = 0; i < totalSizeUrban; ++i) {
+    values_urban[i] = 1000.0 + (i % numUrbanLayers) * 100.0;
+  }
+  for (int i = 0; i < totalSizeRoad; ++i) {
+    values_road[i] = 1000.0 + (i % numSoilLayers) * 100.0;
+  }
+  const int size_urban[2] = {numLandunits, numUrbanLayers};
+  const int size_road[2] = {numLandunits, numSoilLayers};
   UrbanErrorCode status;
 
-  UrbanSetHeatCapacityRoad(urban, values, numLandunits, &status);
+  UrbanSetHeatCapacityRoad(urban, values_road, size_road, &status);
   EXPECT_EQ(status, URBAN_SUCCESS) << "UrbanSetHeatCapacityRoad should succeed";
 
-  UrbanSetHeatCapacityWall(urban, values, numLandunits, &status);
+  UrbanSetHeatCapacityWall(urban, values_urban, size_urban, &status);
   EXPECT_EQ(status, URBAN_SUCCESS) << "UrbanSetHeatCapacityWall should succeed";
 
-  UrbanSetHeatCapacityRoof(urban, values, numLandunits, &status);
+  UrbanSetHeatCapacityRoof(urban, values_urban, size_urban, &status);
   EXPECT_EQ(status, URBAN_SUCCESS) << "UrbanSetHeatCapacityRoof should succeed";
 }
 

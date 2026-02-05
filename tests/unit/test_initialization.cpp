@@ -43,20 +43,37 @@ protected:
     UrbanSetEmissivityRoof(urban, emissivity, numLandunits, &status);
     ASSERT_EQ(status, URBAN_SUCCESS);
 
-    double thermal_cond[5] = {1.0, 1.0, 1.0, 1.0, 1.0};
-    UrbanSetThermalConductivityRoad(urban, thermal_cond, numLandunits, &status);
+    const int numUrbanLayers = 5;
+    const int numSoilLayers = 15;
+    const int totalSizeUrban = numLandunits * numUrbanLayers;
+    const int totalSizeRoad = numLandunits * numSoilLayers;
+    double thermal_cond_urban[25];  // 5 * 5
+    double heat_cap_urban[25];      // 5 * 5
+    double thermal_cond_road[75];   // 5 * 15
+    double heat_cap_road[75];       // 5 * 15
+    for (int i = 0; i < totalSizeUrban; ++i) {
+      thermal_cond_urban[i] = 1.0;
+      heat_cap_urban[i] = 1500.0;
+    }
+    for (int i = 0; i < totalSizeRoad; ++i) {
+      thermal_cond_road[i] = 1.0;
+      heat_cap_road[i] = 1500.0;
+    }
+    const int size2D_urban[2] = {numLandunits, numUrbanLayers};
+    const int size2D_road[2] = {numLandunits, numSoilLayers};
+    
+    UrbanSetThermalConductivityRoad(urban, thermal_cond_road, size2D_road, &status);
     ASSERT_EQ(status, URBAN_SUCCESS);
-    UrbanSetThermalConductivityWall(urban, thermal_cond, numLandunits, &status);
+    UrbanSetThermalConductivityWall(urban, thermal_cond_urban, size2D_urban, &status);
     ASSERT_EQ(status, URBAN_SUCCESS);
-    UrbanSetThermalConductivityRoof(urban, thermal_cond, numLandunits, &status);
+    UrbanSetThermalConductivityRoof(urban, thermal_cond_urban, size2D_urban, &status);
     ASSERT_EQ(status, URBAN_SUCCESS);
 
-    double heat_cap[5] = {1500.0, 1500.0, 1500.0, 1500.0, 1500.0};
-    UrbanSetHeatCapacityRoad(urban, heat_cap, numLandunits, &status);
+    UrbanSetHeatCapacityRoad(urban, heat_cap_road, size2D_road, &status);
     ASSERT_EQ(status, URBAN_SUCCESS);
-    UrbanSetHeatCapacityWall(urban, heat_cap, numLandunits, &status);
+    UrbanSetHeatCapacityWall(urban, heat_cap_urban, size2D_urban, &status);
     ASSERT_EQ(status, URBAN_SUCCESS);
-    UrbanSetHeatCapacityRoof(urban, heat_cap, numLandunits, &status);
+    UrbanSetHeatCapacityRoof(urban, heat_cap_urban, size2D_urban, &status);
     ASSERT_EQ(status, URBAN_SUCCESS);
 
     // Set height parameters
@@ -75,19 +92,19 @@ protected:
     ASSERT_EQ(status, URBAN_SUCCESS);
 
     // Set albedos
-    const int size[3] = {numLandunits, 2, 2}; // landunits x bands x rad_types
+    const int size3D[3] = {numLandunits, 2, 2}; // landunits x bands x rad_types
     double albedo[20];
     for (int i = 0; i < 20; ++i) albedo[i] = 0.20;
     
-    UrbanSetAlbedoPerviousRoad(urban, albedo, size, &status);
+    UrbanSetAlbedoPerviousRoad(urban, albedo, size3D, &status);
     ASSERT_EQ(status, URBAN_SUCCESS);
-    UrbanSetAlbedoImperviousRoad(urban, albedo, size, &status);
+    UrbanSetAlbedoImperviousRoad(urban, albedo, size3D, &status);
     ASSERT_EQ(status, URBAN_SUCCESS);
-    UrbanSetAlbedoSunlitWall(urban, albedo, size, &status);
+    UrbanSetAlbedoSunlitWall(urban, albedo, size3D, &status);
     ASSERT_EQ(status, URBAN_SUCCESS);
-    UrbanSetAlbedoShadedWall(urban, albedo, size, &status);
+    UrbanSetAlbedoShadedWall(urban, albedo, size3D, &status);
     ASSERT_EQ(status, URBAN_SUCCESS);
-    UrbanSetAlbedoRoof(urban, albedo, size, &status);
+    UrbanSetAlbedoRoof(urban, albedo, size3D, &status);
     ASSERT_EQ(status, URBAN_SUCCESS);
 
     // Set atmospheric forcing
@@ -115,7 +132,7 @@ protected:
 
     double shortwave[20];
     for (int i = 0; i < 20; ++i) shortwave[i] = 500.0;
-    UrbanSetAtmShortwaveDown(urban, shortwave, size, &status);
+    UrbanSetAtmShortwaveDown(urban, shortwave, size3D, &status);
     ASSERT_EQ(status, URBAN_SUCCESS);
 
     double frac_perv[5] = {0.2, 0.2, 0.2, 0.2, 0.2};
@@ -124,76 +141,76 @@ protected:
   }
 };
 
-// Test: UrbanInitializeTemperature with valid parameters
-TEST_F(InitializationTest, InitializeTemperature_WithValidParameters) {
+// Test: UrbanSetup with valid parameters
+TEST_F(InitializationTest, Setup_WithValidParameters) {
   UrbanErrorCode status;
   
   // Set all required parameters
   SetMinimalParameters();
   
-  // Initialize temperature
-  UrbanInitializeTemperature(urban, &status);
+  // Setup urban model
+  UrbanSetup(urban, &status);
   
   EXPECT_EQ(status, URBAN_SUCCESS) 
-      << "UrbanInitializeTemperature should succeed with valid parameters";
+      << "UrbanSetup should succeed with valid parameters";
 }
 
-// Test: UrbanInitializeTemperature with null urban object
-TEST_F(InitializationTest, InitializeTemperature_NullUrban) {
+// Test: UrbanSetup with null urban object
+TEST_F(InitializationTest, Setup_NullUrban) {
   UrbanErrorCode status;
   
-  UrbanInitializeTemperature(nullptr, &status);
+  UrbanSetup(nullptr, &status);
   
   EXPECT_EQ(status, URBAN_ERR_INVALID_ARGUMENT) 
-      << "UrbanInitializeTemperature should fail with null urban object";
+      << "UrbanSetup should fail with null urban object";
 }
 
-// Test: UrbanInitializeTemperature with null status
-TEST_F(InitializationTest, InitializeTemperature_NullStatus) {
+// Test: UrbanSetup with null status
+TEST_F(InitializationTest, Setup_NullStatus) {
   // Set all required parameters
   SetMinimalParameters();
   
   // Should not crash with null status
-  UrbanInitializeTemperature(urban, nullptr);
+  UrbanSetup(urban, nullptr);
 }
 
-// Test: Initialize temperature multiple times (should work)
-TEST_F(InitializationTest, InitializeTemperature_MultipleTimes) {
+// Test: Setup multiple times (should work)
+TEST_F(InitializationTest, Setup_MultipleTimes) {
   UrbanErrorCode status;
   
   // Set all required parameters
   SetMinimalParameters();
   
-  // First initialization
-  UrbanInitializeTemperature(urban, &status);
+  // First setup
+  UrbanSetup(urban, &status);
   ASSERT_EQ(status, URBAN_SUCCESS);
   
-  // Second initialization (should also succeed)
-  UrbanInitializeTemperature(urban, &status);
+  // Second setup (should also succeed)
+  UrbanSetup(urban, &status);
   EXPECT_EQ(status, URBAN_SUCCESS) 
-      << "Re-initializing temperature should succeed";
+      << "Re-running setup should succeed";
 }
 
-// Test: Full workflow - Create, Set Parameters, Initialize
-TEST_F(InitializationTest, FullWorkflow_CreateSetInitialize) {
+// Test: Full workflow - Create, Set Parameters, Setup
+TEST_F(InitializationTest, FullWorkflow_CreateSetSetup) {
   UrbanErrorCode status;
   
   // Set all parameters
   SetMinimalParameters();
   
-  // Initialize
-  UrbanInitializeTemperature(urban, &status);
+  // Setup
+  UrbanSetup(urban, &status);
   EXPECT_EQ(status, URBAN_SUCCESS);
 }
 
-// Test: Initialize immediately after create (without setting parameters)
-TEST_F(InitializationTest, InitializeTemperature_WithoutParameters) {
+// Test: Setup immediately after create (without setting parameters)
+TEST_F(InitializationTest, Setup_WithoutParameters) {
   UrbanErrorCode status;
   
-  // Try to initialize without setting any parameters
+  // Try to setup without setting any parameters
   // This may succeed or fail depending on implementation
   // We're testing that it doesn't crash
-  UrbanInitializeTemperature(urban, &status);
+  UrbanSetup(urban, &status);
   
   // Just check that we get a valid error code (not necessarily success)
   EXPECT_TRUE(status == URBAN_SUCCESS || 

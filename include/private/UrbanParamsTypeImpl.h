@@ -47,14 +47,18 @@ struct Emissivity {
 };
 
 struct CommonSurfaceProperties {
-  DECLARE_DEVICE_VIEW(1DR8, Road) // property value for road material
-  DECLARE_DEVICE_VIEW(1DR8, Wall) // property value for wall material
-  DECLARE_DEVICE_VIEW(1DR8, Roof) // property value for roof material
+  DECLARE_DEVICE_VIEW(
+      2DR8, Road) // property value for road material (landunit, level)
+  DECLARE_DEVICE_VIEW(
+      2DR8, Wall) // property value for wall material (landunit, level)
+  DECLARE_DEVICE_VIEW(
+      2DR8, Roof) // property value for roof material (landunit, level)
 
-  CommonSurfaceProperties(int numLandunits) {
-    ALLOCATE_DEVICE_VIEW(Road, Array1DR8, numLandunits)
-    ALLOCATE_DEVICE_VIEW(Wall, Array1DR8, numLandunits)
-    ALLOCATE_DEVICE_VIEW(Roof, Array1DR8, numLandunits)
+  CommonSurfaceProperties(int numLandunits, int numRoadLayers,
+                          int numUrbanLayers) {
+    ALLOCATE_DEVICE_VIEW(Road, Array2DR8, numLandunits, numRoadLayers)
+    ALLOCATE_DEVICE_VIEW(Wall, Array2DR8, numLandunits, numUrbanLayers)
+    ALLOCATE_DEVICE_VIEW(Roof, Array2DR8, numLandunits, numUrbanLayers)
   }
 };
 
@@ -97,6 +101,22 @@ struct HeightParameters {
   }
 };
 
+struct BuildingParameters {
+  DECLARE_DEVICE_VIEW(
+      1DR8, MaxTemperature) // maximum allowable interior temperature (K)
+  DECLARE_DEVICE_VIEW(
+      1DR8, MinTemperature) // minimum allowable interior temperature (K)
+  DECLARE_DEVICE_VIEW(1DR8, WallThickness) // wall thickness (m)
+  DECLARE_DEVICE_VIEW(1DR8, RoofThickness) // roof thickness (m)
+
+  BuildingParameters(int numLandunits) {
+    ALLOCATE_DEVICE_VIEW(MaxTemperature, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(MinTemperature, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(WallThickness, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(RoofThickness, Array1DR8, numLandunits)
+  }
+};
+
 struct UrbanParamsType {
   DECLARE_DEVICE_VIEW(1DR8, CanyonHwr) // canyon height-to-width ratio (-)
   DECLARE_DEVICE_VIEW(1DR8,
@@ -111,11 +131,16 @@ struct UrbanParamsType {
   Albedo albedo;              // albedo for various urban surfaces
   Emissivity emissivity;      // emissivity for various urban surfaces
   HeightParameters heights;   // height parameters for surface flux calculations
+  BuildingParameters building; // building parameters
 
-  UrbanParamsType(int numLandunits, int numRadBands, int numRadTypes)
-      : viewFactor(numLandunits), tk(numLandunits), cv(numLandunits),
+  UrbanParamsType(int numLandunits, int numRadBands, int numRadTypes,
+                  int numRoadLayers, int numUrbanLayers)
+      : viewFactor(numLandunits),
+        tk(numLandunits, numRoadLayers, numUrbanLayers),
+        cv(numLandunits, numRoadLayers, numUrbanLayers),
         albedo(numLandunits, numRadBands, numRadTypes),
-        emissivity(numLandunits), heights(numLandunits) {
+        emissivity(numLandunits), heights(numLandunits),
+        building(numLandunits) {
     ALLOCATE_DEVICE_VIEW(CanyonHwr, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(FracPervRoadOfTotalRoad, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(WtRoof, Array1DR8, numLandunits)
