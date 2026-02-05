@@ -188,47 +188,6 @@ module urban_mod
       integer(c_int) :: status
     end subroutine UrbanSetHeatCapacityRoof_C
 
-    ! Temperature setter functions
-    subroutine UrbanSetTemperatureRoof_C(urban, values, length, status) bind(C, name="UrbanSetTemperatureRoof")
-      import :: c_ptr, c_int
-      type(c_ptr), value :: urban
-      type(c_ptr), value :: values
-      integer(c_int), value :: length
-      integer(c_int) :: status
-    end subroutine UrbanSetTemperatureRoof_C
-
-    subroutine UrbanSetTemperatureImperviousRoad_C(urban, values, length, status) bind(C, name="UrbanSetTemperatureImperviousRoad")
-      import :: c_ptr, c_int
-      type(c_ptr), value :: urban
-      type(c_ptr), value :: values
-      integer(c_int), value :: length
-      integer(c_int) :: status
-    end subroutine UrbanSetTemperatureImperviousRoad_C
-
-    subroutine UrbanSetTemperaturePerviousRoad_C(urban, values, length, status) bind(C, name="UrbanSetTemperaturePerviousRoad")
-      import :: c_ptr, c_int
-      type(c_ptr), value :: urban
-      type(c_ptr), value :: values
-      integer(c_int), value :: length
-      integer(c_int) :: status
-    end subroutine UrbanSetTemperaturePerviousRoad_C
-
-    subroutine UrbanSetTemperatureSunlitWall_C(urban, values, length, status) bind(C, name="UrbanSetTemperatureSunlitWall")
-      import :: c_ptr, c_int
-      type(c_ptr), value :: urban
-      type(c_ptr), value :: values
-      integer(c_int), value :: length
-      integer(c_int) :: status
-    end subroutine UrbanSetTemperatureSunlitWall_C
-
-    subroutine UrbanSetTemperatureShadedWall_C(urban, values, length, status) bind(C, name="UrbanSetTemperatureShadedWall")
-      import :: c_ptr, c_int
-      type(c_ptr), value :: urban
-      type(c_ptr), value :: values
-      integer(c_int), value :: length
-      integer(c_int) :: status
-    end subroutine UrbanSetTemperatureShadedWall_C
-
     ! Soil property setter functions for pervious road
     subroutine UrbanSetSandPerviousRoad(urban, values, size, status) bind(C, name="UrbanSetSandPerviousRoad")
       import :: c_ptr, c_int, UrbanType
@@ -821,46 +780,6 @@ module urban_mod
     integer(c_int), intent(out) :: status
     call UrbanSetHeatCapacityRoof_C(urban%ptr, values, size, status)
   end subroutine UrbanSetHeatCapacityRoof
-
-  subroutine UrbanSetTemperatureRoof(urban, values, length, status)
-    type(UrbanType), intent(in) :: urban
-    type(c_ptr), value :: values
-    integer(c_int), value :: length
-    integer(c_int), intent(out) :: status
-    call UrbanSetTemperatureRoof_C(urban%ptr, values, length, status)
-  end subroutine UrbanSetTemperatureRoof
-
-  subroutine UrbanSetTemperatureImperviousRoad(urban, values, length, status)
-    type(UrbanType), intent(in) :: urban
-    type(c_ptr), value :: values
-    integer(c_int), value :: length
-    integer(c_int), intent(out) :: status
-    call UrbanSetTemperatureImperviousRoad_C(urban%ptr, values, length, status)
-  end subroutine UrbanSetTemperatureImperviousRoad
-
-  subroutine UrbanSetTemperaturePerviousRoad(urban, values, length, status)
-    type(UrbanType), intent(in) :: urban
-    type(c_ptr), value :: values
-    integer(c_int), value :: length
-    integer(c_int), intent(out) :: status
-    call UrbanSetTemperaturePerviousRoad_C(urban%ptr, values, length, status)
-  end subroutine UrbanSetTemperaturePerviousRoad
-
-  subroutine UrbanSetTemperatureSunlitWall(urban, values, length, status)
-    type(UrbanType), intent(in) :: urban
-    type(c_ptr), value :: values
-    integer(c_int), value :: length
-    integer(c_int), intent(out) :: status
-    call UrbanSetTemperatureSunlitWall_C(urban%ptr, values, length, status)
-  end subroutine UrbanSetTemperatureSunlitWall
-
-  subroutine UrbanSetTemperatureShadedWall(urban, values, length, status)
-    type(UrbanType), intent(in) :: urban
-    type(c_ptr), value :: values
-    integer(c_int), value :: length
-    integer(c_int), intent(out) :: status
-    call UrbanSetTemperatureShadedWall_C(urban%ptr, values, length, status)
-  end subroutine UrbanSetTemperatureShadedWall
 
   subroutine UrbanSetForcHgtT(urban, values, length, status)
     type(UrbanType), intent(in) :: urban
