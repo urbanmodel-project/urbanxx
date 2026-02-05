@@ -153,15 +153,39 @@ void SetAlbedo(UrbanType urban, int numLandunits, int mpi_rank) {
   double *albedoShadedWall = AllocateArray(totalSize3D, "albedoShadedWall");
   double *albedoRoof = AllocateArray(totalSize3D, "albedoRoof");
 
-  for (int ilandunit = 0; ilandunit < numLandunits; ++ilandunit) {
-    for (int iband = 0; iband < numBands; ++iband) {
-      for (int itype = 0; itype < numTypes; ++itype) {
-        int idx = ilandunit * numBands * numTypes + iband * numTypes + itype;
-        albedoPerviousRoad[idx] = ALB_PERROAD;
-        albedoImperviousRoad[idx] = ALB_IMPROAD;
-        albedoSunlitWall[idx] = ALB_WALL;
-        albedoShadedWall[idx] = ALB_WALL;
-        albedoRoof[idx] = ALB_ROOF;
+  // Fill arrays based on Kokkos memory layout
+  bool isLayoutLeft = UrbanKokkosIsLayoutLeft();
+
+  if (isLayoutLeft) {
+    // LayoutLeft: First dimension (landunits) varies fastest
+    // Iterate: itype (outer), iband (middle), landunits (inner)
+    int idx = 0;
+    for (int itype = 0; itype < numTypes; ++itype) {
+      for (int iband = 0; iband < numBands; ++iband) {
+        for (int ilandunit = 0; ilandunit < numLandunits; ++ilandunit) {
+          albedoPerviousRoad[idx] = ALB_PERROAD;
+          albedoImperviousRoad[idx] = ALB_IMPROAD;
+          albedoSunlitWall[idx] = ALB_WALL;
+          albedoShadedWall[idx] = ALB_WALL;
+          albedoRoof[idx] = ALB_ROOF;
+          ++idx;
+        }
+      }
+    }
+  } else {
+    // LayoutRight: Last dimension (types) varies fastest
+    // Iterate: landunits (outer), iband (middle), itype (inner)
+    int idx = 0;
+    for (int ilandunit = 0; ilandunit < numLandunits; ++ilandunit) {
+      for (int iband = 0; iband < numBands; ++iband) {
+        for (int itype = 0; itype < numTypes; ++itype) {
+          albedoPerviousRoad[idx] = ALB_PERROAD;
+          albedoImperviousRoad[idx] = ALB_IMPROAD;
+          albedoSunlitWall[idx] = ALB_WALL;
+          albedoShadedWall[idx] = ALB_WALL;
+          albedoRoof[idx] = ALB_ROOF;
+          ++idx;
+        }
       }
     }
   }
@@ -305,24 +329,52 @@ void SetThermalConductivity(UrbanType urban, int numLandunits, int mpi_rank) {
       {0.503093481063843, 0.094768725335598, 0.127733826637268},
       {0.503093481063843, 0.094768725335598, 0.127733826637268}};
 
-  // Fill road array
-  int idx = 0;
-  for (int layer = 0; layer < NUM_ROAD_LEVELS; ++layer) {
-    for (int i = 0; i < numLandunits; ++i) {
-      const int urban_density_class = i % NUM_URBAN_DENSITY_CLASSES;
-      tkRoad[idx] = tkRoadLevels[layer][urban_density_class];
-      ++idx;
-    }
-  }
+  // Fill arrays based on Kokkos memory layout
+  bool isLayoutLeft = UrbanKokkosIsLayoutLeft();
 
-  // Fill wall and roof arrays
-  idx = 0;
-  for (int layer = 0; layer < NUM_URBAN_LEVELS; ++layer) {
+  if (isLayoutLeft) {
+    // LayoutLeft: First dimension (landunits) varies fastest
+    // Iterate: layer (outer), landunits (inner)
+    int idx = 0;
+    for (int layer = 0; layer < NUM_ROAD_LEVELS; ++layer) {
+      for (int i = 0; i < numLandunits; ++i) {
+        const int urban_density_class = i % NUM_URBAN_DENSITY_CLASSES;
+        tkRoad[idx] = tkRoadLevels[layer][urban_density_class];
+        ++idx;
+      }
+    }
+
+    // Fill wall and roof arrays
+    idx = 0;
+    for (int layer = 0; layer < NUM_URBAN_LEVELS; ++layer) {
+      for (int i = 0; i < numLandunits; ++i) {
+        const int urban_density_class = i % NUM_URBAN_DENSITY_CLASSES;
+        tkWall[idx] = tkWallLevels[layer][urban_density_class];
+        tkRoof[idx] = tkRoofLevels[layer][urban_density_class];
+        ++idx;
+      }
+    }
+  } else {
+    // LayoutRight: Last dimension (layers) varies fastest
+    // Iterate: landunits (outer), layer (inner)
+    int idx = 0;
     for (int i = 0; i < numLandunits; ++i) {
       const int urban_density_class = i % NUM_URBAN_DENSITY_CLASSES;
-      tkWall[idx] = tkWallLevels[layer][urban_density_class];
-      tkRoof[idx] = tkRoofLevels[layer][urban_density_class];
-      ++idx;
+      for (int layer = 0; layer < NUM_ROAD_LEVELS; ++layer) {
+        tkRoad[idx] = tkRoadLevels[layer][urban_density_class];
+        ++idx;
+      }
+    }
+
+    // Fill wall and roof arrays
+    idx = 0;
+    for (int i = 0; i < numLandunits; ++i) {
+      const int urban_density_class = i % NUM_URBAN_DENSITY_CLASSES;
+      for (int layer = 0; layer < NUM_URBAN_LEVELS; ++layer) {
+        tkWall[idx] = tkWallLevels[layer][urban_density_class];
+        tkRoof[idx] = tkRoofLevels[layer][urban_density_class];
+        ++idx;
+      }
     }
   }
 
@@ -391,24 +443,52 @@ void SetHeatCapacity(UrbanType urban, int numLandunits, int mpi_rank) {
       {570998.0, 646213.375, 862451.375},
       {570998.0, 646213.375, 862451.375}};
 
-  // Fill road array
-  int idx = 0;
-  for (int layer = 0; layer < NUM_ROAD_LEVELS; ++layer) {
-    for (int i = 0; i < numLandunits; ++i) {
-      const int urban_density_class = i % NUM_URBAN_DENSITY_CLASSES;
-      cvRoad[idx] = cvRoadLevels[layer][urban_density_class];
-      ++idx;
-    }
-  }
+  // Fill arrays based on Kokkos memory layout
+  bool isLayoutLeft = UrbanKokkosIsLayoutLeft();
 
-  // Fill wall and roof arrays
-  idx = 0;
-  for (int layer = 0; layer < NUM_URBAN_LEVELS; ++layer) {
+  if (isLayoutLeft) {
+    // LayoutLeft: First dimension (landunits) varies fastest
+    // Iterate: layer (outer), landunits (inner)
+    int idx = 0;
+    for (int layer = 0; layer < NUM_ROAD_LEVELS; ++layer) {
+      for (int i = 0; i < numLandunits; ++i) {
+        const int urban_density_class = i % NUM_URBAN_DENSITY_CLASSES;
+        cvRoad[idx] = cvRoadLevels[layer][urban_density_class];
+        ++idx;
+      }
+    }
+
+    // Fill wall and roof arrays
+    idx = 0;
+    for (int layer = 0; layer < NUM_URBAN_LEVELS; ++layer) {
+      for (int i = 0; i < numLandunits; ++i) {
+        const int urban_density_class = i % NUM_URBAN_DENSITY_CLASSES;
+        cvWall[idx] = cvWallLevels[layer][urban_density_class];
+        cvRoof[idx] = cvRoofLevels[layer][urban_density_class];
+        ++idx;
+      }
+    }
+  } else {
+    // LayoutRight: Last dimension (layers) varies fastest
+    // Iterate: landunits (outer), layer (inner)
+    int idx = 0;
     for (int i = 0; i < numLandunits; ++i) {
       const int urban_density_class = i % NUM_URBAN_DENSITY_CLASSES;
-      cvWall[idx] = cvWallLevels[layer][urban_density_class];
-      cvRoof[idx] = cvRoofLevels[layer][urban_density_class];
-      ++idx;
+      for (int layer = 0; layer < NUM_ROAD_LEVELS; ++layer) {
+        cvRoad[idx] = cvRoadLevels[layer][urban_density_class];
+        ++idx;
+      }
+    }
+
+    // Fill wall and roof arrays
+    idx = 0;
+    for (int i = 0; i < numLandunits; ++i) {
+      const int urban_density_class = i % NUM_URBAN_DENSITY_CLASSES;
+      for (int layer = 0; layer < NUM_URBAN_LEVELS; ++layer) {
+        cvWall[idx] = cvWallLevels[layer][urban_density_class];
+        cvRoof[idx] = cvRoofLevels[layer][urban_density_class];
+        ++idx;
+      }
     }
   }
 
@@ -452,15 +532,36 @@ void SetSoilProperties(UrbanType urban, int numLandunits, int mpi_rank) {
                               7.08594278159189,
                               0.0,
                               0.0};
-  int idx = 0;
-  for (int layer = 0; layer < NUM_SOIL_LEVELS; ++layer) {
+  // Fill arrays based on Kokkos memory layout
+  bool isLayoutLeft = UrbanKokkosIsLayoutLeft();
+
+  if (isLayoutLeft) {
+    // LayoutLeft: First dimension (landunits) varies fastest
+    // Iterate: layer (outer), landunits (inner)
+    int idx = 0;
+    for (int layer = 0; layer < NUM_SOIL_LEVELS; ++layer) {
+      for (int i = 0; i < numLandunits; ++i) {
+        // Use layer 9 (10th layer) values for layers 10-14 (11th-15th)
+        int srcLayer = (layer < 10) ? layer : 9;
+        sand[idx] = sandLevels[srcLayer];
+        clay[idx] = clayLevels[srcLayer];
+        organic[idx] = organicLevels[srcLayer];
+        ++idx;
+      }
+    }
+  } else {
+    // LayoutRight: Last dimension (layers) varies fastest
+    // Iterate: landunits (outer), layer (inner)
+    int idx = 0;
     for (int i = 0; i < numLandunits; ++i) {
-      // Use layer 9 (10th layer) values for layers 10-14 (11th-15th)
-      int srcLayer = (layer < 10) ? layer : 9;
-      sand[idx] = sandLevels[srcLayer];
-      clay[idx] = clayLevels[srcLayer];
-      organic[idx] = organicLevels[srcLayer];
-      ++idx;
+      for (int layer = 0; layer < NUM_SOIL_LEVELS; ++layer) {
+        // Use layer 9 (10th layer) values for layers 10-14 (11th-15th)
+        int srcLayer = (layer < 10) ? layer : 9;
+        sand[idx] = sandLevels[srcLayer];
+        clay[idx] = clayLevels[srcLayer];
+        organic[idx] = organicLevels[srcLayer];
+        ++idx;
+      }
     }
   }
 
@@ -525,8 +626,33 @@ void SetAtmosphericForcing(UrbanType urban, int numLandunits, int mpi_rank) {
     atmLongwave[i] = LWDOWN;
   }
 
-  for (int i = 0; i < totalSize3D; ++i) {
-    atmShortwave[i] = SWDOWN;
+  // Fill arrays based on Kokkos memory layout
+  bool isLayoutLeft = UrbanKokkosIsLayoutLeft();
+
+  if (isLayoutLeft) {
+    // LayoutLeft: First dimension (landunits) varies fastest
+    // Iterate: itype (outer), iband (middle), landunits (inner)
+    int idx = 0;
+    for (int itype = 0; itype < numTypes; ++itype) {
+      for (int iband = 0; iband < numBands; ++iband) {
+        for (int i = 0; i < numLandunits; ++i) {
+          atmShortwave[idx] = SWDOWN;
+          ++idx;
+        }
+      }
+    }
+  } else {
+    // LayoutRight: Last dimension (types) varies fastest
+    // Iterate: landunits (outer), iband (middle), itype (inner)
+    int idx = 0;
+    for (int i = 0; i < numLandunits; ++i) {
+      for (int iband = 0; iband < numBands; ++iband) {
+        for (int itype = 0; itype < numTypes; ++itype) {
+          atmShortwave[idx] = SWDOWN;
+          ++idx;
+        }
+      }
+    }
   }
 
   // Set atmospheric forcing
