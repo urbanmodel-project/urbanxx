@@ -9,6 +9,10 @@
 
 namespace URBANXX {
 
+// Crank-Nicolson factor (same value as CRANK_NICONSON_FACTOR = 0.5)
+// Used in building surface boundary condition
+constexpr Real CNFAC = 0.5;
+
 // Compute ground net energy flux for a surface
 KOKKOS_INLINE_FUNCTION
 Real ComputeGroundNetEnergyFlux(Real netSw, Real netLw, Real eflxShGrnd,
@@ -152,6 +156,103 @@ KOKKOS_INLINE_FUNCTION void SolveRoadHeatDiffusion(
   }
 }
 
+// Solve 1D heat diffusion for a building surface (roof or wall)
+// using Crank-Nicolson implicit time-stepping
+// Differs from road surfaces: no dz_eff adjustment for top layer,
+// and bottom layer has heat flux to building interior
+template <typename TempView, typename GeomView, typename TkView,
+          typename CvView>
+KOKKOS_INLINE_FUNCTION void SolveBuildingSurfaceHeatDiffusion(
+    int l, int numLayers, Real dtime, TempView &temp, GeomView &zc,
+    GeomView &zi, GeomView &dz, TkView &tkInterface, TkView &tkLayer,
+    CvView &cv_times_dz, Real EflxGnet, Real DEflxGnet_DTemp,
+    Real buildingTemp) {
+  int level;
+
+  // Working arrays for heat diffusion computation
+  Real fact[NUM_URBAN_LAYERS];
+  Real fn[NUM_URBAN_LAYERS];
+  Real a[NUM_URBAN_LAYERS];
+  Real b[NUM_URBAN_LAYERS];
+  Real c[NUM_URBAN_LAYERS];
+  Real r[NUM_URBAN_LAYERS];
+  Real newTemp[NUM_URBAN_LAYERS];
+
+  // Compute factors and interface fluxes
+  // Top layer (no dz_eff adjustment for building surfaces)
+  level = 0;
+  fact[level] = dtime / cv_times_dz(l, level);
+  fn[level] = tkInterface(l, level) * (temp(l, level + 1) - temp(l, level)) /
+              (zc(l, level + 1) - zc(l, level));
+
+  // Internal layers
+  for (level = 1; level < numLayers - 1; ++level) {
+    fact[level] = dtime / cv_times_dz(l, level);
+    fn[level] = tkInterface(l, level) * (temp(l, level + 1) - temp(l, level)) /
+                (zc(l, level + 1) - zc(l, level));
+  }
+
+  // Bottom layer (heat flux to building interior)
+  level = numLayers - 1;
+  fact[level] = dtime / cv_times_dz(l, level);
+  fn[level] = tkInterface(l, level) * (buildingTemp - CNFAC * temp(l, level)) /
+              (zi(l, level) - zc(l, level));
+
+  // Compute tridiagonal system (RHS vector and coefficient matrix)
+  // Top layer
+  level = 0;
+  Real dzp, dzm;
+
+  r[level] = temp(l, level) +
+             fact[level] * (EflxGnet - DEflxGnet_DTemp * temp(l, level) +
+                            CRANK_NICONSON_FACTOR * fn[level]);
+
+  dzp = zc(l, level + 1) - zc(l, level);
+  a[level] = 0.0;
+  b[level] = 1.0 +
+             (1.0 - CRANK_NICONSON_FACTOR) * fact[level] *
+                 tkInterface(l, level) / dzp -
+             fact[level] * DEflxGnet_DTemp;
+  c[level] = -(1.0 - CRANK_NICONSON_FACTOR) * fact[level] *
+             tkInterface(l, level) / dzp;
+
+  // Internal layers
+  for (level = 1; level < numLayers - 1; ++level) {
+    r[level] = temp(l, level) + fact[level] * CRANK_NICONSON_FACTOR *
+                                    (fn[level] - fn[level - 1]);
+    dzm = zc(l, level) - zc(l, level - 1);
+    dzp = zc(l, level + 1) - zc(l, level);
+    a[level] = -(1.0 - CRANK_NICONSON_FACTOR) * fact[level] *
+               tkInterface(l, level - 1) / dzm;
+    b[level] = 1.0 + (1.0 - CRANK_NICONSON_FACTOR) * fact[level] *
+                         (tkInterface(l, level) / dzp +
+                          tkInterface(l, level - 1) / dzm);
+    c[level] = -(1.0 - CRANK_NICONSON_FACTOR) * fact[level] *
+               tkInterface(l, level) / dzp;
+  }
+
+  // Bottom layer (different from roads - uses building boundary condition)
+  level = numLayers - 1;
+  r[level] = temp(l, level) +
+             fact[level] * (fn[level] - CRANK_NICONSON_FACTOR * fn[level - 1]);
+  dzm = zc(l, level) - zc(l, level - 1);
+  dzp = zi(l, level + 1) - zc(l, level);
+  a[level] = -(1.0 - CRANK_NICONSON_FACTOR) * fact[level] *
+             tkInterface(l, level - 1) / dzm;
+  b[level] =
+      1.0 + (1.0 - CRANK_NICONSON_FACTOR) * fact[level] *
+                (tkInterface(l, level - 1) / dzm + tkInterface(l, level) / dzp);
+  c[level] = 0.0;
+
+  // Solve tridiagonal system for new temperatures
+  SolveTridiagonal(numLayers, a, b, c, r, newTemp);
+
+  // Update temperature
+  for (int j = 0; j < numLayers; ++j) {
+    temp(l, j) = newTemp[j];
+  }
+}
+
 // Compute 1D heat diffusion for all urban surfaces
 void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
 
@@ -193,6 +294,13 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
   auto &roof_Cgrndl = urban.roof.Cgrndl;
   auto &roof_Temp = urban.roof.EffectiveSurfTemp;
   auto &roof_emiss = urban.urbanParams.emissivity.Roof;
+  auto &roof_temp = urban.roof.Temperature;
+  auto &roof_tkInterface = urban.roof.TkInterface;
+  auto &roof_tkLayer = urban.roof.TkLayer;
+  auto &roof_cv_times_dz = urban.roof.CvTimesDz;
+  auto &roof_dz = urban.roof.Dz;
+  auto &roof_zc = urban.roof.Zc;
+  auto &roof_zi = urban.roof.Zi;
 
   // Access impervious road property views
   auto &imperv_tkLayer = urban.imperviousRoad.TkLayer;
@@ -219,6 +327,13 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
   auto &sunwall_Cgrnds = urban.sunlitWall.Cgrnds;
   auto &sunwall_Cgrndl = urban.sunlitWall.Cgrndl;
   auto &sunwall_Temp = urban.sunlitWall.EffectiveSurfTemp;
+  auto &sunwall_temp = urban.sunlitWall.Temperature;
+  auto &sunwall_tkInterface = urban.sunlitWall.TkInterface;
+  auto &sunwall_tkLayer = urban.sunlitWall.TkLayer;
+  auto &sunwall_cv_times_dz = urban.sunlitWall.CvTimesDz;
+  auto &sunwall_dz = urban.sunlitWall.Dz;
+  auto &sunwall_zc = urban.sunlitWall.Zc;
+  auto &sunwall_zi = urban.sunlitWall.Zi;
   auto &wall_emiss = urban.urbanParams.emissivity.Wall;
 
   // Access shaded wall property views
@@ -228,6 +343,16 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
   auto &shadewall_Cgrnds = urban.shadedWall.Cgrnds;
   auto &shadewall_Cgrndl = urban.shadedWall.Cgrndl;
   auto &shadewall_Temp = urban.shadedWall.EffectiveSurfTemp;
+  auto &shadewall_temp = urban.shadedWall.Temperature;
+  auto &shadewall_tkInterface = urban.shadedWall.TkInterface;
+  auto &shadewall_tkLayer = urban.shadedWall.TkLayer;
+  auto &shadewall_cv_times_dz = urban.shadedWall.CvTimesDz;
+  auto &shadewall_dz = urban.shadedWall.Dz;
+  auto &shadewall_zc = urban.shadedWall.Zc;
+  auto &shadewall_zi = urban.shadedWall.Zi;
+
+  // Access building property views
+  auto &building_temp = urban.building.Temperature;
 
   // Single parallel kernel over all landunits
   Kokkos::parallel_for(
@@ -310,11 +435,25 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
             imperv_dz, imperv_tkInterface, imperv_tkLayer, imperv_cv_times_dz,
             imperv_EflxGnet, imperv_DEflxGnet_DTemp);
 
-        // TODO: Add remaining heat diffusion:
-        // - Roof (numUrbanLayers)
-        // - Sunlit wall (numUrbanLayers)
-        // - Shaded wall (numUrbanLayers)
-        // - Update surface temperatures for all surfaces
+        // Solve heat diffusion for roof
+        SolveBuildingSurfaceHeatDiffusion(
+            l, numUrbanLayers, dtime, roof_temp, roof_zc, roof_zi, roof_dz,
+            roof_tkInterface, roof_tkLayer, roof_cv_times_dz, roof_EflxGnet,
+            roof_DEflxGnet_DTemp, building_temp(l));
+
+        // Solve heat diffusion for sunlit wall
+        SolveBuildingSurfaceHeatDiffusion(
+            l, numUrbanLayers, dtime, sunwall_temp, sunwall_zc, sunwall_zi,
+            sunwall_dz, sunwall_tkInterface, sunwall_tkLayer,
+            sunwall_cv_times_dz, sunwall_EflxGnet, sunwall_DEflxGnet_DTemp,
+            building_temp(l));
+
+        // Solve heat diffusion for shaded wall
+        SolveBuildingSurfaceHeatDiffusion(
+            l, numUrbanLayers, dtime, shadewall_temp, shadewall_zc,
+            shadewall_zi, shadewall_dz, shadewall_tkInterface,
+            shadewall_tkLayer, shadewall_cv_times_dz, shadewall_EflxGnet,
+            shadewall_DEflxGnet_DTemp, building_temp(l));
       });
   Kokkos::fence();
 }
