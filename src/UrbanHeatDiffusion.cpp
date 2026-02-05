@@ -195,8 +195,8 @@ KOKKOS_INLINE_FUNCTION void SolveBuildingSurfaceHeatDiffusion(
   // Bottom layer (heat flux to building interior)
   level = numLayers - 1;
   fact[level] = dtime / cv_times_dz(l, level);
-  fn[level] = tkInterface(l, level) * (buildingTemp - CNFAC * temp(l, level)) /
-              (zi(l, level) - zc(l, level));
+  fn[level] = tkInterface(l, level) * (buildingTemp - temp(l, level)) /
+              (zi(l, level + 1) - zc(l, level));
 
   // Compute tridiagonal system (RHS vector and coefficient matrix)
   // Top layer
@@ -233,10 +233,12 @@ KOKKOS_INLINE_FUNCTION void SolveBuildingSurfaceHeatDiffusion(
 
   // Bottom layer (different from roads - uses building boundary condition)
   level = numLayers - 1;
-  r[level] = temp(l, level) +
-             fact[level] * (fn[level] - CRANK_NICONSON_FACTOR * fn[level - 1]);
   dzm = zc(l, level) - zc(l, level - 1);
   dzp = zi(l, level + 1) - zc(l, level);
+  r[level] = temp(l, level) +
+             fact[level] * CRANK_NICONSON_FACTOR * (fn[level] - fn[level - 1]);
+  r[level] += (1.0 - CRANK_NICONSON_FACTOR) * fact[level] *
+              tkInterface(l, level) / dzp * buildingTemp;
   a[level] = -(1.0 - CRANK_NICONSON_FACTOR) * fact[level] *
              tkInterface(l, level - 1) / dzm;
   b[level] =

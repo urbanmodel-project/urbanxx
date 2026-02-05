@@ -28,6 +28,7 @@ static void UrbanInitializeTemperature(UrbanType urban) {
   auto &perviousRoadLayerTemp = urban->perviousRoad.Temperature;
   auto &sunlitWallLayerTemp = urban->sunlitWall.Temperature;
   auto &shadedWallLayerTemp = urban->shadedWall.Temperature;
+  auto &buildingTemp = urban->building.Temperature;
 
   // Get references to canyon air properties
   auto &taf = urban->urbanCanyon.Taf;
@@ -53,6 +54,7 @@ static void UrbanInitializeTemperature(UrbanType urban) {
         perviousRoadTemp(l) = TEMP_ROAD_INIT;
         sunlitWallTemp(l) = TEMP_WALL_INIT;
         shadedWallTemp(l) = TEMP_WALL_INIT;
+        buildingTemp(l) = TEMP_WALL_INIT;
 
         // Initialize layer temperatures for urban surfaces (numUrbanLayers)
         for (int k = 0; k < numUrbanLayers; ++k) {
