@@ -367,7 +367,10 @@ static void UrbanInitializePerviousRoadSoils(UrbanType urban) {
           // Get input soil properties (sand, clay in %, organic in kg/m³)
           const Real sand_pct = sand(l, k);
           const Real clay_pct = clay(l, k);
-          const Real organic_kgm3 = organic(l, k) * 0.0;
+
+          // The soils within urban areas are assumed to have no organic matter.
+          // Thus, organic(l, k) is not used.
+          const Real organic_kgm3 = 0.0;
 
           // Compute soil depth using exponential discretization (same as ELM)
           // zsoi(j) = scalez * (exp(zecoeff * (j - 0.5)) - 1.0)
