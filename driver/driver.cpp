@@ -1,16 +1,16 @@
 #include <Kokkos_Core.hpp>
+#include <Urban.h>
+#include <UrbanMacros.h>
 #include <iostream>
 #include <mpi.h>
 #include <stdlib.h>
-#include <Urban.h>
-#include <UrbanMacros.h>
 
 // Constants
 const int NUM_LEVELS = 5;
 const int NUM_URBAN_DENSITY_CLASSES = 3;
 
 // Helper function to allocate memory with error checking
-static double* AllocateArray(int size, const char* name) {
+static double *AllocateArray(int size, const char *name) {
   double *arr = (double *)malloc(size * sizeof(double));
   if (arr == NULL) {
     fprintf(stderr, "Failed to allocate memory for %s\n", name);
@@ -36,22 +36,26 @@ void SetCanyonHwr(UrbanType urban, int numLandunits, int mpi_rank) {
   }
   UrbanCall(UrbanSetCanyonHwr(urban, canyonHwr, numLandunits, &ierr), &ierr);
   free(canyonHwr);
-  
+
   if (mpi_rank == 0) {
     std::cout << "Set canyon height-to-width ratio" << std::endl;
   }
 }
 
-void SetFracPervRoadOfTotalRoad(UrbanType urban, int numLandunits, int mpi_rank) {
+void SetFracPervRoadOfTotalRoad(UrbanType urban, int numLandunits,
+                                int mpi_rank) {
   UrbanErrorCode ierr;
 
-  double *fracPervRoadOfTotalRoad = AllocateArray(numLandunits, "fracPervRoadOfTotalRoad");
+  double *fracPervRoadOfTotalRoad =
+      AllocateArray(numLandunits, "fracPervRoadOfTotalRoad");
   for (int i = 0; i < numLandunits; ++i) {
     fracPervRoadOfTotalRoad[i] = 0.16666667163372040;
   }
-  UrbanCall(UrbanSetFracPervRoadOfTotalRoad(urban, fracPervRoadOfTotalRoad, numLandunits, &ierr), &ierr);
+  UrbanCall(UrbanSetFracPervRoadOfTotalRoad(urban, fracPervRoadOfTotalRoad,
+                                            numLandunits, &ierr),
+            &ierr);
   free(fracPervRoadOfTotalRoad);
-  
+
   if (mpi_rank == 0) {
     std::cout << "Set fraction of pervious road w.r.t. total road" << std::endl;
   }
@@ -62,7 +66,7 @@ void SetHeightParameters(UrbanType urban, int numLandunits, int mpi_rank) {
 
   // Height parameter default values (in meters)
   const double FORC_HGT_T_DEFAULT = 144.44377627618979;
-  const double FORC_HGT_U_DEFAULT = 144.44377627618979;  // Same as T
+  const double FORC_HGT_U_DEFAULT = 144.44377627618979; // Same as T
   const double Z_D_TOWN_DEFAULT = 113.96331622200367;
   const double Z_0_TOWN_DEFAULT = 0.48046005418613641;
   const double HT_ROOF_DEFAULT = 120.0;
@@ -89,19 +93,26 @@ void SetHeightParameters(UrbanType urban, int numLandunits, int mpi_rank) {
   UrbanCall(UrbanSetZDTown(urban, zDTown, numLandunits, &ierr), &ierr);
   UrbanCall(UrbanSetZ0Town(urban, z0Town, numLandunits, &ierr), &ierr);
   UrbanCall(UrbanSetHtRoof(urban, htRoof, numLandunits, &ierr), &ierr);
-  UrbanCall(UrbanSetWindHgtCanyon(urban, windHgtCanyon, numLandunits, &ierr), &ierr);
+  UrbanCall(UrbanSetWindHgtCanyon(urban, windHgtCanyon, numLandunits, &ierr),
+            &ierr);
 
-  double *heightArrays[] = {forcHgtT, forcHgtU, zDTown, z0Town, htRoof, windHgtCanyon};
+  double *heightArrays[] = {forcHgtT, forcHgtU, zDTown,
+                            z0Town,   htRoof,   windHgtCanyon};
   FreeArrays(heightArrays, 6);
 
   if (mpi_rank == 0) {
     std::cout << "Set height parameters:" << std::endl;
-    std::cout << "  Forcing height (T): " << FORC_HGT_T_DEFAULT << " m" << std::endl;
-    std::cout << "  Forcing height (U): " << FORC_HGT_U_DEFAULT << " m" << std::endl;
-    std::cout << "  Zero displacement (town): " << Z_D_TOWN_DEFAULT << " m" << std::endl;
-    std::cout << "  Roughness length (town): " << Z_0_TOWN_DEFAULT << " m" << std::endl;
+    std::cout << "  Forcing height (T): " << FORC_HGT_T_DEFAULT << " m"
+              << std::endl;
+    std::cout << "  Forcing height (U): " << FORC_HGT_U_DEFAULT << " m"
+              << std::endl;
+    std::cout << "  Zero displacement (town): " << Z_D_TOWN_DEFAULT << " m"
+              << std::endl;
+    std::cout << "  Roughness length (town): " << Z_0_TOWN_DEFAULT << " m"
+              << std::endl;
     std::cout << "  Roof height: " << HT_ROOF_DEFAULT << " m" << std::endl;
-    std::cout << "  Wind height (canyon): " << WIND_HGT_CANYON_DEFAULT << " m" << std::endl;
+    std::cout << "  Wind height (canyon): " << WIND_HGT_CANYON_DEFAULT << " m"
+              << std::endl;
   }
 }
 
@@ -116,7 +127,7 @@ void SetWtRoof(UrbanType urban, int numLandunits, int mpi_rank) {
   }
   UrbanCall(UrbanSetWtRoof(urban, wtRoof, numLandunits, &ierr), &ierr);
   free(wtRoof);
-  
+
   if (mpi_rank == 0) {
     std::cout << "Set roof weight: " << WT_ROOF_DEFAULT << std::endl;
   }
@@ -125,8 +136,8 @@ void SetWtRoof(UrbanType urban, int numLandunits, int mpi_rank) {
 void SetAlbedo(UrbanType urban, int numLandunits, int mpi_rank) {
   UrbanErrorCode ierr;
 
-  int numBands = 2;    // VIS, NIR
-  int numTypes = 2;    // Direct, Diffuse
+  int numBands = 2; // VIS, NIR
+  int numTypes = 2; // Direct, Diffuse
   int size3D[3] = {numLandunits, numBands, numTypes};
   int totalSize3D = numLandunits * numBands * numTypes;
 
@@ -136,7 +147,8 @@ void SetAlbedo(UrbanType urban, int numLandunits, int mpi_rank) {
   const double ALB_WALL = 0.200000002980232;
 
   double *albedoPerviousRoad = AllocateArray(totalSize3D, "albedoPerviousRoad");
-  double *albedoImperviousRoad = AllocateArray(totalSize3D, "albedoImperviousRoad");
+  double *albedoImperviousRoad =
+      AllocateArray(totalSize3D, "albedoImperviousRoad");
   double *albedoSunlitWall = AllocateArray(totalSize3D, "albedoSunlitWall");
   double *albedoShadedWall = AllocateArray(totalSize3D, "albedoShadedWall");
   double *albedoRoof = AllocateArray(totalSize3D, "albedoRoof");
@@ -154,13 +166,20 @@ void SetAlbedo(UrbanType urban, int numLandunits, int mpi_rank) {
     }
   }
 
-  UrbanCall(UrbanSetAlbedoPerviousRoad(urban, albedoPerviousRoad, size3D, &ierr), &ierr);
-  UrbanCall(UrbanSetAlbedoImperviousRoad(urban, albedoImperviousRoad, size3D, &ierr), &ierr);
-  UrbanCall(UrbanSetAlbedoSunlitWall(urban, albedoSunlitWall, size3D, &ierr), &ierr);
-  UrbanCall(UrbanSetAlbedoShadedWall(urban, albedoShadedWall, size3D, &ierr), &ierr);
+  UrbanCall(
+      UrbanSetAlbedoPerviousRoad(urban, albedoPerviousRoad, size3D, &ierr),
+      &ierr);
+  UrbanCall(
+      UrbanSetAlbedoImperviousRoad(urban, albedoImperviousRoad, size3D, &ierr),
+      &ierr);
+  UrbanCall(UrbanSetAlbedoSunlitWall(urban, albedoSunlitWall, size3D, &ierr),
+            &ierr);
+  UrbanCall(UrbanSetAlbedoShadedWall(urban, albedoShadedWall, size3D, &ierr),
+            &ierr);
   UrbanCall(UrbanSetAlbedoRoof(urban, albedoRoof, size3D, &ierr), &ierr);
 
-  double *albedoArrays[] = {albedoPerviousRoad, albedoImperviousRoad, albedoSunlitWall, albedoShadedWall, albedoRoof};
+  double *albedoArrays[] = {albedoPerviousRoad, albedoImperviousRoad,
+                            albedoSunlitWall, albedoShadedWall, albedoRoof};
   FreeArrays(albedoArrays, 5);
 
   if (mpi_rank == 0) {
@@ -171,8 +190,10 @@ void SetAlbedo(UrbanType urban, int numLandunits, int mpi_rank) {
 void SetEmissivity(UrbanType urban, int numLandunits, int mpi_rank) {
   UrbanErrorCode ierr;
 
-  double *emissivityPerviousRoad = AllocateArray(numLandunits, "emissivityPerviousRoad");
-  double *emissivityImperviousRoad = AllocateArray(numLandunits, "emissivityImperviousRoad");
+  double *emissivityPerviousRoad =
+      AllocateArray(numLandunits, "emissivityPerviousRoad");
+  double *emissivityImperviousRoad =
+      AllocateArray(numLandunits, "emissivityImperviousRoad");
   double *emissivityWall = AllocateArray(numLandunits, "emissivityWall");
   double *emissivityRoof = AllocateArray(numLandunits, "emissivityRoof");
 
@@ -188,12 +209,20 @@ void SetEmissivity(UrbanType urban, int numLandunits, int mpi_rank) {
     emissivityRoof[i] = EMISS_ROOF;
   }
 
-  UrbanCall(UrbanSetEmissivityPerviousRoad(urban, emissivityPerviousRoad, numLandunits, &ierr), &ierr);
-  UrbanCall(UrbanSetEmissivityImperviousRoad(urban, emissivityImperviousRoad, numLandunits, &ierr), &ierr);
-  UrbanCall(UrbanSetEmissivityWall(urban, emissivityWall, numLandunits, &ierr), &ierr);
-  UrbanCall(UrbanSetEmissivityRoof(urban, emissivityRoof, numLandunits, &ierr), &ierr);
+  UrbanCall(UrbanSetEmissivityPerviousRoad(urban, emissivityPerviousRoad,
+                                           numLandunits, &ierr),
+            &ierr);
+  UrbanCall(UrbanSetEmissivityImperviousRoad(urban, emissivityImperviousRoad,
+                                             numLandunits, &ierr),
+            &ierr);
+  UrbanCall(UrbanSetEmissivityWall(urban, emissivityWall, numLandunits, &ierr),
+            &ierr);
+  UrbanCall(UrbanSetEmissivityRoof(urban, emissivityRoof, numLandunits, &ierr),
+            &ierr);
 
-  double *emissivityArrays[] = {emissivityPerviousRoad, emissivityImperviousRoad, emissivityWall, emissivityRoof};
+  double *emissivityArrays[] = {emissivityPerviousRoad,
+                                emissivityImperviousRoad, emissivityWall,
+                                emissivityRoof};
   FreeArrays(emissivityArrays, 4);
 
   if (mpi_rank == 0) {
@@ -201,7 +230,8 @@ void SetEmissivity(UrbanType urban, int numLandunits, int mpi_rank) {
   }
 }
 
-void SetNumberOfActiveLayersImperviousRoad(UrbanType urban, int numLandunits, int mpi_rank) {
+void SetNumberOfActiveLayersImperviousRoad(UrbanType urban, int numLandunits,
+                                           int mpi_rank) {
   UrbanErrorCode ierr;
 
   // Number of active layers for each urban density class
@@ -211,13 +241,18 @@ void SetNumberOfActiveLayersImperviousRoad(UrbanType urban, int numLandunits, in
   double *numActiveLayers = AllocateArray(numLandunits, "numActiveLayers");
   for (int i = 0; i < numLandunits; ++i) {
     const int urban_density_class = i % NUM_URBAN_DENSITY_CLASSES;
-    numActiveLayers[i] = static_cast<double>(nlevImproadClasses[urban_density_class]);
+    numActiveLayers[i] =
+        static_cast<double>(nlevImproadClasses[urban_density_class]);
   }
-  UrbanCall(UrbanSetNumberOfActiveLayersImperviousRoad(urban, numActiveLayers, numLandunits, &ierr), &ierr);
+  UrbanCall(UrbanSetNumberOfActiveLayersImperviousRoad(urban, numActiveLayers,
+                                                       numLandunits, &ierr),
+            &ierr);
   free(numActiveLayers);
-  
+
   if (mpi_rank == 0) {
-    std::cout << "Set number of active layers for impervious road (3, 2, 2 for density classes)" << std::endl;
+    std::cout << "Set number of active layers for impervious road (3, 2, 2 for "
+                 "density classes)"
+              << std::endl;
   }
 }
 
@@ -235,41 +270,40 @@ void SetThermalConductivity(UrbanType urban, int numLandunits, int mpi_rank) {
   double *tkWall = AllocateArray(totalSizeUrban, "tkWall");
   double *tkRoof = AllocateArray(totalSizeUrban, "tkRoof");
 
-  // Thermal conductivity values for road (15 levels) across NUM_URBAN_DENSITY_CLASSES urban density classes
-  // [layer][urban_density_class]: 0=Tall Building District, 1=High Density, 2=Medium Density
-  // Active layers use specified values, inactive layers use bedrock thermal conductivity (3.0 W/m-K)
-  const double TK_BEDROCK = 3.0;  // thermal conductivity of bedrock [W/m-K]
+  // Thermal conductivity values for road (15 levels) across
+  // NUM_URBAN_DENSITY_CLASSES urban density classes
+  // [layer][urban_density_class]: 0=Tall Building District, 1=High Density,
+  // 2=Medium Density Active layers use specified values, inactive layers use
+  // bedrock thermal conductivity (3.0 W/m-K)
+  const double TK_BEDROCK = 3.0; // thermal conductivity of bedrock [W/m-K]
   double tkRoadLevels[NUM_ROAD_LEVELS][NUM_URBAN_DENSITY_CLASSES] = {
-    {1.8999999761581421, 1.6699999570846558, 1.6699999570846558},
-    {0.56000000238418579, 0.56000000238418579, 0.56000000238418579},
-    {0.36000001430511475, 0.21664454245689402, 0.21664454245689402},
-    {0.21572236500511191, 0.21572236500511191, 0.21572236500511191},
-    {0.21389214262493184, 0.21389214262493184, 0.21389214262493184},
-    {0.21208052418425166, 0.21208052418425166, 0.21208052418425166},
-    {0.21028722745802339, 0.21028722745802339, 0.21028722745802339},
-    {0.21028722745802339, 0.21028722745802339, 0.21028722745802339},
-    {0.21298402568603625, 0.21298402568603625, 0.21298402568603625},
-    {0.21664454245689402, 0.21664454245689402, 0.21664454245689402},
-    {TK_BEDROCK, TK_BEDROCK, TK_BEDROCK},
-    {TK_BEDROCK, TK_BEDROCK, TK_BEDROCK},
-    {TK_BEDROCK, TK_BEDROCK, TK_BEDROCK},
-    {TK_BEDROCK, TK_BEDROCK, TK_BEDROCK},
-    {TK_BEDROCK, TK_BEDROCK, TK_BEDROCK}
-  };
+      {1.8999999761581421, 1.6699999570846558, 1.6699999570846558},
+      {0.56000000238418579, 0.56000000238418579, 0.56000000238418579},
+      {0.36000001430511475, 0.21664454245689402, 0.21664454245689402},
+      {0.21572236500511191, 0.21572236500511191, 0.21572236500511191},
+      {0.21389214262493184, 0.21389214262493184, 0.21389214262493184},
+      {0.21208052418425166, 0.21208052418425166, 0.21208052418425166},
+      {0.21028722745802339, 0.21028722745802339, 0.21028722745802339},
+      {0.21028722745802339, 0.21028722745802339, 0.21028722745802339},
+      {0.21298402568603625, 0.21298402568603625, 0.21298402568603625},
+      {0.21664454245689402, 0.21664454245689402, 0.21664454245689402},
+      {TK_BEDROCK, TK_BEDROCK, TK_BEDROCK},
+      {TK_BEDROCK, TK_BEDROCK, TK_BEDROCK},
+      {TK_BEDROCK, TK_BEDROCK, TK_BEDROCK},
+      {TK_BEDROCK, TK_BEDROCK, TK_BEDROCK},
+      {TK_BEDROCK, TK_BEDROCK, TK_BEDROCK}};
   double tkWallLevels[NUM_URBAN_LEVELS][NUM_URBAN_DENSITY_CLASSES] = {
-    {1.44716906547546, 1.06582415103912, 0.970157384872437},
-    {1.44716906547546, 1.06582415103912, 0.970157384872437},
-    {1.44716906547546, 1.06582415103912, 0.970157384872437},
-    {1.44716906547546, 1.06582415103912, 0.970157384872437},
-    {1.44716906547546, 1.06582415103912, 0.970157384872437}
-  };
+      {1.44716906547546, 1.06582415103912, 0.970157384872437},
+      {1.44716906547546, 1.06582415103912, 0.970157384872437},
+      {1.44716906547546, 1.06582415103912, 0.970157384872437},
+      {1.44716906547546, 1.06582415103912, 0.970157384872437},
+      {1.44716906547546, 1.06582415103912, 0.970157384872437}};
   double tkRoofLevels[NUM_URBAN_LEVELS][NUM_URBAN_DENSITY_CLASSES] = {
-    {0.503093481063843, 0.094768725335598, 0.127733826637268},
-    {0.503093481063843, 0.094768725335598, 0.127733826637268},
-    {0.503093481063843, 0.094768725335598, 0.127733826637268},
-    {0.503093481063843, 0.094768725335598, 0.127733826637268},
-    {0.503093481063843, 0.094768725335598, 0.127733826637268}
-  };
+      {0.503093481063843, 0.094768725335598, 0.127733826637268},
+      {0.503093481063843, 0.094768725335598, 0.127733826637268},
+      {0.503093481063843, 0.094768725335598, 0.127733826637268},
+      {0.503093481063843, 0.094768725335598, 0.127733826637268},
+      {0.503093481063843, 0.094768725335598, 0.127733826637268}};
 
   // Fill road array
   int idx = 0;
@@ -292,15 +326,19 @@ void SetThermalConductivity(UrbanType urban, int numLandunits, int mpi_rank) {
     }
   }
 
-  UrbanCall(UrbanSetThermalConductivityRoad(urban, tkRoad, size2D_road, &ierr), &ierr);
-  UrbanCall(UrbanSetThermalConductivityWall(urban, tkWall, size2D_urban, &ierr), &ierr);
-  UrbanCall(UrbanSetThermalConductivityRoof(urban, tkRoof, size2D_urban, &ierr), &ierr);
+  UrbanCall(UrbanSetThermalConductivityRoad(urban, tkRoad, size2D_road, &ierr),
+            &ierr);
+  UrbanCall(UrbanSetThermalConductivityWall(urban, tkWall, size2D_urban, &ierr),
+            &ierr);
+  UrbanCall(UrbanSetThermalConductivityRoof(urban, tkRoof, size2D_urban, &ierr),
+            &ierr);
 
   double *tkArrays[] = {tkRoad, tkWall, tkRoof};
   FreeArrays(tkArrays, 3);
 
   if (mpi_rank == 0) {
-    std::cout << "Set thermal conductivity values for all surfaces" << std::endl;
+    std::cout << "Set thermal conductivity values for all surfaces"
+              << std::endl;
   }
 }
 
@@ -318,41 +356,40 @@ void SetHeatCapacity(UrbanType urban, int numLandunits, int mpi_rank) {
   double *cvWall = AllocateArray(totalSizeUrban, "cvWall");
   double *cvRoof = AllocateArray(totalSizeUrban, "cvRoof");
 
-  // Heat capacity values for road (15 levels) across NUM_URBAN_DENSITY_CLASSES urban density classes
-  // [layer][urban_density_class]: 0=Tall Building District, 1=High Density, 2=Medium Density
-  // Active layers use specified values, inactive layers use bedrock heat capacity (2.0e6 J/m^3/K)
-  const double CV_BEDROCK = 2.0e6;  // heat capacity of bedrock [J/m^3/K]
+  // Heat capacity values for road (15 levels) across NUM_URBAN_DENSITY_CLASSES
+  // urban density classes [layer][urban_density_class]: 0=Tall Building
+  // District, 1=High Density, 2=Medium Density Active layers use specified
+  // values, inactive layers use bedrock heat capacity (2.0e6 J/m^3/K)
+  const double CV_BEDROCK = 2.0e6; // heat capacity of bedrock [J/m^3/K]
   double cvRoadLevels[NUM_ROAD_LEVELS][NUM_URBAN_DENSITY_CLASSES] = {
-    {2100000.0, 2060470.625, 2060470.625},
-    {1773000.0, 1712294.75, 1712294.75},
-    {1545600.0, CV_BEDROCK, CV_BEDROCK},  // Layer 2: only active for density class 0
-    {CV_BEDROCK, CV_BEDROCK, CV_BEDROCK},  // Remaining layers use bedrock
-    {CV_BEDROCK, CV_BEDROCK, CV_BEDROCK},
-    {CV_BEDROCK, CV_BEDROCK, CV_BEDROCK},
-    {CV_BEDROCK, CV_BEDROCK, CV_BEDROCK},
-    {CV_BEDROCK, CV_BEDROCK, CV_BEDROCK},
-    {CV_BEDROCK, CV_BEDROCK, CV_BEDROCK},
-    {CV_BEDROCK, CV_BEDROCK, CV_BEDROCK},
-    {CV_BEDROCK, CV_BEDROCK, CV_BEDROCK},
-    {CV_BEDROCK, CV_BEDROCK, CV_BEDROCK},
-    {CV_BEDROCK, CV_BEDROCK, CV_BEDROCK},
-    {CV_BEDROCK, CV_BEDROCK, CV_BEDROCK},
-    {CV_BEDROCK, CV_BEDROCK, CV_BEDROCK}
-  };
+      {2100000.0, 2060470.625, 2060470.625},
+      {1773000.0, 1712294.75, 1712294.75},
+      {1545600.0, CV_BEDROCK, CV_BEDROCK},  // Layer 2: only active for density
+                                            // class 0
+      {CV_BEDROCK, CV_BEDROCK, CV_BEDROCK}, // Remaining layers use bedrock
+      {CV_BEDROCK, CV_BEDROCK, CV_BEDROCK},
+      {CV_BEDROCK, CV_BEDROCK, CV_BEDROCK},
+      {CV_BEDROCK, CV_BEDROCK, CV_BEDROCK},
+      {CV_BEDROCK, CV_BEDROCK, CV_BEDROCK},
+      {CV_BEDROCK, CV_BEDROCK, CV_BEDROCK},
+      {CV_BEDROCK, CV_BEDROCK, CV_BEDROCK},
+      {CV_BEDROCK, CV_BEDROCK, CV_BEDROCK},
+      {CV_BEDROCK, CV_BEDROCK, CV_BEDROCK},
+      {CV_BEDROCK, CV_BEDROCK, CV_BEDROCK},
+      {CV_BEDROCK, CV_BEDROCK, CV_BEDROCK},
+      {CV_BEDROCK, CV_BEDROCK, CV_BEDROCK}};
   double cvWallLevels[NUM_URBAN_LEVELS][NUM_URBAN_DENSITY_CLASSES] = {
-    {1079394.75, 957632.8125, 899827.1875},
-    {1079394.75, 957632.8125, 899827.1875},
-    {1079394.75, 957632.8125, 899827.1875},
-    {1079394.75, 957632.8125, 899827.1875},
-    {1079394.75, 957632.8125, 899827.1875}
-  };
+      {1079394.75, 957632.8125, 899827.1875},
+      {1079394.75, 957632.8125, 899827.1875},
+      {1079394.75, 957632.8125, 899827.1875},
+      {1079394.75, 957632.8125, 899827.1875},
+      {1079394.75, 957632.8125, 899827.1875}};
   double cvRoofLevels[NUM_URBAN_LEVELS][NUM_URBAN_DENSITY_CLASSES] = {
-    {570998.0, 646213.375, 862451.375},
-    {570998.0, 646213.375, 862451.375},
-    {570998.0, 646213.375, 862451.375},
-    {570998.0, 646213.375, 862451.375},
-    {570998.0, 646213.375, 862451.375}
-  };
+      {570998.0, 646213.375, 862451.375},
+      {570998.0, 646213.375, 862451.375},
+      {570998.0, 646213.375, 862451.375},
+      {570998.0, 646213.375, 862451.375},
+      {570998.0, 646213.375, 862451.375}};
 
   // Fill road array
   int idx = 0;
@@ -376,8 +413,10 @@ void SetHeatCapacity(UrbanType urban, int numLandunits, int mpi_rank) {
   }
 
   UrbanCall(UrbanSetHeatCapacityRoad(urban, cvRoad, size2D_road, &ierr), &ierr);
-  UrbanCall(UrbanSetHeatCapacityWall(urban, cvWall, size2D_urban, &ierr), &ierr);
-  UrbanCall(UrbanSetHeatCapacityRoof(urban, cvRoof, size2D_urban, &ierr), &ierr);
+  UrbanCall(UrbanSetHeatCapacityWall(urban, cvWall, size2D_urban, &ierr),
+            &ierr);
+  UrbanCall(UrbanSetHeatCapacityRoof(urban, cvRoof, size2D_urban, &ierr),
+            &ierr);
 
   double *cvArrays[] = {cvRoad, cvWall, cvRoof};
   FreeArrays(cvArrays, 3);
@@ -399,11 +438,20 @@ void SetSoilProperties(UrbanType urban, int numLandunits, int mpi_rank) {
   double *organic = AllocateArray(totalSize, "organic");
 
   // Soil property values for first 10 layers (layers 11-15 use layer 10 values)
-  double sandLevels[10] = {46.0, 46.0, 44.0, 43.0, 41.0, 39.0, 37.0, 37.0, 40.0, 44.0};
-  double clayLevels[10] = {35.0, 35.0, 37.0, 39.0, 42.0, 44.0, 46.0, 45.0, 41.0, 42.0};
-  double organicLevels[10] = {25.2229820327902, 25.700711396596, 22.091324741929, 18.1150405358844,
-                              14.5211498497041, 11.4998502546828, 9.04501744160207, 7.08594278159189,
-                              0.0, 0.0};
+  double sandLevels[10] = {46.0, 46.0, 44.0, 43.0, 41.0,
+                           39.0, 37.0, 37.0, 40.0, 44.0};
+  double clayLevels[10] = {35.0, 35.0, 37.0, 39.0, 42.0,
+                           44.0, 46.0, 45.0, 41.0, 42.0};
+  double organicLevels[10] = {25.2229820327902,
+                              25.700711396596,
+                              22.091324741929,
+                              18.1150405358844,
+                              14.5211498497041,
+                              11.4998502546828,
+                              9.04501744160207,
+                              7.08594278159189,
+                              0.0,
+                              0.0};
   int idx = 0;
   for (int layer = 0; layer < NUM_SOIL_LEVELS; ++layer) {
     for (int i = 0; i < numLandunits; ++i) {
@@ -424,7 +472,8 @@ void SetSoilProperties(UrbanType urban, int numLandunits, int mpi_rank) {
   FreeArrays(soilArrays, 3);
 
   if (mpi_rank == 0) {
-    std::cout << "Set soil properties for pervious road (sand, clay, organic)" << std::endl;
+    std::cout << "Set soil properties for pervious road (sand, clay, organic)"
+              << std::endl;
   }
 }
 
@@ -456,8 +505,8 @@ void SetAtmosphericForcing(UrbanType urban, int numLandunits, int mpi_rank) {
   double *atmFracSnow = AllocateArray(numLandunits, "atmFracSnow");
   double *atmLongwave = AllocateArray(numLandunits, "atmLongwave");
 
-  int numBands = 2;    // VIS, NIR
-  int numTypes = 2;    // Direct, Diffuse
+  int numBands = 2; // VIS, NIR
+  int numTypes = 2; // Direct, Diffuse
   int size3D[3] = {numLandunits, numBands, numTypes};
   int totalSize3D = numLandunits * numBands * numTypes;
   double *atmShortwave = AllocateArray(totalSize3D, "atmShortwave");
@@ -489,14 +538,17 @@ void SetAtmosphericForcing(UrbanType urban, int numLandunits, int mpi_rank) {
   UrbanCall(UrbanSetAtmWindU(urban, atmWindU, numLandunits, &ierr), &ierr);
   UrbanCall(UrbanSetAtmWindV(urban, atmWindV, numLandunits, &ierr), &ierr);
   UrbanCall(UrbanSetAtmCoszen(urban, atmCoszen, numLandunits, &ierr), &ierr);
-  UrbanCall(UrbanSetAtmFracSnow(urban, atmFracSnow, numLandunits, &ierr), &ierr);
-  UrbanCall(UrbanSetAtmLongwaveDown(urban, atmLongwave, numLandunits, &ierr), &ierr);
-  UrbanCall(UrbanSetAtmShortwaveDown(urban, atmShortwave, size3D, &ierr), &ierr);
+  UrbanCall(UrbanSetAtmFracSnow(urban, atmFracSnow, numLandunits, &ierr),
+            &ierr);
+  UrbanCall(UrbanSetAtmLongwaveDown(urban, atmLongwave, numLandunits, &ierr),
+            &ierr);
+  UrbanCall(UrbanSetAtmShortwaveDown(urban, atmShortwave, size3D, &ierr),
+            &ierr);
 
   // Free arrays
-  double *atmArrays[] = {atmTemp, atmPotTemp, atmRho, atmSpcHumd, atmPress,
-                         atmWindU, atmWindV, atmCoszen, atmFracSnow,
-                         atmLongwave, atmShortwave};
+  double *atmArrays[] = {atmTemp,     atmPotTemp,  atmRho,      atmSpcHumd,
+                         atmPress,    atmWindU,    atmWindV,    atmCoszen,
+                         atmFracSnow, atmLongwave, atmShortwave};
   FreeArrays(atmArrays, 11);
 
   if (mpi_rank == 0) {
@@ -517,8 +569,8 @@ void SetAtmosphericForcing(UrbanType urban, int numLandunits, int mpi_rank) {
 void SetBuildingTemperature(UrbanType urban, int numLandunits, int mpi_rank) {
   UrbanErrorCode ierr;
 
-  const double MIN_TEMP = 285.0;  // K
-  const double MAX_TEMP = 310.0;  // K
+  const double MIN_TEMP = 285.0; // K
+  const double MAX_TEMP = 310.0; // K
 
   double *minTemp = AllocateArray(numLandunits, "minTemp");
   double *maxTemp = AllocateArray(numLandunits, "maxTemp");
@@ -528,8 +580,10 @@ void SetBuildingTemperature(UrbanType urban, int numLandunits, int mpi_rank) {
     maxTemp[i] = MAX_TEMP;
   }
 
-  UrbanCall(UrbanSetBuildingMinTemperature(urban, minTemp, numLandunits, &ierr), &ierr);
-  UrbanCall(UrbanSetBuildingMaxTemperature(urban, maxTemp, numLandunits, &ierr), &ierr);
+  UrbanCall(UrbanSetBuildingMinTemperature(urban, minTemp, numLandunits, &ierr),
+            &ierr);
+  UrbanCall(UrbanSetBuildingMaxTemperature(urban, maxTemp, numLandunits, &ierr),
+            &ierr);
 
   double *tempArrays[] = {minTemp, maxTemp};
   FreeArrays(tempArrays, 2);
@@ -541,8 +595,8 @@ void SetBuildingTemperature(UrbanType urban, int numLandunits, int mpi_rank) {
   }
 
   // Set building thickness parameters
-  const double THICK_WALL = 0.286199986934662;  // m
-  const double THICK_ROOF = 0.217099994421005;  // m
+  const double THICK_WALL = 0.286199986934662; // m
+  const double THICK_ROOF = 0.217099994421005; // m
 
   double *wallThickness = AllocateArray(numLandunits, "wallThickness");
   double *roofThickness = AllocateArray(numLandunits, "roofThickness");
@@ -552,8 +606,12 @@ void SetBuildingTemperature(UrbanType urban, int numLandunits, int mpi_rank) {
     roofThickness[i] = THICK_ROOF;
   }
 
-  UrbanCall(UrbanSetBuildingWallThickness(urban, wallThickness, numLandunits, &ierr), &ierr);
-  UrbanCall(UrbanSetBuildingRoofThickness(urban, roofThickness, numLandunits, &ierr), &ierr);
+  UrbanCall(
+      UrbanSetBuildingWallThickness(urban, wallThickness, numLandunits, &ierr),
+      &ierr);
+  UrbanCall(
+      UrbanSetBuildingRoofThickness(urban, roofThickness, numLandunits, &ierr),
+      &ierr);
 
   double *thicknessArrays[] = {wallThickness, roofThickness};
   FreeArrays(thicknessArrays, 2);
@@ -602,7 +660,7 @@ int main(int argc, char *argv[]) {
     UrbanCall(UrbanCreate(numLandunits, &urban, &ierr), &ierr);
 
     if (mpi_rank == 0) {
-      std::cout << "Successfully created Urban object with " << numLandunits 
+      std::cout << "Successfully created Urban object with " << numLandunits
                 << " landunits" << std::endl;
     }
 
@@ -623,11 +681,9 @@ int main(int argc, char *argv[]) {
 
     // Destroy Urban object
     UrbanCall(UrbanDestroy(&urban, &ierr), &ierr);
-
   }
 
   Kokkos::finalize();
   MPI_Finalize();
   return 0;
-
 }
