@@ -9,8 +9,7 @@
 
 namespace URBANXX {
 
-// Crank-Nicolson factor (same value as CRANK_NICONSON_FACTOR = 0.5)
-// Used in building surface boundary condition
+// Crank-Nicolson weighting factor for implicit time-stepping
 constexpr Real CNFAC = 0.5;
 
 // Compute ground net energy flux for a surface
@@ -39,6 +38,9 @@ Real ComputeGroundNetEnergyFluxDerivative(Real cgrnds, Real cgrndl, Real emiss,
 KOKKOS_INLINE_FUNCTION
 void SolveTridiagonal(int n, const Real *a, const Real *b, const Real *c,
                       const Real *r, Real *x) {
+  KOKKOS_ASSERT(n <= NUM_SOIL_LAYERS &&
+                "SolveTridiagonal: n exceeds NUM_SOIL_LAYERS");
+
   // Working arrays for modified coefficients
   Real cp[NUM_SOIL_LAYERS]; // Modified upper diagonal
   Real rp[NUM_SOIL_LAYERS]; // Modified right-hand side
@@ -126,52 +128,45 @@ Solve1DHeatDiffusion(int l, int numLayers, Real dtime, TempView &temp,
 
   r[level] = temp(l, level) +
              fact[level] * (EflxGnet - DEflxGnet_DTemp * temp(l, level) +
-                            CRANK_NICONSON_FACTOR * fn[level]);
+                            CNFAC * fn[level]);
 
   dzp = zc(l, level + 1) - zc(l, level);
   a[level] = 0.0;
-  b[level] = 1.0 +
-             (1.0 - CRANK_NICONSON_FACTOR) * fact[level] *
-                 tkInterface(l, level) / dzp -
+  b[level] = 1.0 + (1.0 - CNFAC) * fact[level] * tkInterface(l, level) / dzp -
              fact[level] * DEflxGnet_DTemp;
-  c[level] = -(1.0 - CRANK_NICONSON_FACTOR) * fact[level] *
-             tkInterface(l, level) / dzp;
+  c[level] = -(1.0 - CNFAC) * fact[level] * tkInterface(l, level) / dzp;
 
   // Internal layers
   for (level = 1; level < numLayers - 1; ++level) {
-    r[level] = temp(l, level) + fact[level] * CRANK_NICONSON_FACTOR *
-                                    (fn[level] - fn[level - 1]);
+    r[level] =
+        temp(l, level) + fact[level] * CNFAC * (fn[level] - fn[level - 1]);
     dzm = zc(l, level) - zc(l, level - 1);
     dzp = zc(l, level + 1) - zc(l, level);
-    a[level] = -(1.0 - CRANK_NICONSON_FACTOR) * fact[level] *
-               tkInterface(l, level - 1) / dzm;
-    b[level] = 1.0 + (1.0 - CRANK_NICONSON_FACTOR) * fact[level] *
+    a[level] = -(1.0 - CNFAC) * fact[level] * tkInterface(l, level - 1) / dzm;
+    b[level] = 1.0 + (1.0 - CNFAC) * fact[level] *
                          (tkInterface(l, level) / dzp +
                           tkInterface(l, level - 1) / dzm);
-    c[level] = -(1.0 - CRANK_NICONSON_FACTOR) * fact[level] *
-               tkInterface(l, level) / dzp;
+    c[level] = -(1.0 - CNFAC) * fact[level] * tkInterface(l, level) / dzp;
   }
 
   // Bottom layer
   level = numLayers - 1;
   dzm = zc(l, level) - zc(l, level - 1);
-  r[level] = temp(l, level) +
-             fact[level] * CRANK_NICONSON_FACTOR * (fn[level] - fn[level - 1]);
-  a[level] = -(1.0 - CRANK_NICONSON_FACTOR) * fact[level] *
-             tkInterface(l, level - 1) / dzm;
+  r[level] = temp(l, level) + fact[level] * CNFAC * (fn[level] - fn[level - 1]);
+  a[level] = -(1.0 - CNFAC) * fact[level] * tkInterface(l, level - 1) / dzm;
 
   if (hasBottomBoundary) {
     // Building surfaces: include coupling to building interior
     dzp = zi(l, level + 1) - zc(l, level);
-    r[level] += (1.0 - CRANK_NICONSON_FACTOR) * fact[level] *
-                tkInterface(l, level) / dzp * bottomBoundaryTemp;
-    b[level] = 1.0 + (1.0 - CRANK_NICONSON_FACTOR) * fact[level] *
+    r[level] += (1.0 - CNFAC) * fact[level] * tkInterface(l, level) / dzp *
+                bottomBoundaryTemp;
+    b[level] = 1.0 + (1.0 - CNFAC) * fact[level] *
                          (tkInterface(l, level - 1) / dzm +
                           tkInterface(l, level) / dzp);
   } else {
     // Road surfaces: zero flux at bottom
-    b[level] = 1.0 + (1.0 - CRANK_NICONSON_FACTOR) * fact[level] *
-                         tkInterface(l, level - 1) / dzm;
+    b[level] =
+        1.0 + (1.0 - CNFAC) * fact[level] * tkInterface(l, level - 1) / dzm;
   }
   c[level] = 0.0;
 
