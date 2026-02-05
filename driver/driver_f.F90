@@ -272,6 +272,7 @@ contains
     integer(c_int) :: status, i, ilandunit, iband, itype, idx
     integer(c_int) :: numBands, numTypes, totalSize3D
     integer(c_int), dimension(3) :: size3D
+    logical(c_bool) :: isLayoutLeft
     real(c_double), allocatable, target :: albedoPerviousRoad(:)
     real(c_double), allocatable, target :: albedoImperviousRoad(:)
     real(c_double), allocatable, target :: albedoSunlitWall(:)
@@ -293,20 +294,41 @@ contains
     allocate(albedoShadedWall(totalSize3D))
     allocate(albedoRoof(totalSize3D))
 
-    ! Fill arrays using same indexing as C: idx = ilandunit * numBands * numTypes + iband * numTypes + itype
-    ! Note: Fortran arrays are 1-indexed, so we adjust accordingly
-    do ilandunit = 0, numLandunits - 1
-      do iband = 0, numBands - 1
-        do itype = 0, numTypes - 1
-          idx = ilandunit * numBands * numTypes + iband * numTypes + itype + 1  ! +1 for Fortran 1-indexing
-          albedoPerviousRoad(idx) = ALB_PERROAD
-          albedoImperviousRoad(idx) = ALB_IMPROAD
-          albedoSunlitWall(idx) = ALB_WALL
-          albedoShadedWall(idx) = ALB_WALL
-          albedoRoof(idx) = ALB_ROOF
+    ! Check Kokkos memory layout
+    isLayoutLeft = UrbanKokkosIsLayoutLeft()
+
+    if (isLayoutLeft) then
+      ! LayoutLeft: First dimension (landunits) varies fastest
+      ! Iterate: itype (outer), iband (middle), landunits (inner)
+      idx = 1
+      do itype = 0, numTypes - 1
+        do iband = 0, numBands - 1
+          do ilandunit = 0, numLandunits - 1
+            albedoPerviousRoad(idx) = ALB_PERROAD
+            albedoImperviousRoad(idx) = ALB_IMPROAD
+            albedoSunlitWall(idx) = ALB_WALL
+            albedoShadedWall(idx) = ALB_WALL
+            albedoRoof(idx) = ALB_ROOF
+            idx = idx + 1
+          end do
         end do
       end do
-    end do
+    else
+      ! LayoutRight: Last dimension (types) varies fastest
+      ! Iterate: landunits (outer), iband (middle), itype (inner)
+      do ilandunit = 0, numLandunits - 1
+        do iband = 0, numBands - 1
+          do itype = 0, numTypes - 1
+            idx = ilandunit * numBands * numTypes + iband * numTypes + itype + 1  ! +1 for Fortran 1-indexing
+            albedoPerviousRoad(idx) = ALB_PERROAD
+            albedoImperviousRoad(idx) = ALB_IMPROAD
+            albedoSunlitWall(idx) = ALB_WALL
+            albedoShadedWall(idx) = ALB_WALL
+            albedoRoof(idx) = ALB_ROOF
+          end do
+        end do
+      end do
+    end if
 
     call UrbanSetAlbedoPerviousRoad(urban, &
       c_loc(albedoPerviousRoad), size3D, status)
@@ -417,25 +439,38 @@ contains
     type(UrbanType), intent(in) :: urban
     integer(c_int), intent(in) :: numLandunits
     integer, intent(in) :: mpi_rank
-    integer(c_int) :: status, i, k, urban_density_class
-    integer(c_int), parameter :: NUM_LEVELS = 5
-    integer(c_int) :: totalSize
-    integer(c_int), dimension(2) :: size2D
+    integer(c_int) :: status, i, k, urban_density_class, idx
+    integer(c_int), parameter :: NUM_ROAD_LEVELS = 15
+    integer(c_int), parameter :: NUM_URBAN_LEVELS = 5
+    integer(c_int) :: totalSizeRoad, totalSizeUrban
+    integer(c_int), dimension(2) :: size2D_road, size2D_urban
     real(c_double), allocatable, target :: tkRoad(:)
     real(c_double), allocatable, target :: tkWall(:)
     real(c_double), allocatable, target :: tkRoof(:)
-    ! Thermal conductivity values for 5 levels across 3 urban density classes
+    logical(c_bool) :: isLayoutLeft
+    ! Thermal conductivity values for road (15 levels) across 3 urban density classes
     ! [layer][urban_density_class]: 0=Tall Building District, 1=High Density, 2=Medium Density
-    real(c_double), dimension(5,3) :: tkRoadLevels
+    real(c_double), parameter :: TK_BEDROCK = 3.0d0  ! thermal conductivity of bedrock [W/m-K]
+    real(c_double), dimension(15,3) :: tkRoadLevels
     real(c_double), dimension(5,3) :: tkWallLevels
     real(c_double), dimension(5,3) :: tkRoofLevels
 
     tkRoadLevels = reshape((/ &
-      1.89999997615814d0, 1.66999995708466d0, 1.66999995708466d0, &
-      0.560000002384186d0, 0.560000002384186d0, 0.560000002384186d0, &
-      0.360000014305115d0, 0.0d0, 0.0d0, &
-      0.0d0, 0.0d0, 0.0d0, &
-      0.0d0, 0.0d0, 0.0d0 /), shape(tkRoadLevels))
+      1.8999999761581421d0, 1.6699999570846558d0, 1.6699999570846558d0, &
+      0.56000000238418579d0, 0.56000000238418579d0, 0.56000000238418579d0, &
+      0.36000001430511475d0, 0.21664454245689402d0, 0.21664454245689402d0, &
+      0.21572236500511191d0, 0.21572236500511191d0, 0.21572236500511191d0, &
+      0.21389214262493184d0, 0.21389214262493184d0, 0.21389214262493184d0, &
+      0.21208052418425166d0, 0.21208052418425166d0, 0.21208052418425166d0, &
+      0.21028722745802339d0, 0.21028722745802339d0, 0.21028722745802339d0, &
+      0.21028722745802339d0, 0.21028722745802339d0, 0.21028722745802339d0, &
+      0.21298402568603625d0, 0.21298402568603625d0, 0.21298402568603625d0, &
+      0.21664454245689402d0, 0.21664454245689402d0, 0.21664454245689402d0, &
+      TK_BEDROCK, TK_BEDROCK, TK_BEDROCK, &
+      TK_BEDROCK, TK_BEDROCK, TK_BEDROCK, &
+      TK_BEDROCK, TK_BEDROCK, TK_BEDROCK, &
+      TK_BEDROCK, TK_BEDROCK, TK_BEDROCK, &
+      TK_BEDROCK, TK_BEDROCK, TK_BEDROCK /), shape(tkRoadLevels))
     
     tkWallLevels = reshape((/ &
       1.44716906547546d0, 1.06582415103912d0, 0.970157384872437d0, &
@@ -451,31 +486,72 @@ contains
       0.503093481063843d0, 0.094768725335598d0, 0.127733826637268d0, &
       0.503093481063843d0, 0.094768725335598d0, 0.127733826637268d0 /), shape(tkRoofLevels))
 
-    totalSize = numLandunits * NUM_LEVELS
-    size2D(1) = numLandunits
-    size2D(2) = NUM_LEVELS
+    totalSizeRoad = numLandunits * NUM_ROAD_LEVELS
+    totalSizeUrban = numLandunits * NUM_URBAN_LEVELS
+    size2D_road(1) = numLandunits
+    size2D_road(2) = NUM_ROAD_LEVELS
+    size2D_urban(1) = numLandunits
+    size2D_urban(2) = NUM_URBAN_LEVELS
 
-    allocate(tkRoad(totalSize))
-    allocate(tkWall(totalSize))
-    allocate(tkRoof(totalSize))
+    allocate(tkRoad(totalSizeRoad))
+    allocate(tkWall(totalSizeUrban))
+    allocate(tkRoof(totalSizeUrban))
 
-    do i = 1, numLandunits
-      urban_density_class = mod(i-1, 3) + 1  ! 1=Tall Building District, 2=High Density, 3=Medium Density
-      do k = 1, NUM_LEVELS
-        tkRoad((i-1) * NUM_LEVELS + k) = tkRoadLevels(k, urban_density_class)
-        tkWall((i-1) * NUM_LEVELS + k) = tkWallLevels(k, urban_density_class)
-        tkRoof((i-1) * NUM_LEVELS + k) = tkRoofLevels(k, urban_density_class)
+    ! Check Kokkos memory layout
+    isLayoutLeft = UrbanKokkosIsLayoutLeft()
+
+    if (isLayoutLeft) then
+      ! LayoutLeft: First dimension (landunits) varies fastest
+      ! Iterate: layer (outer), landunits (inner)
+      idx = 1
+      do k = 1, NUM_ROAD_LEVELS
+        do i = 1, numLandunits
+          urban_density_class = mod(i-1, 3) + 1
+          tkRoad(idx) = tkRoadLevels(k, urban_density_class)
+          idx = idx + 1
+        end do
       end do
-    end do
+
+      idx = 1
+      do k = 1, NUM_URBAN_LEVELS
+        do i = 1, numLandunits
+          urban_density_class = mod(i-1, 3) + 1
+          tkWall(idx) = tkWallLevels(k, urban_density_class)
+          tkRoof(idx) = tkRoofLevels(k, urban_density_class)
+          idx = idx + 1
+        end do
+      end do
+    else
+      ! LayoutRight: Last dimension (layers) varies fastest
+      ! Iterate: landunits (outer), layer (inner)
+      idx = 1
+      do i = 1, numLandunits
+        urban_density_class = mod(i-1, 3) + 1
+        do k = 1, NUM_ROAD_LEVELS
+          tkRoad(idx) = tkRoadLevels(k, urban_density_class)
+          idx = idx + 1
+        end do
+      end do
+
+      idx = 1
+      do i = 1, numLandunits
+        urban_density_class = mod(i-1, 3) + 1
+        do k = 1, NUM_URBAN_LEVELS
+          tkWall(idx) = tkWallLevels(k, urban_density_class)
+          tkRoof(idx) = tkRoofLevels(k, urban_density_class)
+          idx = idx + 1
+        end do
+      end do
+    end if
 
     call UrbanSetThermalConductivityRoad(urban, &
-      c_loc(tkRoad), size2D, status)
+      c_loc(tkRoad), size2D_road, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
     call UrbanSetThermalConductivityWall(urban, &
-      c_loc(tkWall), size2D, status)
+      c_loc(tkWall), size2D_urban, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
     call UrbanSetThermalConductivityRoof(urban, &
-      c_loc(tkRoof), size2D, status)
+      c_loc(tkRoof), size2D_urban, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
 
     if (mpi_rank == 0) then
@@ -491,25 +567,38 @@ contains
     type(UrbanType), intent(in) :: urban
     integer(c_int), intent(in) :: numLandunits
     integer, intent(in) :: mpi_rank
-    integer(c_int) :: status, i, k, urban_density_class
-    integer(c_int), parameter :: NUM_LEVELS = 5
-    integer(c_int) :: totalSize
-    integer(c_int), dimension(2) :: size2D
+    integer(c_int) :: status, i, k, urban_density_class, idx
+    integer(c_int), parameter :: NUM_ROAD_LEVELS = 15
+    integer(c_int), parameter :: NUM_URBAN_LEVELS = 5
+    integer(c_int) :: totalSizeRoad, totalSizeUrban
+    integer(c_int), dimension(2) :: size2D_road, size2D_urban
     real(c_double), allocatable, target :: cvRoad(:)
     real(c_double), allocatable, target :: cvWall(:)
     real(c_double), allocatable, target :: cvRoof(:)
-    ! Heat capacity values for 5 levels across 3 urban density classes
+    logical(c_bool) :: isLayoutLeft
+    ! Heat capacity values for road (15 levels) across 3 urban density classes
     ! [layer][urban_density_class]: 0=Tall Building District, 1=High Density, 2=Medium Density
-    real(c_double), dimension(5,3) :: cvRoadLevels
+    real(c_double), parameter :: CV_BEDROCK = 2.0d6  ! heat capacity of bedrock [J/m^3/K]
+    real(c_double), dimension(15,3) :: cvRoadLevels
     real(c_double), dimension(5,3) :: cvWallLevels
     real(c_double), dimension(5,3) :: cvRoofLevels
 
     cvRoadLevels = reshape((/ &
       2100000.0d0, 2060470.625d0, 2060470.625d0, &
       1773000.0d0, 1712294.75d0, 1712294.75d0, &
-      1545600.0d0, 0.0d0, 0.0d0, &
-      0.0d0, 0.0d0, 0.0d0, &
-      0.0d0, 0.0d0, 0.0d0 /), shape(cvRoadLevels))
+      1545600.0d0, CV_BEDROCK, CV_BEDROCK, &
+      CV_BEDROCK, CV_BEDROCK, CV_BEDROCK, &
+      CV_BEDROCK, CV_BEDROCK, CV_BEDROCK, &
+      CV_BEDROCK, CV_BEDROCK, CV_BEDROCK, &
+      CV_BEDROCK, CV_BEDROCK, CV_BEDROCK, &
+      CV_BEDROCK, CV_BEDROCK, CV_BEDROCK, &
+      CV_BEDROCK, CV_BEDROCK, CV_BEDROCK, &
+      CV_BEDROCK, CV_BEDROCK, CV_BEDROCK, &
+      CV_BEDROCK, CV_BEDROCK, CV_BEDROCK, &
+      CV_BEDROCK, CV_BEDROCK, CV_BEDROCK, &
+      CV_BEDROCK, CV_BEDROCK, CV_BEDROCK, &
+      CV_BEDROCK, CV_BEDROCK, CV_BEDROCK, &
+      CV_BEDROCK, CV_BEDROCK, CV_BEDROCK /), shape(cvRoadLevels))
     
     cvWallLevels = reshape((/ &
       1079394.75d0, 957632.8125d0, 899827.1875d0, &
@@ -525,31 +614,72 @@ contains
       570998.0d0, 646213.375d0, 862451.375d0, &
       570998.0d0, 646213.375d0, 862451.375d0 /), shape(cvRoofLevels))
 
-    totalSize = numLandunits * NUM_LEVELS
-    size2D(1) = numLandunits
-    size2D(2) = NUM_LEVELS
+    totalSizeRoad = numLandunits * NUM_ROAD_LEVELS
+    totalSizeUrban = numLandunits * NUM_URBAN_LEVELS
+    size2D_road(1) = numLandunits
+    size2D_road(2) = NUM_ROAD_LEVELS
+    size2D_urban(1) = numLandunits
+    size2D_urban(2) = NUM_URBAN_LEVELS
 
-    allocate(cvRoad(totalSize))
-    allocate(cvWall(totalSize))
-    allocate(cvRoof(totalSize))
+    allocate(cvRoad(totalSizeRoad))
+    allocate(cvWall(totalSizeUrban))
+    allocate(cvRoof(totalSizeUrban))
 
-    do i = 1, numLandunits
-      urban_density_class = mod(i-1, 3) + 1  ! 1=Tall Building District, 2=High Density, 3=Medium Density
-      do k = 1, NUM_LEVELS
-        cvRoad((i-1) * NUM_LEVELS + k) = cvRoadLevels(k, urban_density_class)
-        cvWall((i-1) * NUM_LEVELS + k) = cvWallLevels(k, urban_density_class)
-        cvRoof((i-1) * NUM_LEVELS + k) = cvRoofLevels(k, urban_density_class)
+    ! Check Kokkos memory layout
+    isLayoutLeft = UrbanKokkosIsLayoutLeft()
+
+    if (isLayoutLeft) then
+      ! LayoutLeft: First dimension (landunits) varies fastest
+      ! Iterate: layer (outer), landunits (inner)
+      idx = 1
+      do k = 1, NUM_ROAD_LEVELS
+        do i = 1, numLandunits
+          urban_density_class = mod(i-1, 3) + 1
+          cvRoad(idx) = cvRoadLevels(k, urban_density_class)
+          idx = idx + 1
+        end do
       end do
-    end do
+
+      idx = 1
+      do k = 1, NUM_URBAN_LEVELS
+        do i = 1, numLandunits
+          urban_density_class = mod(i-1, 3) + 1
+          cvWall(idx) = cvWallLevels(k, urban_density_class)
+          cvRoof(idx) = cvRoofLevels(k, urban_density_class)
+          idx = idx + 1
+        end do
+      end do
+    else
+      ! LayoutRight: Last dimension (layers) varies fastest
+      ! Iterate: landunits (outer), layer (inner)
+      idx = 1
+      do i = 1, numLandunits
+        urban_density_class = mod(i-1, 3) + 1
+        do k = 1, NUM_ROAD_LEVELS
+          cvRoad(idx) = cvRoadLevels(k, urban_density_class)
+          idx = idx + 1
+        end do
+      end do
+
+      idx = 1
+      do i = 1, numLandunits
+        urban_density_class = mod(i-1, 3) + 1
+        do k = 1, NUM_URBAN_LEVELS
+          cvWall(idx) = cvWallLevels(k, urban_density_class)
+          cvRoof(idx) = cvRoofLevels(k, urban_density_class)
+          idx = idx + 1
+        end do
+      end do
+    end if
 
     call UrbanSetHeatCapacityRoad(urban, &
-      c_loc(cvRoad), size2D, status)
+      c_loc(cvRoad), size2D_road, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
     call UrbanSetHeatCapacityWall(urban, &
-      c_loc(cvWall), size2D, status)
+      c_loc(cvWall), size2D_urban, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
     call UrbanSetHeatCapacityRoof(urban, &
-      c_loc(cvRoof), size2D, status)
+      c_loc(cvRoof), size2D_urban, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
 
     if (mpi_rank == 0) then
@@ -565,10 +695,11 @@ contains
     type(UrbanType), intent(in) :: urban
     integer(c_int), intent(in) :: numLandunits
     integer, intent(in) :: mpi_rank
-    integer(c_int) :: status, i, k, srcLayer
+    integer(c_int) :: status, i, k, srcLayer, idx
     integer(c_int), parameter :: NUM_SOIL_LEVELS = 15
     integer(c_int) :: totalSize
     integer(c_int), dimension(2) :: size2D
+    logical(c_bool) :: isLayoutLeft
     real(c_double), allocatable, target :: sand(:)
     real(c_double), allocatable, target :: clay(:)
     real(c_double), allocatable, target :: organic(:)
@@ -591,19 +722,44 @@ contains
     allocate(clay(totalSize))
     allocate(organic(totalSize))
 
-    do i = 1, numLandunits
+    ! Check Kokkos memory layout
+    isLayoutLeft = UrbanKokkosIsLayoutLeft()
+
+    if (isLayoutLeft) then
+      ! LayoutLeft: First dimension (landunits) varies fastest
+      ! Iterate: layer (outer), landunits (inner)
+      idx = 1
       do k = 1, NUM_SOIL_LEVELS
-        ! Use layer 10 values for layers 11-15
-        if (k <= 10) then
-          srcLayer = k
-        else
-          srcLayer = 10
-        end if
-        sand((i-1) * NUM_SOIL_LEVELS + k) = sandLevels(srcLayer)
-        clay((i-1) * NUM_SOIL_LEVELS + k) = clayLevels(srcLayer)
-        organic((i-1) * NUM_SOIL_LEVELS + k) = organicLevels(srcLayer)
+        do i = 1, numLandunits
+          ! Use layer 10 values for layers 11-15
+          if (k <= 10) then
+            srcLayer = k
+          else
+            srcLayer = 10
+          end if
+          sand(idx) = sandLevels(srcLayer)
+          clay(idx) = clayLevels(srcLayer)
+          organic(idx) = organicLevels(srcLayer)
+          idx = idx + 1
+        end do
       end do
-    end do
+    else
+      ! LayoutRight: Last dimension (layers) varies fastest
+      ! Iterate: landunits (outer), layer (inner)
+      do i = 1, numLandunits
+        do k = 1, NUM_SOIL_LEVELS
+          ! Use layer 10 values for layers 11-15
+          if (k <= 10) then
+            srcLayer = k
+          else
+            srcLayer = 10
+          end if
+          sand((i-1) * NUM_SOIL_LEVELS + k) = sandLevels(srcLayer)
+          clay((i-1) * NUM_SOIL_LEVELS + k) = clayLevels(srcLayer)
+          organic((i-1) * NUM_SOIL_LEVELS + k) = organicLevels(srcLayer)
+        end do
+      end do
+    end if
 
     call UrbanSetSandPerviousRoad(urban, c_loc(sand), size2D, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
@@ -625,9 +781,10 @@ contains
     type(UrbanType), intent(in) :: urban
     integer(c_int), intent(in) :: numLandunits
     integer, intent(in) :: mpi_rank
-    integer(c_int) :: status, i
+    integer(c_int) :: status, i, iband, itype, idx
     integer(c_int) :: numBands, numTypes, totalSize3D
     integer(c_int), dimension(3) :: size3D
+    logical(c_bool) :: isLayoutLeft
     real(c_double), allocatable, target :: atmTemp(:)
     real(c_double), allocatable, target :: atmPotTemp(:)
     real(c_double), allocatable, target :: atmRho(:)
@@ -685,9 +842,28 @@ contains
       atmLongwave(i) = LWDOWN
     end do
 
-    do i = 1, totalSize3D
-      atmShortwave(i) = SWDOWN
-    end do
+    ! Check Kokkos memory layout
+    isLayoutLeft = UrbanKokkosIsLayoutLeft()
+
+    if (isLayoutLeft) then
+      ! LayoutLeft: First dimension (landunits) varies fastest
+      ! Iterate: itype (outer), iband (middle), landunits (inner)
+      idx = 1
+      do itype = 1, numTypes
+        do iband = 1, numBands
+          do i = 1, numLandunits
+            atmShortwave(idx) = SWDOWN
+            idx = idx + 1
+          end do
+        end do
+      end do
+    else
+      ! LayoutRight: Last dimension (types) varies fastest
+      ! Iterate: landunits (outer), iband (middle), itype (inner)
+      do i = 1, totalSize3D
+        atmShortwave(i) = SWDOWN
+      end do
+    end if
 
     ! Set atmospheric forcing
     call UrbanSetAtmTemp(urban, c_loc(atmTemp), numLandunits, status)
