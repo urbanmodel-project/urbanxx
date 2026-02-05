@@ -260,7 +260,6 @@ void ComputeNetLongwave(URBANXX::_p_UrbanType &urban) {
   auto &tempPerRoad = urban.perviousRoad.EffectiveSurfTemp;
 
   // Access net longwave radiation fields (to be updated)
-  auto &netLwRoof = urban.roof.NetLongRad;
   auto &netLwSunlitWall = urban.sunlitWall.NetLongRad;
   auto &netLwShadedWall = urban.shadedWall.NetLongRad;
   auto &netLwImpRoad = urban.imperviousRoad.NetLongRad;
@@ -268,7 +267,6 @@ void ComputeNetLongwave(URBANXX::_p_UrbanType &urban) {
   auto &netLwRoof = urban.roof.NetLongRad;
 
   // Access upward longwave radiation fields (to be updated)
-  auto &upLwRoof = urban.roof.UpwardLongRad;
   auto &upLwSunlitWall = urban.sunlitWall.UpwardLongRad;
   auto &upLwShadedWall = urban.shadedWall.UpwardLongRad;
   auto &upLwImpRoad = urban.imperviousRoad.UpwardLongRad;
