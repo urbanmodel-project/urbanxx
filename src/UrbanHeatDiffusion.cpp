@@ -121,6 +121,48 @@ KOKKOS_INLINE_FUNCTION void ComputeSoilHeatCapacityTimesDz(
   }
 }
 
+// Struct to hold geometry and thermal properties for heat diffusion
+template <typename TempView, typename GeomView, typename TkView,
+          typename CvView>
+struct SurfaceProperties {
+  int l;               // Landunit index
+  int numLayers;       // Number of layers
+  TempView &temp;      // Temperature
+  GeomView &zc;        // Layer center depth
+  GeomView &zi;        // Layer interface depth
+  GeomView &dz;        // Layer thickness
+  TkView &tkInterface; // Thermal conductivity at interfaces
+  TkView &tkLayer;     // Thermal conductivity at layer centers
+  CvView &cv_times_dz; // Heat capacity times layer thickness
+
+  KOKKOS_INLINE_FUNCTION
+  SurfaceProperties(int landunit, int layers, TempView &temperature,
+                    GeomView &layer_center, GeomView &layer_interface,
+                    GeomView &layer_thickness, TkView &tk_interface,
+                    TkView &tk_layer, CvView &cv_dz)
+      : l(landunit), numLayers(layers), temp(temperature), zc(layer_center),
+        zi(layer_interface), dz(layer_thickness), tkInterface(tk_interface),
+        tkLayer(tk_layer), cv_times_dz(cv_dz) {}
+};
+
+// Struct to hold boundary condition parameters
+struct BoundaryConditions {
+  Real EflxGnet;              // Ground net energy flux
+  Real DEflxGnet_DTemp;       // Derivative of flux w.r.t. temperature
+  bool useTopLayerAdjustment; // Use dz_eff adjustment for top layer
+  Real capr;               // Turing factor (if useTopLayerAdjustment is true)
+  bool hasBottomBoundary;  // Has bottom boundary temperature coupling
+  Real bottomBoundaryTemp; // Bottom boundary temperature (if hasBottomBoundary
+                           // is true)
+
+  KOKKOS_INLINE_FUNCTION
+  BoundaryConditions(Real net_flux, Real flux_derivative, bool top_adjustment,
+                     Real turing_factor, bool bottom_bc, Real bottom_temp)
+      : EflxGnet(net_flux), DEflxGnet_DTemp(flux_derivative),
+        useTopLayerAdjustment(top_adjustment), capr(turing_factor),
+        hasBottomBoundary(bottom_bc), bottomBoundaryTemp(bottom_temp) {}
+};
+
 // Solve tridiagonal system using Thomas algorithm
 // Solves: a[i]*x[i-1] + b[i]*x[i] + c[i]*x[i+1] = r[i]
 // for i = 0 to n-1
@@ -158,13 +200,9 @@ void SolveTridiagonal(int n, const Real *a, const Real *b, const Real *c,
 // interior at bottom)
 template <typename TempView, typename GeomView, typename TkView,
           typename CvView>
-KOKKOS_INLINE_FUNCTION void
-Solve1DHeatDiffusion(int l, int numLayers, Real dtime, TempView &temp,
-                     GeomView &zc, GeomView &zi, GeomView &dz,
-                     TkView &tkInterface, TkView &tkLayer, CvView &cv_times_dz,
-                     Real EflxGnet, Real DEflxGnet_DTemp,
-                     bool useTopLayerAdjustment, Real capr,
-                     bool hasBottomBoundary, Real bottomBoundaryTemp) {
+KOKKOS_INLINE_FUNCTION void Solve1DHeatDiffusion(
+    Real dtime, SurfaceProperties<TempView, GeomView, TkView, CvView> &surf,
+    const BoundaryConditions &bc) {
   int level;
 
   // Working arrays for heat diffusion computation
@@ -179,33 +217,37 @@ Solve1DHeatDiffusion(int l, int numLayers, Real dtime, TempView &temp,
   // Compute factors and interface fluxes
   // Top layer
   level = 0;
-  if (useTopLayerAdjustment) {
+  if (bc.useTopLayerAdjustment) {
     // Road surfaces: use dz_eff adjustment (Turing factor)
-    const Real dz1 = zc(l, level) - zi(l, level);
-    const Real dz2 = zc(l, level + 1) - zi(l, level);
-    const Real dz_eff = 0.5 * (dz1 + capr * dz2);
-    fact[level] = dtime / cv_times_dz(l, level) * dz(l, level) / dz_eff;
+    const Real dz1 = surf.zc(surf.l, level) - surf.zi(surf.l, level);
+    const Real dz2 = surf.zc(surf.l, level + 1) - surf.zi(surf.l, level);
+    const Real dz_eff = 0.5 * (dz1 + bc.capr * dz2);
+    fact[level] = dtime / surf.cv_times_dz(surf.l, level) *
+                  surf.dz(surf.l, level) / dz_eff;
   } else {
     // Building surfaces: direct calculation
-    fact[level] = dtime / cv_times_dz(l, level);
+    fact[level] = dtime / surf.cv_times_dz(surf.l, level);
   }
-  fn[level] = tkInterface(l, level) * (temp(l, level + 1) - temp(l, level)) /
-              (zc(l, level + 1) - zc(l, level));
+  fn[level] = surf.tkInterface(surf.l, level) *
+              (surf.temp(surf.l, level + 1) - surf.temp(surf.l, level)) /
+              (surf.zc(surf.l, level + 1) - surf.zc(surf.l, level));
 
   // Internal layers
-  for (level = 1; level < numLayers - 1; ++level) {
-    fact[level] = dtime / cv_times_dz(l, level);
-    fn[level] = tkInterface(l, level) * (temp(l, level + 1) - temp(l, level)) /
-                (zc(l, level + 1) - zc(l, level));
+  for (level = 1; level < surf.numLayers - 1; ++level) {
+    fact[level] = dtime / surf.cv_times_dz(surf.l, level);
+    fn[level] = surf.tkInterface(surf.l, level) *
+                (surf.temp(surf.l, level + 1) - surf.temp(surf.l, level)) /
+                (surf.zc(surf.l, level + 1) - surf.zc(surf.l, level));
   }
 
   // Bottom layer
-  level = numLayers - 1;
-  fact[level] = dtime / cv_times_dz(l, level);
-  if (hasBottomBoundary) {
+  level = surf.numLayers - 1;
+  fact[level] = dtime / surf.cv_times_dz(surf.l, level);
+  if (bc.hasBottomBoundary) {
     // Building surfaces: heat flux to building interior
-    fn[level] = tkInterface(l, level) * (bottomBoundaryTemp - temp(l, level)) /
-                (zi(l, level + 1) - zc(l, level));
+    fn[level] = surf.tkInterface(surf.l, level) *
+                (bc.bottomBoundaryTemp - surf.temp(surf.l, level)) /
+                (surf.zi(surf.l, level + 1) - surf.zc(surf.l, level));
   } else {
     // Road surfaces: zero flux boundary condition
     fn[level] = 0.0;
@@ -216,56 +258,64 @@ Solve1DHeatDiffusion(int l, int numLayers, Real dtime, TempView &temp,
   level = 0;
   Real dzp, dzm;
 
-  r[level] = temp(l, level) +
-             fact[level] * (EflxGnet - DEflxGnet_DTemp * temp(l, level) +
-                            CNFAC * fn[level]);
+  r[level] = surf.temp(surf.l, level) +
+             fact[level] *
+                 (bc.EflxGnet - bc.DEflxGnet_DTemp * surf.temp(surf.l, level) +
+                  CNFAC * fn[level]);
 
-  dzp = zc(l, level + 1) - zc(l, level);
+  dzp = surf.zc(surf.l, level + 1) - surf.zc(surf.l, level);
   a[level] = 0.0;
-  b[level] = 1.0 + (1.0 - CNFAC) * fact[level] * tkInterface(l, level) / dzp -
-             fact[level] * DEflxGnet_DTemp;
-  c[level] = -(1.0 - CNFAC) * fact[level] * tkInterface(l, level) / dzp;
+  b[level] =
+      1.0 +
+      (1.0 - CNFAC) * fact[level] * surf.tkInterface(surf.l, level) / dzp -
+      fact[level] * bc.DEflxGnet_DTemp;
+  c[level] =
+      -(1.0 - CNFAC) * fact[level] * surf.tkInterface(surf.l, level) / dzp;
 
   // Internal layers
-  for (level = 1; level < numLayers - 1; ++level) {
-    r[level] =
-        temp(l, level) + fact[level] * CNFAC * (fn[level] - fn[level - 1]);
-    dzm = zc(l, level) - zc(l, level - 1);
-    dzp = zc(l, level + 1) - zc(l, level);
-    a[level] = -(1.0 - CNFAC) * fact[level] * tkInterface(l, level - 1) / dzm;
+  for (level = 1; level < surf.numLayers - 1; ++level) {
+    r[level] = surf.temp(surf.l, level) +
+               fact[level] * CNFAC * (fn[level] - fn[level - 1]);
+    dzm = surf.zc(surf.l, level) - surf.zc(surf.l, level - 1);
+    dzp = surf.zc(surf.l, level + 1) - surf.zc(surf.l, level);
+    a[level] = -(1.0 - CNFAC) * fact[level] *
+               surf.tkInterface(surf.l, level - 1) / dzm;
     b[level] = 1.0 + (1.0 - CNFAC) * fact[level] *
-                         (tkInterface(l, level) / dzp +
-                          tkInterface(l, level - 1) / dzm);
-    c[level] = -(1.0 - CNFAC) * fact[level] * tkInterface(l, level) / dzp;
+                         (surf.tkInterface(surf.l, level) / dzp +
+                          surf.tkInterface(surf.l, level - 1) / dzm);
+    c[level] =
+        -(1.0 - CNFAC) * fact[level] * surf.tkInterface(surf.l, level) / dzp;
   }
 
   // Bottom layer
-  level = numLayers - 1;
-  dzm = zc(l, level) - zc(l, level - 1);
-  r[level] = temp(l, level) + fact[level] * CNFAC * (fn[level] - fn[level - 1]);
-  a[level] = -(1.0 - CNFAC) * fact[level] * tkInterface(l, level - 1) / dzm;
+  level = surf.numLayers - 1;
+  dzm = surf.zc(surf.l, level) - surf.zc(surf.l, level - 1);
+  r[level] = surf.temp(surf.l, level) +
+             fact[level] * CNFAC * (fn[level] - fn[level - 1]);
+  a[level] =
+      -(1.0 - CNFAC) * fact[level] * surf.tkInterface(surf.l, level - 1) / dzm;
 
-  if (hasBottomBoundary) {
+  if (bc.hasBottomBoundary) {
     // Building surfaces: include coupling to building interior
-    dzp = zi(l, level + 1) - zc(l, level);
-    r[level] += (1.0 - CNFAC) * fact[level] * tkInterface(l, level) / dzp *
-                bottomBoundaryTemp;
+    dzp = surf.zi(surf.l, level + 1) - surf.zc(surf.l, level);
+    r[level] += (1.0 - CNFAC) * fact[level] * surf.tkInterface(surf.l, level) /
+                dzp * bc.bottomBoundaryTemp;
     b[level] = 1.0 + (1.0 - CNFAC) * fact[level] *
-                         (tkInterface(l, level - 1) / dzm +
-                          tkInterface(l, level) / dzp);
+                         (surf.tkInterface(surf.l, level - 1) / dzm +
+                          surf.tkInterface(surf.l, level) / dzp);
   } else {
     // Road surfaces: zero flux at bottom
-    b[level] =
-        1.0 + (1.0 - CNFAC) * fact[level] * tkInterface(l, level - 1) / dzm;
+    b[level] = 1.0 + (1.0 - CNFAC) * fact[level] *
+                         surf.tkInterface(surf.l, level - 1) / dzm;
   }
   c[level] = 0.0;
 
   // Solve tridiagonal system for new temperatures
-  SolveTridiagonal(numLayers, a, b, c, r, newTemp);
+  SolveTridiagonal(surf.numLayers, a, b, c, r, newTemp);
 
   // Update temperature
-  for (int j = 0; j < numLayers; ++j) {
-    temp(l, j) = newTemp[j];
+  for (int j = 0; j < surf.numLayers; ++j) {
+    surf.temp(surf.l, j) = newTemp[j];
   }
 }
 
@@ -447,41 +497,51 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
         const Real noBottomTemp = 0.0; // Not used for road surfaces
 
         // Solve heat diffusion for pervious road
-        Solve1DHeatDiffusion(l, numSoilLayers, dtime, perv_temp, perv_zc,
-                             perv_zi, perv_dz, perv_tkInterface, perv_tkLayer,
-                             perv_cv_times_dz, perv_EflxGnet,
-                             perv_DEflxGnet_DTemp, useTopAdjustment_road, capr,
-                             hasBottomBC_road, noBottomTemp);
+        SurfaceProperties perv_surf(l, numSoilLayers, perv_temp, perv_zc,
+                                    perv_zi, perv_dz, perv_tkInterface,
+                                    perv_tkLayer, perv_cv_times_dz);
+        BoundaryConditions perv_bc(perv_EflxGnet, perv_DEflxGnet_DTemp,
+                                   useTopAdjustment_road, capr,
+                                   hasBottomBC_road, noBottomTemp);
+        Solve1DHeatDiffusion(dtime, perv_surf, perv_bc);
 
         // Solve heat diffusion for impervious road
-        Solve1DHeatDiffusion(
-            l, numSoilLayers, dtime, imperv_temp, imperv_zc, imperv_zi,
-            imperv_dz, imperv_tkInterface, imperv_tkLayer, imperv_cv_times_dz,
-            imperv_EflxGnet, imperv_DEflxGnet_DTemp, useTopAdjustment_road,
-            capr, hasBottomBC_road, noBottomTemp);
+        SurfaceProperties imperv_surf(l, numSoilLayers, imperv_temp, imperv_zc,
+                                      imperv_zi, imperv_dz, imperv_tkInterface,
+                                      imperv_tkLayer, imperv_cv_times_dz);
+        BoundaryConditions imperv_bc(imperv_EflxGnet, imperv_DEflxGnet_DTemp,
+                                     useTopAdjustment_road, capr,
+                                     hasBottomBC_road, noBottomTemp);
+        Solve1DHeatDiffusion(dtime, imperv_surf, imperv_bc);
 
         // Solve heat diffusion for roof
-        Solve1DHeatDiffusion(l, numUrbanLayers, dtime, roof_temp, roof_zc,
-                             roof_zi, roof_dz, roof_tkInterface, roof_tkLayer,
-                             roof_cv_times_dz, roof_EflxGnet,
-                             roof_DEflxGnet_DTemp, useTopAdjustment_building,
-                             capr, hasBottomBC_building, building_temp(l));
+        SurfaceProperties roof_surf(l, numUrbanLayers, roof_temp, roof_zc,
+                                    roof_zi, roof_dz, roof_tkInterface,
+                                    roof_tkLayer, roof_cv_times_dz);
+        BoundaryConditions roof_bc(roof_EflxGnet, roof_DEflxGnet_DTemp,
+                                   useTopAdjustment_building, capr,
+                                   hasBottomBC_building, building_temp(l));
+        Solve1DHeatDiffusion(dtime, roof_surf, roof_bc);
 
         // Solve heat diffusion for sunlit wall
-        Solve1DHeatDiffusion(l, numUrbanLayers, dtime, sunwall_temp, sunwall_zc,
-                             sunwall_zi, sunwall_dz, sunwall_tkInterface,
-                             sunwall_tkLayer, sunwall_cv_times_dz,
-                             sunwall_EflxGnet, sunwall_DEflxGnet_DTemp,
-                             useTopAdjustment_building, capr,
-                             hasBottomBC_building, building_temp(l));
+        SurfaceProperties sunwall_surf(
+            l, numUrbanLayers, sunwall_temp, sunwall_zc, sunwall_zi, sunwall_dz,
+            sunwall_tkInterface, sunwall_tkLayer, sunwall_cv_times_dz);
+        BoundaryConditions sunwall_bc(sunwall_EflxGnet, sunwall_DEflxGnet_DTemp,
+                                      useTopAdjustment_building, capr,
+                                      hasBottomBC_building, building_temp(l));
+        Solve1DHeatDiffusion(dtime, sunwall_surf, sunwall_bc);
 
         // Solve heat diffusion for shaded wall
-        Solve1DHeatDiffusion(
-            l, numUrbanLayers, dtime, shadewall_temp, shadewall_zc,
-            shadewall_zi, shadewall_dz, shadewall_tkInterface,
-            shadewall_tkLayer, shadewall_cv_times_dz, shadewall_EflxGnet,
-            shadewall_DEflxGnet_DTemp, useTopAdjustment_building, capr,
-            hasBottomBC_building, building_temp(l));
+        SurfaceProperties shadewall_surf(
+            l, numUrbanLayers, shadewall_temp, shadewall_zc, shadewall_zi,
+            shadewall_dz, shadewall_tkInterface, shadewall_tkLayer,
+            shadewall_cv_times_dz);
+        BoundaryConditions shadewall_bc(shadewall_EflxGnet,
+                                        shadewall_DEflxGnet_DTemp,
+                                        useTopAdjustment_building, capr,
+                                        hasBottomBC_building, building_temp(l));
+        Solve1DHeatDiffusion(dtime, shadewall_surf, shadewall_bc);
       });
   Kokkos::fence();
 }
