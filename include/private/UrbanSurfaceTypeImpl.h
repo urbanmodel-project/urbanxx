@@ -181,7 +181,8 @@ struct ImperviousRoadDataType : SnowCoveredSurfaceData {
                          int numLayers)
       : SnowCoveredSurfaceData(numLandunits, numRadBands, numRadTypes,
                                numLayers) {
-    ALLOCATE_DEVICE_VIEW(NumberOfActiveLayers, Array1DI4, numLandunits)
+    // Don't initialize to 0 - must be set via UrbanSetNumberOfActiveLayersImperviousRoad
+    ALLOCATE_VIEW_NO_INIT(NumberOfActiveLayers, Array1DI4, numLandunits)
   }
 };
 

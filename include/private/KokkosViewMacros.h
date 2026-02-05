@@ -11,15 +11,29 @@ namespace URBANXX {
   HostArray##suffix name##H;                                                   \
   Array##suffix name;
 
-// Macro to allocate a single view
+// Macro to allocate a single view (no initialization)
+#define ALLOCATE_VIEW_NO_INIT(viewname, type, ...)                             \
+  viewname = type(#viewname, __VA_ARGS__);
+
+// Macro to allocate a single floating-point view with zero initialization
 #define ALLOCATE_VIEW(viewname, type, ...)                                     \
-  viewname = type(#viewname, __VA_ARGS__);                                     \
+  ALLOCATE_VIEW_NO_INIT(viewname, type, __VA_ARGS__)                           \
   Kokkos::deep_copy(viewname, 0.0);
+
+// Macro to allocate a single integer view with zero initialization
+#define ALLOCATE_VIEW_INT(viewname, type, ...)                                 \
+  ALLOCATE_VIEW_NO_INIT(viewname, type, __VA_ARGS__)                           \
+  Kokkos::deep_copy(viewname, 0);
 
 #define ALLOCATE_DEVICE_VIEW(viewname, type, ...)                              \
   ALLOCATE_VIEW(viewname, type, __VA_ARGS__)
 #define ALLOCATE_HOST_VIEW(viewname, type, ...)                                \
   ALLOCATE_VIEW(viewname##H, type, __VA_ARGS__)
+
+#define ALLOCATE_DEVICE_VIEW_INT(viewname, type, ...)                          \
+  ALLOCATE_VIEW_INT(viewname, type, __VA_ARGS__)
+#define ALLOCATE_HOST_VIEW_INT(viewname, type, ...)                            \
+  ALLOCATE_VIEW_INT(viewname##H, type, __VA_ARGS__)
 
 // Macro to allocate dual views (host and device)
 #define ALLOCATE_DUAL_VIEWS(viewname, suffix, ...)                             \
