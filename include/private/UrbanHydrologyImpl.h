@@ -14,6 +14,9 @@ void SetupHydrologyTridiagonal(UrbanType urban, Real dtime);
 void SolveHydrologyTridiagonal(UrbanType urban);
 void UpdateSoilWater(UrbanType urban, Real dtime);
 
+// Internal wrapper for time-stepping integration (uses fixed 30-min timestep)
+void ComputeHydrology(_p_UrbanType &urban);
+
 } // namespace URBANXX
 
 #endif // URBAN_HYDROLOGY_IMPL_H
