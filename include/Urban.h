@@ -169,6 +169,8 @@ URBAN_EXTERN void UrbanComputeNetShortwave(UrbanType urban,
                                            UrbanErrorCode *status);
 URBAN_EXTERN void UrbanComputeSurfaceFluxes(UrbanType urban,
                                             UrbanErrorCode *status);
+URBAN_EXTERN void UrbanComputeHydrology(UrbanType urban, double dtime,
+                                        UrbanErrorCode *status);
 
 // Kokkos utility functions
 URBAN_EXTERN bool UrbanKokkosIsLayoutRight(void);
