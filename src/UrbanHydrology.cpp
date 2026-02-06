@@ -71,12 +71,9 @@ void ComputeHydraulicProperties(UrbanType urban) {
 
           // Compute relative saturation for next layer interface
           // (average of current and next layer for interface properties)
-          const int j_next = Kokkos::fmin(j + 1, nlevbed - 1);
-          const Real s_interface =
-              0.5 *
-              (vol_liq / watsat(l, j) +
-               Kokkos::fmax(h2osoi_liq(l, j_next), 1.0e-6) /
-                   (dz(l, j_next) * SHR_CONST_RHOWATER * watsat(l, j_next)));
+          const int j_next = Kokkos::fmin(j + 1, NUM_LAYERS_ABV_BEDROCK - 1);
+          const Real s_interface = (h2osoi_vol(l, j) + h2osoi_vol(l, j_next)) /
+                                   (watsat(l, j) + watsat(l, j_next));
 
           // Compute ice impedance for interface
           const Real icefrac_next = Kokkos::fmin(
@@ -90,6 +87,10 @@ void ComputeHydraulicProperties(UrbanType urban) {
           // Compute hydraulic conductivity at interface
           hk(l, j) = ComputeHydraulicConductivity(s_interface, hksat(l, j),
                                                   bsw(l, j), imped);
+          if (j >= NUM_LAYERS_ABV_BEDROCK) {
+            hk(l, j) = 0.0; // Hydrologically inactive layers below layer
+                            // NUM_LAYERS_ABV_BEDROCK
+          }
 
           // Compute soil matric potential at node
           const Real s_node = Kokkos::fmax(vol_liq / watsat(l, j), 0.01);
@@ -140,8 +141,8 @@ void SetupHydrologyTridiagonal(UrbanType urban, Real dtime) {
         // Compute equilibrium matric potentials for each layer
         Real zq[NUM_SOIL_LAYERS + 1];
         for (int j = 0; j < nlevbed; ++j) {
-          const Real z_top = (j == 0) ? 0.0 : zi(l, j - 1) * 1000.0;
-          const Real z_bot = zi(l, j) * 1000.0;
+          const Real z_top = zi(l, j) * 1000.0;
+          const Real z_bot = zi(l, j + 1) * 1000.0;
 
           const Real vol_eq = ComputeEquilibriumWaterContent(
               zwtmm, z_top, z_bot, watsat(l, j), sucsat(l, j), bsw(l, j));
@@ -191,9 +192,13 @@ void SetupHydrologyTridiagonal(UrbanType urban, Real dtime) {
           const Real imped =
               ComputeIceImpedance(0.5 * (icefrac + icefrac_next));
 
+          // NOTE: 0.5 * (watsat(l, j) + watsat(l, j_next)) is not used
+          // to be consistent with code in ELM. It is possible that the 0.5
+          // neglected after performing algebraic manupilations in the
+          // descrtized equations in ELM, but this needs to be verified.
           dhkdw[j] = ComputeHydraulicConductivityDerivative(
               s_interface, hksat(l, j), bsw(l, j), imped,
-              0.5 * (watsat(l, j) + watsat(l, j_next)));
+              (watsat(l, j) + watsat(l, j_next)));
 
           dsmpdw[j] =
               ComputeMatricPotentialDerivative(smp(l, j), vol_liq, bsw(l, j));
@@ -399,6 +404,17 @@ void SolveHydrologyTridiagonal(UrbanType urban) {
           r_local[j] = rmx(l, j);
         }
 
+        // Make layers below NUM_LAYERS_ABV_BEDROCK inactive by setting diagonal
+        // to 1 and rhs to 0
+        for (int j = 0; j < nlayers; ++j) {
+          if (j >= NUM_LAYERS_ABV_BEDROCK - 1) {
+            a_local[j] = 0.0;
+            b_local[j] = 1.0;
+            c_local[j] = 0.0;
+            r_local[j] = 0.0;
+          }
+        }
+
         // Solve tridiagonal system
         SolveTridiagonal(nlayers, a_local, b_local, c_local, r_local, x_local);
 
@@ -522,6 +538,20 @@ void UpdateSoilWater(UrbanType urban, Real dtime) {
         }
       });
   Kokkos::fence();
+}
+
+// ============================================================================
+// Internal wrapper for time-stepping integration
+// ============================================================================
+
+void ComputeHydrology(URBANXX::_p_UrbanType &urban) {
+  // Use 30-minute timestep (1800 seconds) - typical for land surface models
+  const Real dtime = 1800.0; // seconds
+
+  ComputeHydraulicProperties(static_cast<UrbanType>(&urban));
+  SetupHydrologyTridiagonal(static_cast<UrbanType>(&urban), dtime);
+  SolveHydrologyTridiagonal(static_cast<UrbanType>(&urban));
+  UpdateSoilWater(static_cast<UrbanType>(&urban), dtime);
 }
 
 } // namespace URBANXX
