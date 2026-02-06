@@ -334,6 +334,9 @@ static void UrbanInitializePerviousRoadSoils(UrbanType urban) {
   auto &clay = urban->perviousRoad.soil.Clay;
   auto &organic = urban->perviousRoad.soil.Organic;
   auto &watsat = urban->perviousRoad.soil.WatSat;
+  auto &hksat_view = urban->perviousRoad.soil.HkSat;
+  auto &bsw_view = urban->perviousRoad.soil.Bsw;
+  auto &sucsat_view = urban->perviousRoad.soil.SucSat;
   auto &tk_minerals = urban->perviousRoad.soil.TkMinerals;
   auto &tk_dry = urban->perviousRoad.soil.TkDry;
   auto &tk_saturated = urban->perviousRoad.soil.TkSaturated;
@@ -447,6 +450,9 @@ static void UrbanInitializePerviousRoadSoils(UrbanType urban) {
 
           // Store computed properties
           watsat(l, k) = watsat_mixed;
+          hksat_view(l, k) = hksat;
+          bsw_view(l, k) = bsw_mixed;
+          sucsat_view(l, k) = sucsat_mixed;
           tk_minerals(l, k) = tkmg;
           tk_dry(l, k) = tkdry;
           tk_saturated(l, k) = tksatu;
