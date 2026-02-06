@@ -749,6 +749,67 @@ void SetBuildingTemperature(UrbanType urban, int numLandunits, int mpi_rank) {
   }
 }
 
+void SetHydrologyBoundaryConditions(UrbanType urban, int numLandunits,
+                                   int mpi_rank) {
+  UrbanErrorCode ierr;
+
+  const double ZWT_INITIAL = 4.8018819123227204; // m (initial water table depth)
+  const double QFLX_INFL = 0.0;                  // mm/s (infiltration flux)
+  const int NUM_SOIL_LAYERS = 15;
+
+  // Set water table depth (1D: per landunit)
+  double *zwt = AllocateArray(numLandunits, "zwt");
+  for (int i = 0; i < numLandunits; ++i) {
+    zwt[i] = ZWT_INITIAL;
+  }
+  UrbanCall(UrbanSetWaterTableDepth(urban, zwt, numLandunits, &ierr), &ierr);
+  free(zwt);
+
+  // Set infiltration flux (1D: per landunit)
+  double *qflxInfl = AllocateArray(numLandunits, "qflxInfl");
+  for (int i = 0; i < numLandunits; ++i) {
+    qflxInfl[i] = QFLX_INFL;
+  }
+  UrbanCall(UrbanSetInfiltrationFlux(urban, qflxInfl, numLandunits, &ierr),
+            &ierr);
+  free(qflxInfl);
+
+  // Set transpiration flux (2D: per landunit and soil layer)
+  int size2D[2] = {numLandunits, NUM_SOIL_LAYERS};
+  int totalSize = numLandunits * NUM_SOIL_LAYERS;
+  double *qflxTran = AllocateArray(totalSize, "qflxTran");
+
+  // Initialize to zero for all landunits and layers
+  bool isLayoutLeft = UrbanKokkosIsLayoutLeft();
+  if (isLayoutLeft) {
+    // LayoutLeft: landunits vary fastest
+    int idx = 0;
+    for (int layer = 0; layer < NUM_SOIL_LAYERS; ++layer) {
+      for (int i = 0; i < numLandunits; ++i) {
+        qflxTran[idx++] = 0.0;
+      }
+    }
+  } else {
+    // LayoutRight: layers vary fastest
+    int idx = 0;
+    for (int i = 0; i < numLandunits; ++i) {
+      for (int layer = 0; layer < NUM_SOIL_LAYERS; ++layer) {
+        qflxTran[idx++] = 0.0;
+      }
+    }
+  }
+  UrbanCall(UrbanSetTranspirationFlux(urban, qflxTran, size2D, &ierr), &ierr);
+  free(qflxTran);
+
+  if (mpi_rank == 0) {
+    std::cout << "Set hydrology boundary conditions:" << std::endl;
+    std::cout << "  Initial water table depth: " << ZWT_INITIAL << " m"
+              << std::endl;
+    std::cout << "  Infiltration flux: " << QFLX_INFL << " mm/s" << std::endl;
+    std::cout << "  Transpiration flux: 0.0 mm/s (all layers)" << std::endl;
+  }
+}
+
 void SetUrbanParameters(UrbanType urban, int numLandunits, int mpi_rank) {
   SetCanyonHwr(urban, numLandunits, mpi_rank);
   SetFracPervRoadOfTotalRoad(urban, numLandunits, mpi_rank);
@@ -762,6 +823,7 @@ void SetUrbanParameters(UrbanType urban, int numLandunits, int mpi_rank) {
   SetHeatCapacity(urban, numLandunits, mpi_rank);
   SetSoilProperties(urban, numLandunits, mpi_rank);
   SetAtmosphericForcing(urban, numLandunits, mpi_rank);
+  SetHydrologyBoundaryConditions(urban, numLandunits, mpi_rank);
 }
 
 int main(int argc, char *argv[]) {

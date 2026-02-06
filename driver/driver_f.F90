@@ -917,6 +917,82 @@ contains
     deallocate(atmShortwave)
   end subroutine SetAtmosphericForcing
 
+  subroutine SetHydrologyBoundaryConditions(urban, numLandunits, mpi_rank)
+    type(UrbanType), intent(in) :: urban
+    integer(c_int), intent(in) :: numLandunits
+    integer, intent(in) :: mpi_rank
+    integer(c_int) :: status, i, j, idx
+    integer(c_int), parameter :: NUM_SOIL_LAYERS = 15
+    integer(c_int) :: size2D(2)
+    integer(c_int) :: totalSize
+    real(c_double), allocatable, target :: zwt(:)
+    real(c_double), allocatable, target :: qflxInfl(:)
+    real(c_double), allocatable, target :: qflxTran(:)
+    logical(c_bool) :: isLayoutLeft
+
+    ! Constants
+    real(c_double), parameter :: ZWT_INITIAL = 4.8018819123227204d0  ! m (initial water table depth)
+    real(c_double), parameter :: QFLX_INFL = 0.0d0                   ! mm/s (infiltration flux)
+
+    ! Set water table depth (1D: per landunit)
+    allocate(zwt(numLandunits))
+    do i = 1, numLandunits
+      zwt(i) = ZWT_INITIAL
+    end do
+    call UrbanSetWaterTableDepth(urban, c_loc(zwt), numLandunits, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+    deallocate(zwt)
+
+    ! Set infiltration flux (1D: per landunit)
+    allocate(qflxInfl(numLandunits))
+    do i = 1, numLandunits
+      qflxInfl(i) = QFLX_INFL
+    end do
+    call UrbanSetInfiltrationFlux(urban, c_loc(qflxInfl), numLandunits, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+    deallocate(qflxInfl)
+
+    ! Set transpiration flux (2D: per landunit and soil layer)
+    size2D(1) = numLandunits
+    size2D(2) = NUM_SOIL_LAYERS
+    totalSize = numLandunits * NUM_SOIL_LAYERS
+    allocate(qflxTran(totalSize))
+
+    ! Check memory layout
+    isLayoutLeft = UrbanKokkosIsLayoutLeft()
+
+    ! Initialize to zero for all landunits and layers
+    idx = 1
+    if (isLayoutLeft) then
+      ! LayoutLeft: landunits vary fastest
+      do j = 1, NUM_SOIL_LAYERS
+        do i = 1, numLandunits
+          qflxTran(idx) = 0.0d0
+          idx = idx + 1
+        end do
+      end do
+    else
+      ! LayoutRight: layers vary fastest
+      do i = 1, numLandunits
+        do j = 1, NUM_SOIL_LAYERS
+          qflxTran(idx) = 0.0d0
+          idx = idx + 1
+        end do
+      end do
+    end if
+
+    call UrbanSetTranspirationFlux(urban, c_loc(qflxTran), size2D, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+    deallocate(qflxTran)
+
+    if (mpi_rank == 0) then
+      write(*,*) 'Set hydrology boundary conditions:'
+      write(*,*) '  Initial water table depth:', ZWT_INITIAL, 'm'
+      write(*,*) '  Infiltration flux:', QFLX_INFL, 'mm/s'
+      write(*,*) '  Transpiration flux: 0.0 mm/s (all layers)'
+    end if
+  end subroutine SetHydrologyBoundaryConditions
+
   subroutine SetUrbanParameters(urban, numLandunits, mpi_rank)
     type(UrbanType), intent(in) :: urban
     integer(c_int), intent(in) :: numLandunits
@@ -934,6 +1010,7 @@ contains
     call SetHeatCapacity(urban, numLandunits, mpi_rank)
     call SetSoilProperties(urban, numLandunits, mpi_rank)
     call SetAtmosphericForcing(urban, numLandunits, mpi_rank)
+    call SetHydrologyBoundaryConditions(urban, numLandunits, mpi_rank)
   end subroutine SetUrbanParameters
 
 end program urbanxx_driver_f

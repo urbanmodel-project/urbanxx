@@ -480,6 +480,38 @@ static void UrbanInitializePerviousRoadSoils(UrbanType urban) {
         }
       });
   Kokkos::fence();
+
+  // Initialize hydrology boundary conditions and state variables
+  auto &qflx_infl = urban->perviousRoad.QflxInfl;
+  auto &qflx_tran = urban->perviousRoad.QflxTran;
+  auto &zwt = urban->perviousRoad.Zwt;
+  auto &h2osoi_liq = urban->perviousRoad.H2OSoiLiq;
+  auto &h2osoi_ice = urban->perviousRoad.H2OSoiIce;
+  auto &h2osoi_vol = urban->perviousRoad.H2OSoiVol;
+  auto &qcharge = urban->perviousRoad.Qcharge;
+  auto &qflx_deficit = urban->perviousRoad.QflxDeficit;
+
+  Kokkos::parallel_for(
+      "UrbanInitializeHydrologyBCs", numLandunits, KOKKOS_LAMBDA(int l) {
+        // Initialize boundary conditions
+        qflx_infl(l) = 0.0;          // No infiltration initially
+        zwt(l) = 4.8018819123227204; // Water table depth [m]
+        qcharge(l) = 0.0;            // No aquifer recharge initially
+        qflx_deficit(l) = 0.0;       // No water deficit initially
+
+        // Initialize transpiration to zero for all layers
+        for (int k = 0; k < numSoilLayers; ++k) {
+          qflx_tran(l, k) = 0.0;
+        }
+
+        // Copy water content from soil to hydrology state variables
+        for (int k = 0; k < numSoilLayers; ++k) {
+          h2osoi_liq(l, k) = water_liquid(l, k);
+          h2osoi_ice(l, k) = water_ice(l, k);
+          h2osoi_vol(l, k) = water_vol(l, k);
+        }
+      });
+  Kokkos::fence();
 }
 
 static void UrbanInitializeInterfaceThermalProperties(UrbanType urban) {
