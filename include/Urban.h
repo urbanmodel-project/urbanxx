@@ -169,6 +169,19 @@ URBAN_EXTERN void UrbanComputeNetShortwave(UrbanType urban,
                                            UrbanErrorCode *status);
 URBAN_EXTERN void UrbanComputeSurfaceFluxes(UrbanType urban,
                                             UrbanErrorCode *status);
+URBAN_EXTERN void UrbanComputeHydrology(UrbanType urban, double dtime,
+                                        UrbanErrorCode *status);
+
+// Hydrology boundary condition setter functions
+URBAN_EXTERN void UrbanSetInfiltrationFlux(UrbanType urban,
+                                           const double *values, int length,
+                                           UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetTranspirationFlux(UrbanType urban,
+                                            const double *values,
+                                            const int size[2],
+                                            UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetWaterTableDepth(UrbanType urban, const double *values,
+                                          int length, UrbanErrorCode *status);
 
 // Kokkos utility functions
 URBAN_EXTERN bool UrbanKokkosIsLayoutRight(void);

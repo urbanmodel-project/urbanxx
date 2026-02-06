@@ -2,6 +2,7 @@
 #include "private/AtmosphereTypeImpl.h"
 #include "private/DataTypesImpl.h"
 #include "private/UrbanHeatDiffusionImpl.h"
+#include "private/UrbanHydrologyImpl.h"
 #include "private/UrbanLongwaveRadImpl.h"
 #include "private/UrbanShortwaveRadImpl.h"
 #include "private/UrbanSurfaceFluxesImpl.h"
@@ -68,6 +69,9 @@ void UrbanAdvance(UrbanType urban, UrbanErrorCode *status) {
 
     // Compute heat diffusion in urban surfaces
     URBANXX::ComputeHeatDiffusion(*urban);
+
+    // Compute hydrology for pervious road
+    URBANXX::ComputeHydrology(*urban);
 
     // Compute net shortwave radiation
     URBANXX::ComputeNetShortwave(*urban);

@@ -334,6 +334,9 @@ static void UrbanInitializePerviousRoadSoils(UrbanType urban) {
   auto &clay = urban->perviousRoad.soil.Clay;
   auto &organic = urban->perviousRoad.soil.Organic;
   auto &watsat = urban->perviousRoad.soil.WatSat;
+  auto &hksat_view = urban->perviousRoad.soil.HkSat;
+  auto &bsw_view = urban->perviousRoad.soil.Bsw;
+  auto &sucsat_view = urban->perviousRoad.soil.SucSat;
   auto &tk_minerals = urban->perviousRoad.soil.TkMinerals;
   auto &tk_dry = urban->perviousRoad.soil.TkDry;
   auto &tk_saturated = urban->perviousRoad.soil.TkSaturated;
@@ -447,6 +450,9 @@ static void UrbanInitializePerviousRoadSoils(UrbanType urban) {
 
           // Store computed properties
           watsat(l, k) = watsat_mixed;
+          hksat_view(l, k) = hksat;
+          bsw_view(l, k) = bsw_mixed;
+          sucsat_view(l, k) = sucsat_mixed;
           tk_minerals(l, k) = tkmg;
           tk_dry(l, k) = tkdry;
           tk_saturated(l, k) = tksatu;
@@ -477,6 +483,38 @@ static void UrbanInitializePerviousRoadSoils(UrbanType urban) {
             water_ice(l, k) = 0.0;
             water_liquid(l, k) = dz(l, k) * denh2o * water_vol(l, k);
           }
+        }
+      });
+  Kokkos::fence();
+
+  // Initialize hydrology boundary conditions and state variables
+  auto &qflx_infl = urban->perviousRoad.QflxInfl;
+  auto &qflx_tran = urban->perviousRoad.QflxTran;
+  auto &zwt = urban->perviousRoad.Zwt;
+  auto &h2osoi_liq = urban->perviousRoad.H2OSoiLiq;
+  auto &h2osoi_ice = urban->perviousRoad.H2OSoiIce;
+  auto &h2osoi_vol = urban->perviousRoad.H2OSoiVol;
+  auto &qcharge = urban->perviousRoad.Qcharge;
+  auto &qflx_deficit = urban->perviousRoad.QflxDeficit;
+
+  Kokkos::parallel_for(
+      "UrbanInitializeHydrologyBCs", numLandunits, KOKKOS_LAMBDA(int l) {
+        // Initialize boundary conditions
+        qflx_infl(l) = 0.0;          // No infiltration initially
+        zwt(l) = 4.8018819123227204; // Water table depth [m]
+        qcharge(l) = 0.0;            // No aquifer recharge initially
+        qflx_deficit(l) = 0.0;       // No water deficit initially
+
+        // Initialize transpiration to zero for all layers
+        for (int k = 0; k < numSoilLayers; ++k) {
+          qflx_tran(l, k) = 0.0;
+        }
+
+        // Copy water content from soil to hydrology state variables
+        for (int k = 0; k < numSoilLayers; ++k) {
+          h2osoi_liq(l, k) = water_liquid(l, k);
+          h2osoi_ice(l, k) = water_ice(l, k);
+          h2osoi_vol(l, k) = water_vol(l, k);
         }
       });
   Kokkos::fence();

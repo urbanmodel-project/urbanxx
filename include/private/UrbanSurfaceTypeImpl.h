@@ -54,6 +54,19 @@ struct SoilDataType {
   DECLARE_DEVICE_VIEW(2DR8, Clay)            // soil texture: percent clay [-]
   DECLARE_DEVICE_VIEW(2DR8, Organic)         // organic matter [kg/m³]
 
+  // Hydraulic properties
+  DECLARE_DEVICE_VIEW(2DR8, HkSat)  // saturated hydraulic conductivity [mm/s]
+  DECLARE_DEVICE_VIEW(2DR8, Bsw)    // Clapp and Hornberger "b" parameter [-]
+  DECLARE_DEVICE_VIEW(2DR8, SucSat) // saturated suction [mm]
+
+  // Tridiagonal matrix arrays for hydrology solver (nlevbed+1 to include
+  // aquifer layer)
+  DECLARE_DEVICE_VIEW(2DR8, Amx)  // left off-diagonal of tridiagonal matrix
+  DECLARE_DEVICE_VIEW(2DR8, Bmx)  // diagonal of tridiagonal matrix
+  DECLARE_DEVICE_VIEW(2DR8, Cmx)  // right off-diagonal of tridiagonal matrix
+  DECLARE_DEVICE_VIEW(2DR8, Rmx)  // right-hand side forcing vector
+  DECLARE_DEVICE_VIEW(2DR8, Dwat) // solution vector (change in water content)
+
   SoilDataType(int numLandunits, int numSoilLayers) {
     ALLOCATE_DEVICE_VIEW(TkMinerals, Array2DR8, numLandunits, numSoilLayers)
     ALLOCATE_DEVICE_VIEW(TkDry, Array2DR8, numLandunits, numSoilLayers)
@@ -67,6 +80,16 @@ struct SoilDataType {
     ALLOCATE_DEVICE_VIEW(Sand, Array2DR8, numLandunits, numSoilLayers)
     ALLOCATE_DEVICE_VIEW(Clay, Array2DR8, numLandunits, numSoilLayers)
     ALLOCATE_DEVICE_VIEW(Organic, Array2DR8, numLandunits, numSoilLayers)
+    ALLOCATE_DEVICE_VIEW(HkSat, Array2DR8, numLandunits, numSoilLayers)
+    ALLOCATE_DEVICE_VIEW(Bsw, Array2DR8, numLandunits, numSoilLayers)
+    ALLOCATE_DEVICE_VIEW(SucSat, Array2DR8, numLandunits, numSoilLayers)
+
+    // Allocate tridiagonal arrays (+1 for aquifer layer)
+    ALLOCATE_DEVICE_VIEW(Amx, Array2DR8, numLandunits, numSoilLayers + 1)
+    ALLOCATE_DEVICE_VIEW(Bmx, Array2DR8, numLandunits, numSoilLayers + 1)
+    ALLOCATE_DEVICE_VIEW(Cmx, Array2DR8, numLandunits, numSoilLayers + 1)
+    ALLOCATE_DEVICE_VIEW(Rmx, Array2DR8, numLandunits, numSoilLayers + 1)
+    ALLOCATE_DEVICE_VIEW(Dwat, Array2DR8, numLandunits, numSoilLayers + 1)
   }
 };
 
@@ -181,20 +204,54 @@ struct ImperviousRoadDataType : SnowCoveredSurfaceData {
                          int numLayers)
       : SnowCoveredSurfaceData(numLandunits, numRadBands, numRadTypes,
                                numLayers) {
-    // Don't initialize to 0 - must be set via UrbanSetNumberOfActiveLayersImperviousRoad
+    // Don't initialize to 0 - must be set via
+    // UrbanSetNumberOfActiveLayersImperviousRoad
     ALLOCATE_VIEW_NO_INIT(NumberOfActiveLayers, Array1DI4, numLandunits)
   }
 };
 
 struct PerviousRoadDataType : SnowCoveredSurfaceData {
   SoilDataType soil;
+
+  // Hydrology state variables (layer-level)
+  DECLARE_DEVICE_VIEW(2DR8, H2OSoiLiq) // liquid water content [kg/m²]
+  DECLARE_DEVICE_VIEW(2DR8, H2OSoiIce) // ice water content [kg/m²]
+  DECLARE_DEVICE_VIEW(2DR8, H2OSoiVol) // volumetric water content [m³/m³]
+  DECLARE_DEVICE_VIEW(2DR8,
+                      EffPorosity) // effective porosity (porosity - ice) [-]
+  DECLARE_DEVICE_VIEW(2DR8, Hk)    // hydraulic conductivity [mm/s]
+  DECLARE_DEVICE_VIEW(2DR8, Smp)   // soil matrix potential [mm]
+
+  // Hydrology flux variables (layer-level)
+  DECLARE_DEVICE_VIEW(1DR8, QflxInfl) // infiltration flux [mm/s]
+  DECLARE_DEVICE_VIEW(2DR8, QflxTran) // transpiration flux [mm/s]
+
+  // Column-level hydrology variables
+  DECLARE_DEVICE_VIEW(1DR8, Zwt)         // water table depth [m]
+  DECLARE_DEVICE_VIEW(1DR8, Qcharge)     // aquifer recharge rate [mm/s]
+  DECLARE_DEVICE_VIEW(1DI4, Jwt)         // layer index above water table [-]
+  DECLARE_DEVICE_VIEW(1DR8, QflxDeficit) // water deficit flux [mm/s]
+
   // Inherits all fields from SnowCoveredSurfaceData and SurfaceDataBase
   // Also includes soil data for pervious road
   PerviousRoadDataType(int numLandunits, int numRadBands, int numRadTypes,
                        int numSoilLayers)
       : SnowCoveredSurfaceData(numLandunits, numRadBands, numRadTypes,
                                numSoilLayers),
-        soil(numLandunits, numSoilLayers) {}
+        soil(numLandunits, numSoilLayers) {
+    ALLOCATE_DEVICE_VIEW(H2OSoiLiq, Array2DR8, numLandunits, numSoilLayers)
+    ALLOCATE_DEVICE_VIEW(H2OSoiIce, Array2DR8, numLandunits, numSoilLayers)
+    ALLOCATE_DEVICE_VIEW(H2OSoiVol, Array2DR8, numLandunits, numSoilLayers)
+    ALLOCATE_DEVICE_VIEW(EffPorosity, Array2DR8, numLandunits, numSoilLayers)
+    ALLOCATE_DEVICE_VIEW(Hk, Array2DR8, numLandunits, numSoilLayers)
+    ALLOCATE_DEVICE_VIEW(Smp, Array2DR8, numLandunits, numSoilLayers)
+    ALLOCATE_DEVICE_VIEW(QflxInfl, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(QflxTran, Array2DR8, numLandunits, numSoilLayers)
+    ALLOCATE_DEVICE_VIEW(Zwt, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(Qcharge, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(Jwt, Array1DI4, numLandunits)
+    ALLOCATE_DEVICE_VIEW(QflxDeficit, Array1DR8, numLandunits)
+  }
 };
 
 struct WallDataType : SurfaceDataBase {
