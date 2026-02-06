@@ -59,6 +59,14 @@ struct SoilDataType {
   DECLARE_DEVICE_VIEW(2DR8, Bsw)    // Clapp and Hornberger "b" parameter [-]
   DECLARE_DEVICE_VIEW(2DR8, SucSat) // saturated suction [mm]
 
+  // Tridiagonal matrix arrays for hydrology solver (nlevbed+1 to include
+  // aquifer layer)
+  DECLARE_DEVICE_VIEW(2DR8, Amx)  // left off-diagonal of tridiagonal matrix
+  DECLARE_DEVICE_VIEW(2DR8, Bmx)  // diagonal of tridiagonal matrix
+  DECLARE_DEVICE_VIEW(2DR8, Cmx)  // right off-diagonal of tridiagonal matrix
+  DECLARE_DEVICE_VIEW(2DR8, Rmx)  // right-hand side forcing vector
+  DECLARE_DEVICE_VIEW(2DR8, Dwat) // solution vector (change in water content)
+
   SoilDataType(int numLandunits, int numSoilLayers) {
     ALLOCATE_DEVICE_VIEW(TkMinerals, Array2DR8, numLandunits, numSoilLayers)
     ALLOCATE_DEVICE_VIEW(TkDry, Array2DR8, numLandunits, numSoilLayers)
@@ -75,6 +83,13 @@ struct SoilDataType {
     ALLOCATE_DEVICE_VIEW(HkSat, Array2DR8, numLandunits, numSoilLayers)
     ALLOCATE_DEVICE_VIEW(Bsw, Array2DR8, numLandunits, numSoilLayers)
     ALLOCATE_DEVICE_VIEW(SucSat, Array2DR8, numLandunits, numSoilLayers)
+
+    // Allocate tridiagonal arrays (+1 for aquifer layer)
+    ALLOCATE_DEVICE_VIEW(Amx, Array2DR8, numLandunits, numSoilLayers + 1)
+    ALLOCATE_DEVICE_VIEW(Bmx, Array2DR8, numLandunits, numSoilLayers + 1)
+    ALLOCATE_DEVICE_VIEW(Cmx, Array2DR8, numLandunits, numSoilLayers + 1)
+    ALLOCATE_DEVICE_VIEW(Rmx, Array2DR8, numLandunits, numSoilLayers + 1)
+    ALLOCATE_DEVICE_VIEW(Dwat, Array2DR8, numLandunits, numSoilLayers + 1)
   }
 };
 
