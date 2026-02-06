@@ -348,32 +348,6 @@ void SetupHydrologyTridiagonal(UrbanType urban, Real dtime) {
 // Phase 3.3: Solve Tridiagonal System
 // ============================================================================
 
-// Thomas algorithm for tridiagonal system
-// Solves: a[i]*x[i-1] + b[i]*x[i] + c[i]*x[i+1] = r[i]
-KOKKOS_INLINE_FUNCTION
-void SolveTridiagonal(int n, const Real *a, const Real *b, const Real *c,
-                      const Real *r, Real *x) {
-  // Working arrays for modified coefficients
-  Real cp[NUM_SOIL_LAYERS + 1]; // Modified upper diagonal
-  Real rp[NUM_SOIL_LAYERS + 1]; // Modified right-hand side
-
-  // Forward elimination
-  cp[0] = c[0] / b[0];
-  rp[0] = r[0] / b[0];
-
-  for (int i = 1; i < n; i++) {
-    const Real denom = b[i] - a[i] * cp[i - 1];
-    cp[i] = c[i] / denom;
-    rp[i] = (r[i] - a[i] * rp[i - 1]) / denom;
-  }
-
-  // Back substitution
-  x[n - 1] = rp[n - 1];
-  for (int i = n - 2; i >= 0; i--) {
-    x[i] = rp[i] - cp[i] * x[i + 1];
-  }
-}
-
 void SolveHydrologyTridiagonal(UrbanType urban) {
   const int nlandunits = urban->numLandunits;
   const int nlevbed = NUM_SOIL_LAYERS;
@@ -415,8 +389,26 @@ void SolveHydrologyTridiagonal(UrbanType urban) {
           }
         }
 
-        // Solve tridiagonal system
-        SolveTridiagonal(nlayers, a_local, b_local, c_local, r_local, x_local);
+        // Solve tridiagonal system using Thomas algorithm
+        // Solves: a[i]*x[i-1] + b[i]*x[i] + c[i]*x[i+1] = r[i]
+        Real cp[NUM_SOIL_LAYERS + 1]; // Modified upper diagonal
+        Real rp[NUM_SOIL_LAYERS + 1]; // Modified right-hand side
+
+        // Forward elimination
+        cp[0] = c_local[0] / b_local[0];
+        rp[0] = r_local[0] / b_local[0];
+
+        for (int i = 1; i < nlayers; i++) {
+          const Real denom = b_local[i] - a_local[i] * cp[i - 1];
+          cp[i] = c_local[i] / denom;
+          rp[i] = (r_local[i] - a_local[i] * rp[i - 1]) / denom;
+        }
+
+        // Back substitution
+        x_local[nlayers - 1] = rp[nlayers - 1];
+        for (int i = nlayers - 2; i >= 0; i--) {
+          x_local[i] = rp[i] - cp[i] * x_local[i + 1];
+        }
 
         // Store solution
         for (int j = 0; j < nlayers; ++j) {
