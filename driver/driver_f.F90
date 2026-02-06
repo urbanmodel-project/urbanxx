@@ -42,6 +42,9 @@ program urbanxx_driver_f
     write(*,*) 'Completed urban model setup'
   end if
 
+  ! Set hydrology boundary conditions after setup to override initialization defaults
+  call SetHydrologyBoundaryConditions(urban, numLandunits, mpi_rank)
+
   ! Advance the model one time step
   call UrbanAdvance(urban, status)
   if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
@@ -1010,7 +1013,6 @@ contains
     call SetHeatCapacity(urban, numLandunits, mpi_rank)
     call SetSoilProperties(urban, numLandunits, mpi_rank)
     call SetAtmosphericForcing(urban, numLandunits, mpi_rank)
-    call SetHydrologyBoundaryConditions(urban, numLandunits, mpi_rank)
   end subroutine SetUrbanParameters
 
 end program urbanxx_driver_f

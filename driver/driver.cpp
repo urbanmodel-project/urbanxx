@@ -823,7 +823,6 @@ void SetUrbanParameters(UrbanType urban, int numLandunits, int mpi_rank) {
   SetHeatCapacity(urban, numLandunits, mpi_rank);
   SetSoilProperties(urban, numLandunits, mpi_rank);
   SetAtmosphericForcing(urban, numLandunits, mpi_rank);
-  SetHydrologyBoundaryConditions(urban, numLandunits, mpi_rank);
 }
 
 int main(int argc, char *argv[]) {
@@ -860,6 +859,9 @@ int main(int argc, char *argv[]) {
     if (mpi_rank == 0) {
       std::cout << "Completed urban model setup" << std::endl;
     }
+
+    // Set hydrology boundary conditions after setup to override initialization defaults
+    SetHydrologyBoundaryConditions(urban, numLandunits, mpi_rank);
 
     // Advance the model one time step
     UrbanCall(UrbanAdvance(urban, &ierr), &ierr);
