@@ -97,4 +97,21 @@ void UrbanSetLayerTempShadedWall(UrbanType urban, const double *values,
   SetView2D(urban->shadedWall.Temperature, values, size, status);
 }
 
+// Canyon air property setter functions (1D)
+void UrbanSetCanyonAirTemperature(UrbanType urban, const double *values,
+                                  int length, UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  SetView1D(urban->urbanCanyon.Taf, values, length, status);
+}
+
+void UrbanSetCanyonSpecificHumidity(UrbanType urban, const double *values,
+                                    int length, UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  SetView1D(urban->urbanCanyon.Qaf, values, length, status);
+}
+
 } // extern "C"

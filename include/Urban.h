@@ -225,6 +225,15 @@ URBAN_EXTERN void UrbanSetLayerTempShadedWall(UrbanType urban,
                                               const int size[2],
                                               UrbanErrorCode *status);
 
+// Canyon air property setter functions
+URBAN_EXTERN void UrbanSetCanyonAirTemperature(UrbanType urban,
+                                               const double *values, int length,
+                                               UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetCanyonSpecificHumidity(UrbanType urban,
+                                                 const double *values,
+                                                 int length,
+                                                 UrbanErrorCode *status);
+
 // Kokkos utility functions
 URBAN_EXTERN bool UrbanKokkosIsLayoutRight(void);
 URBAN_EXTERN bool UrbanKokkosIsLayoutLeft(void);
