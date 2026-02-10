@@ -950,12 +950,42 @@ void SetHydrologyBoundaryConditions(UrbanType urban, int numLandunits,
   }
 }
 
+void SetCanyonAirProperties(UrbanType urban, int numLandunits, int mpi_rank) {
+  UrbanErrorCode ierr;
+
+  const double TEMP_CANYON_AIR_INIT = 283.0; // K
+  const double QAF_INIT = 1.e-4;             // kg/kg
+
+  double *tempCanyonAir = AllocateArray(numLandunits, "tempCanyonAir");
+  double *qafCanyonAir = AllocateArray(numLandunits, "qafCanyonAir");
+
+  for (int i = 0; i < numLandunits; ++i) {
+    tempCanyonAir[i] = TEMP_CANYON_AIR_INIT;
+    qafCanyonAir[i] = QAF_INIT;
+  }
+
+  UrbanCall(UrbanSetCanyonAirTemperature(urban, tempCanyonAir, numLandunits, &ierr), &ierr);
+  UrbanCall(UrbanSetCanyonSpecificHumidity(urban, qafCanyonAir, numLandunits, &ierr), &ierr);
+
+  double *canyonArrays[] = {tempCanyonAir, qafCanyonAir};
+  FreeArrays(canyonArrays, 2);
+
+  if (mpi_rank == 0) {
+    std::cout << "Set canyon air properties:" << std::endl;
+    std::cout << "  Canyon air temperature: " << TEMP_CANYON_AIR_INIT << " K" << std::endl;
+    std::cout << "  Canyon specific humidity: " << QAF_INIT << " kg/kg" << std::endl;
+  }
+}
+
 void SetUrbanParameters(UrbanType urban, int numLandunits, int mpi_rank) {
   SetCanyonHwr(urban, numLandunits, mpi_rank);
   SetFracPervRoadOfTotalRoad(urban, numLandunits, mpi_rank);
   SetWtRoof(urban, numLandunits, mpi_rank);
   SetHeightParameters(urban, numLandunits, mpi_rank);
   SetBuildingTemperature(urban, numLandunits, mpi_rank);
+  SetSurfaceTemperatures(urban, numLandunits, mpi_rank);
+  SetLayerTemperatures(urban, numLandunits, mpi_rank);
+  SetCanyonAirProperties(urban, numLandunits, mpi_rank);
   SetAlbedo(urban, numLandunits, mpi_rank);
   SetEmissivity(urban, numLandunits, mpi_rank);
   SetNumberOfActiveLayersImperviousRoad(urban, numLandunits, mpi_rank);

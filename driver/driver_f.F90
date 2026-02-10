@@ -1191,6 +1191,43 @@ contains
     end if
   end subroutine SetHydrologyBoundaryConditions
 
+  subroutine SetCanyonAirProperties(urban, numLandunits, mpi_rank)
+    use iso_c_binding, only: c_int, c_double, c_loc
+    implicit none
+    type(UrbanType), intent(in) :: urban
+    integer(c_int), intent(in) :: numLandunits
+    integer, intent(in) :: mpi_rank
+    integer(c_int) :: status
+    real(c_double), allocatable, target :: tempCanyonAir(:)
+    real(c_double), allocatable, target :: qafCanyonAir(:)
+    real(c_double), parameter :: TEMP_CANYON_AIR_INIT = 283.0_c_double
+    real(c_double), parameter :: QAF_INIT = 1.e-4_c_double
+    integer :: i
+
+    allocate(tempCanyonAir(numLandunits))
+    allocate(qafCanyonAir(numLandunits))
+
+    do i = 1, numLandunits
+      tempCanyonAir(i) = TEMP_CANYON_AIR_INIT
+      qafCanyonAir(i) = QAF_INIT
+    end do
+
+    call UrbanSetCanyonAirTemperature(urban, c_loc(tempCanyonAir), numLandunits, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+
+    call UrbanSetCanyonSpecificHumidity(urban, c_loc(qafCanyonAir), numLandunits, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+
+    deallocate(tempCanyonAir)
+    deallocate(qafCanyonAir)
+
+    if (mpi_rank == 0) then
+      print *, 'Set canyon air properties:'
+      print *, '  Canyon air temperature: ', TEMP_CANYON_AIR_INIT, ' K'
+      print *, '  Canyon specific humidity: ', QAF_INIT, ' kg/kg'
+    end if
+  end subroutine SetCanyonAirProperties
+
   subroutine SetUrbanParameters(urban, numLandunits, mpi_rank)
     type(UrbanType), intent(in) :: urban
     integer(c_int), intent(in) :: numLandunits
@@ -1201,6 +1238,9 @@ contains
     call SetWtRoof(urban, numLandunits, mpi_rank)
     call SetHeightParameters(urban, numLandunits, mpi_rank)
     call SetBuildingTemperature(urban, numLandunits, mpi_rank)
+    call SetSurfaceTemperatures(urban, numLandunits, mpi_rank)
+    call SetLayerTemperatures(urban, numLandunits, mpi_rank)
+    call SetCanyonAirProperties(urban, numLandunits, mpi_rank)
     call SetAlbedo(urban, numLandunits, mpi_rank)
     call SetEmissivity(urban, numLandunits, mpi_rank)
     call SetNumberOfActiveLayersImperviousRoad(urban, numLandunits, mpi_rank)
