@@ -244,6 +244,77 @@ contains
     deallocate(roofThickness)
   end subroutine SetBuildingTemperature
 
+  subroutine SetSurfaceTemperatures(urban, numLandunits, mpi_rank)
+    type(UrbanType), intent(in) :: urban
+    integer(c_int), intent(in) :: numLandunits
+    integer, intent(in) :: mpi_rank
+    integer(c_int) :: status, i
+    real(c_double), allocatable, target :: tempRoof(:)
+    real(c_double), allocatable, target :: tempImpRoad(:)
+    real(c_double), allocatable, target :: tempPervRoad(:)
+    real(c_double), allocatable, target :: tempSunlitWall(:)
+    real(c_double), allocatable, target :: tempShadedWall(:)
+    real(c_double), parameter :: TEMP_ROOF_INIT = 292.0d0      ! K
+    real(c_double), parameter :: TEMP_WALL_INIT = 292.0d0      ! K
+    real(c_double), parameter :: TEMP_ROAD_INIT = 274.0d0      ! K
+
+    ! Allocate arrays for surface temperatures
+    allocate(tempRoof(numLandunits))
+    allocate(tempImpRoad(numLandunits))
+    allocate(tempPervRoad(numLandunits))
+    allocate(tempSunlitWall(numLandunits))
+    allocate(tempShadedWall(numLandunits))
+
+    ! Initialize surface temperatures
+    do i = 1, numLandunits
+      tempRoof(i) = TEMP_ROOF_INIT
+      tempImpRoad(i) = TEMP_ROAD_INIT
+      tempPervRoad(i) = TEMP_ROAD_INIT
+      tempSunlitWall(i) = TEMP_WALL_INIT
+      tempShadedWall(i) = TEMP_WALL_INIT
+    end do
+
+    ! Set roof surface temperature
+    call UrbanSetEffectiveSurfTempRoof(urban, c_loc(tempRoof), &
+      numLandunits, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+
+    ! Set impervious road surface temperature
+    call UrbanSetEffectiveSurfTempImperviousRoad(urban, c_loc(tempImpRoad), &
+      numLandunits, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+
+    ! Set pervious road surface temperature
+    call UrbanSetEffectiveSurfTempPerviousRoad(urban, c_loc(tempPervRoad), &
+      numLandunits, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+
+    ! Set sunlit wall surface temperature
+    call UrbanSetEffectiveSurfTempSunlitWall(urban, c_loc(tempSunlitWall), &
+      numLandunits, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+
+    ! Set shaded wall surface temperature
+    call UrbanSetEffectiveSurfTempShadedWall(urban, c_loc(tempShadedWall), &
+      numLandunits, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+
+    if (mpi_rank == 0) then
+      write(*,*) 'Set surface temperatures:'
+      write(*,*) '  Roof:', TEMP_ROOF_INIT, 'K'
+      write(*,*) '  Impervious road:', TEMP_ROAD_INIT, 'K'
+      write(*,*) '  Pervious road:', TEMP_ROAD_INIT, 'K'
+      write(*,*) '  Sunlit wall:', TEMP_WALL_INIT, 'K'
+      write(*,*) '  Shaded wall:', TEMP_WALL_INIT, 'K'
+    end if
+
+    deallocate(tempRoof)
+    deallocate(tempImpRoad)
+    deallocate(tempPervRoad)
+    deallocate(tempSunlitWall)
+    deallocate(tempShadedWall)
+  end subroutine SetSurfaceTemperatures
+
   subroutine SetWtRoof(urban, numLandunits, mpi_rank)
     type(UrbanType), intent(in) :: urban
     integer(c_int), intent(in) :: numLandunits

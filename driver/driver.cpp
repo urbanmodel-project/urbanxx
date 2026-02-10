@@ -749,6 +749,56 @@ void SetBuildingTemperature(UrbanType urban, int numLandunits, int mpi_rank) {
   }
 }
 
+void SetSurfaceTemperatures(UrbanType urban, int numLandunits, int mpi_rank) {
+  UrbanErrorCode ierr;
+
+  const double TEMP_ROOF_INIT = 292.0;   // K
+  const double TEMP_WALL_INIT = 292.0;   // K
+  const double TEMP_ROAD_INIT = 274.0;   // K
+
+  double *tempRoof = AllocateArray(numLandunits, "tempRoof");
+  double *tempImpRoad = AllocateArray(numLandunits, "tempImpRoad");
+  double *tempPervRoad = AllocateArray(numLandunits, "tempPervRoad");
+  double *tempSunlitWall = AllocateArray(numLandunits, "tempSunlitWall");
+  double *tempShadedWall = AllocateArray(numLandunits, "tempShadedWall");
+
+  for (int i = 0; i < numLandunits; ++i) {
+    tempRoof[i] = TEMP_ROOF_INIT;
+    tempImpRoad[i] = TEMP_ROAD_INIT;
+    tempPervRoad[i] = TEMP_ROAD_INIT;
+    tempSunlitWall[i] = TEMP_WALL_INIT;
+    tempShadedWall[i] = TEMP_WALL_INIT;
+  }
+
+  UrbanCall(UrbanSetEffectiveSurfTempRoof(urban, tempRoof, numLandunits, &ierr),
+            &ierr);
+  UrbanCall(UrbanSetEffectiveSurfTempImperviousRoad(urban, tempImpRoad,
+                                                     numLandunits, &ierr),
+            &ierr);
+  UrbanCall(UrbanSetEffectiveSurfTempPerviousRoad(urban, tempPervRoad,
+                                                   numLandunits, &ierr),
+            &ierr);
+  UrbanCall(UrbanSetEffectiveSurfTempSunlitWall(urban, tempSunlitWall,
+                                                 numLandunits, &ierr),
+            &ierr);
+  UrbanCall(UrbanSetEffectiveSurfTempShadedWall(urban, tempShadedWall,
+                                                 numLandunits, &ierr),
+            &ierr);
+
+  double *tempArrays[] = {tempRoof, tempImpRoad, tempPervRoad, tempSunlitWall,
+                          tempShadedWall};
+  FreeArrays(tempArrays, 5);
+
+  if (mpi_rank == 0) {
+    std::cout << "Set surface temperatures:" << std::endl;
+    std::cout << "  Roof: " << TEMP_ROOF_INIT << " K" << std::endl;
+    std::cout << "  Impervious road: " << TEMP_ROAD_INIT << " K" << std::endl;
+    std::cout << "  Pervious road: " << TEMP_ROAD_INIT << " K" << std::endl;
+    std::cout << "  Sunlit wall: " << TEMP_WALL_INIT << " K" << std::endl;
+    std::cout << "  Shaded wall: " << TEMP_WALL_INIT << " K" << std::endl;
+  }
+}
+
 void SetHydrologyBoundaryConditions(UrbanType urban, int numLandunits,
                                    int mpi_rank) {
   UrbanErrorCode ierr;

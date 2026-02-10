@@ -183,6 +183,27 @@ URBAN_EXTERN void UrbanSetTranspirationFlux(UrbanType urban,
 URBAN_EXTERN void UrbanSetWaterTableDepth(UrbanType urban, const double *values,
                                           int length, UrbanErrorCode *status);
 
+// Surface temperature setter functions
+URBAN_EXTERN void UrbanSetEffectiveSurfTempRoof(UrbanType urban,
+                                                const double *values,
+                                                int length,
+                                                UrbanErrorCode *status);
+URBAN_EXTERN void
+UrbanSetEffectiveSurfTempImperviousRoad(UrbanType urban, const double *values,
+                                        int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetEffectiveSurfTempPerviousRoad(UrbanType urban,
+                                                        const double *values,
+                                                        int length,
+                                                        UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetEffectiveSurfTempSunlitWall(UrbanType urban,
+                                                      const double *values,
+                                                      int length,
+                                                      UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetEffectiveSurfTempShadedWall(UrbanType urban,
+                                                      const double *values,
+                                                      int length,
+                                                      UrbanErrorCode *status);
+
 // Kokkos utility functions
 URBAN_EXTERN bool UrbanKokkosIsLayoutRight(void);
 URBAN_EXTERN bool UrbanKokkosIsLayoutLeft(void);
