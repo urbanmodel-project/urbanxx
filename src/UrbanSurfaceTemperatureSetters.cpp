@@ -55,4 +55,46 @@ void UrbanSetEffectiveSurfTempShadedWall(UrbanType urban, const double *values,
   SetView1D(urban->shadedWall.EffectiveSurfTemp, values, length, status);
 }
 
+// Layer temperature setter functions (2D)
+void UrbanSetLayerTempRoof(UrbanType urban, const double *values,
+                           const int size[2], UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
+    return;
+
+  SetView2D(urban->roof.Temperature, values, size, status);
+}
+
+void UrbanSetLayerTempImperviousRoad(UrbanType urban, const double *values,
+                                     const int size[2],
+                                     UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
+    return;
+
+  SetView2D(urban->imperviousRoad.Temperature, values, size, status);
+}
+
+void UrbanSetLayerTempPerviousRoad(UrbanType urban, const double *values,
+                                   const int size[2], UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
+    return;
+
+  SetView2D(urban->perviousRoad.Temperature, values, size, status);
+}
+
+void UrbanSetLayerTempSunlitWall(UrbanType urban, const double *values,
+                                 const int size[2], UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
+    return;
+
+  SetView2D(urban->sunlitWall.Temperature, values, size, status);
+}
+
+void UrbanSetLayerTempShadedWall(UrbanType urban, const double *values,
+                                 const int size[2], UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
+    return;
+
+  SetView2D(urban->shadedWall.Temperature, values, size, status);
+}
+
 } // extern "C"

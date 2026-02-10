@@ -799,6 +799,96 @@ void SetSurfaceTemperatures(UrbanType urban, int numLandunits, int mpi_rank) {
   }
 }
 
+void SetLayerTemperatures(UrbanType urban, int numLandunits, int mpi_rank) {
+  UrbanErrorCode ierr;
+
+  const double TEMP_ROOF_INIT = 292.0;   // K
+  const double TEMP_WALL_INIT = 292.0;   // K
+  const double TEMP_ROAD_INIT = 274.0;   // K
+  const int NUM_URBAN_LAYERS = 5;
+  const int NUM_SOIL_LAYERS = 15;
+
+  // Check memory layout
+  bool isLayoutLeft = UrbanKokkosIsLayoutLeft();
+
+  // Allocate arrays for layer temperatures
+  // Urban surfaces: (numLandunits, NUM_URBAN_LAYERS)
+  double *tempRoof = AllocateArray(numLandunits * NUM_URBAN_LAYERS, "tempRoof");
+  double *tempSunlitWall = AllocateArray(numLandunits * NUM_URBAN_LAYERS, "tempSunlitWall");
+  double *tempShadedWall = AllocateArray(numLandunits * NUM_URBAN_LAYERS, "tempShadedWall");
+  
+  // Road surfaces: (numLandunits, NUM_SOIL_LAYERS)
+  double *tempImpRoad = AllocateArray(numLandunits * NUM_SOIL_LAYERS, "tempImpRoad");
+  double *tempPervRoad = AllocateArray(numLandunits * NUM_SOIL_LAYERS, "tempPervRoad");
+
+  // Fill arrays based on memory layout
+  int idx = 0;
+  if (isLayoutLeft) {
+    // LayoutLeft: iterate landunits in outer loop, layers in inner loop
+    for (int j = 0; j < NUM_URBAN_LAYERS; ++j) {
+      for (int i = 0; i < numLandunits; ++i) {
+        tempRoof[idx] = TEMP_ROOF_INIT;
+        tempSunlitWall[idx] = TEMP_WALL_INIT;
+        tempShadedWall[idx] = TEMP_WALL_INIT;
+        ++idx;
+      }
+    }
+    
+    idx = 0;
+    for (int j = 0; j < NUM_SOIL_LAYERS; ++j) {
+      for (int i = 0; i < numLandunits; ++i) {
+        tempImpRoad[idx] = TEMP_ROAD_INIT;
+        tempPervRoad[idx] = TEMP_ROAD_INIT;
+        ++idx;
+      }
+    }
+  } else {
+    // LayoutRight: iterate layers in outer loop, landunits in inner loop
+    for (int i = 0; i < numLandunits; ++i) {
+      for (int j = 0; j < NUM_URBAN_LAYERS; ++j) {
+        tempRoof[idx] = TEMP_ROOF_INIT;
+        tempSunlitWall[idx] = TEMP_WALL_INIT;
+        tempShadedWall[idx] = TEMP_WALL_INIT;
+        ++idx;
+      }
+    }
+    
+    idx = 0;
+    for (int i = 0; i < numLandunits; ++i) {
+      for (int j = 0; j < NUM_SOIL_LAYERS; ++j) {
+        tempImpRoad[idx] = TEMP_ROAD_INIT;
+        tempPervRoad[idx] = TEMP_ROAD_INIT;
+        ++idx;
+      }
+    }
+  }
+
+  // Set size arrays
+  int size2D_urban[2] = {numLandunits, NUM_URBAN_LAYERS};
+  int size2D_soil[2] = {numLandunits, NUM_SOIL_LAYERS};
+
+  // Set layer temperatures
+  UrbanCall(UrbanSetLayerTempRoof(urban, tempRoof, size2D_urban, &ierr), &ierr);
+  UrbanCall(UrbanSetLayerTempImperviousRoad(urban, tempImpRoad, size2D_soil, &ierr), &ierr);
+  UrbanCall(UrbanSetLayerTempPerviousRoad(urban, tempPervRoad, size2D_soil, &ierr), &ierr);
+  UrbanCall(UrbanSetLayerTempSunlitWall(urban, tempSunlitWall, size2D_urban, &ierr), &ierr);
+  UrbanCall(UrbanSetLayerTempShadedWall(urban, tempShadedWall, size2D_urban, &ierr), &ierr);
+
+  double *tempArrays[] = {tempRoof, tempImpRoad, tempPervRoad, tempSunlitWall,
+                          tempShadedWall};
+  FreeArrays(tempArrays, 5);
+
+  if (mpi_rank == 0) {
+    std::cout << "Set layer temperatures ("
+              << (isLayoutLeft ? "LayoutLeft" : "LayoutRight") << "):" << std::endl;
+    std::cout << "  Roof layers: " << TEMP_ROOF_INIT << " K (" << NUM_URBAN_LAYERS << " layers)" << std::endl;
+    std::cout << "  Impervious road layers: " << TEMP_ROAD_INIT << " K (" << NUM_SOIL_LAYERS << " layers)" << std::endl;
+    std::cout << "  Pervious road layers: " << TEMP_ROAD_INIT << " K (" << NUM_SOIL_LAYERS << " layers)" << std::endl;
+    std::cout << "  Sunlit wall layers: " << TEMP_WALL_INIT << " K (" << NUM_URBAN_LAYERS << " layers)" << std::endl;
+    std::cout << "  Shaded wall layers: " << TEMP_WALL_INIT << " K (" << NUM_URBAN_LAYERS << " layers)" << std::endl;
+  }
+}
+
 void SetHydrologyBoundaryConditions(UrbanType urban, int numLandunits,
                                    int mpi_rank) {
   UrbanErrorCode ierr;

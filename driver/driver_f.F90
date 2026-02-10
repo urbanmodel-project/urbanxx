@@ -315,6 +315,130 @@ contains
     deallocate(tempShadedWall)
   end subroutine SetSurfaceTemperatures
 
+  subroutine SetLayerTemperatures(urban, numLandunits, mpi_rank)
+    type(UrbanType), intent(in) :: urban
+    integer(c_int), intent(in) :: numLandunits
+    integer, intent(in) :: mpi_rank
+    integer(c_int) :: status, i, j, idx
+    integer(c_int), parameter :: NUM_URBAN_LAYERS = 5
+    integer(c_int), parameter :: NUM_SOIL_LAYERS = 15
+    integer(c_int), dimension(2) :: size2D_urban, size2D_soil
+    logical(c_bool) :: isLayoutLeft
+    real(c_double), allocatable, target :: tempRoof(:)
+    real(c_double), allocatable, target :: tempImpRoad(:)
+    real(c_double), allocatable, target :: tempPervRoad(:)
+    real(c_double), allocatable, target :: tempSunlitWall(:)
+    real(c_double), allocatable, target :: tempShadedWall(:)
+    real(c_double), parameter :: TEMP_ROOF_INIT = 292.0d0      ! K
+    real(c_double), parameter :: TEMP_WALL_INIT = 292.0d0      ! K
+    real(c_double), parameter :: TEMP_ROAD_INIT = 274.0d0      ! K
+
+    ! Check memory layout
+    isLayoutLeft = UrbanKokkosIsLayoutLeft()
+
+    ! Allocate arrays for layer temperatures
+    ! Urban surfaces: (numLandunits, NUM_URBAN_LAYERS)
+    allocate(tempRoof(numLandunits * NUM_URBAN_LAYERS))
+    allocate(tempSunlitWall(numLandunits * NUM_URBAN_LAYERS))
+    allocate(tempShadedWall(numLandunits * NUM_URBAN_LAYERS))
+    
+    ! Road surfaces: (numLandunits, NUM_SOIL_LAYERS)
+    allocate(tempImpRoad(numLandunits * NUM_SOIL_LAYERS))
+    allocate(tempPervRoad(numLandunits * NUM_SOIL_LAYERS))
+
+    ! Fill arrays based on memory layout
+    if (isLayoutLeft) then
+      ! LayoutLeft: iterate landunits in outer loop, layers in inner loop
+      idx = 0
+      do j = 1, NUM_URBAN_LAYERS
+        do i = 1, numLandunits
+          idx = idx + 1
+          tempRoof(idx) = TEMP_ROOF_INIT
+          tempSunlitWall(idx) = TEMP_WALL_INIT
+          tempShadedWall(idx) = TEMP_WALL_INIT
+        end do
+      end do
+      
+      idx = 0
+      do j = 1, NUM_SOIL_LAYERS
+        do i = 1, numLandunits
+          idx = idx + 1
+          tempImpRoad(idx) = TEMP_ROAD_INIT
+          tempPervRoad(idx) = TEMP_ROAD_INIT
+        end do
+      end do
+    else
+      ! LayoutRight: iterate layers in outer loop, landunits in inner loop
+      idx = 0
+      do i = 1, numLandunits
+        do j = 1, NUM_URBAN_LAYERS
+          idx = idx + 1
+          tempRoof(idx) = TEMP_ROOF_INIT
+          tempSunlitWall(idx) = TEMP_WALL_INIT
+          tempShadedWall(idx) = TEMP_WALL_INIT
+        end do
+      end do
+      
+      idx = 0
+      do i = 1, numLandunits
+        do j = 1, NUM_SOIL_LAYERS
+          idx = idx + 1
+          tempImpRoad(idx) = TEMP_ROAD_INIT
+          tempPervRoad(idx) = TEMP_ROAD_INIT
+        end do
+      end do
+    end if
+
+    ! Set size arrays
+    size2D_urban(1) = numLandunits
+    size2D_urban(2) = NUM_URBAN_LAYERS
+    size2D_soil(1) = numLandunits
+    size2D_soil(2) = NUM_SOIL_LAYERS
+
+    ! Set roof layer temperatures
+    call UrbanSetLayerTempRoof(urban, c_loc(tempRoof), size2D_urban, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+
+    ! Set impervious road layer temperatures
+    call UrbanSetLayerTempImperviousRoad(urban, c_loc(tempImpRoad), &
+      size2D_soil, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+
+    ! Set pervious road layer temperatures
+    call UrbanSetLayerTempPerviousRoad(urban, c_loc(tempPervRoad), &
+      size2D_soil, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+
+    ! Set sunlit wall layer temperatures
+    call UrbanSetLayerTempSunlitWall(urban, c_loc(tempSunlitWall), &
+      size2D_urban, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+
+    ! Set shaded wall layer temperatures
+    call UrbanSetLayerTempShadedWall(urban, c_loc(tempShadedWall), &
+      size2D_urban, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+
+    if (mpi_rank == 0) then
+      if (isLayoutLeft) then
+        write(*,*) 'Set layer temperatures (LayoutLeft):'
+      else
+        write(*,*) 'Set layer temperatures (LayoutRight):'
+      end if
+      write(*,*) '  Roof layers:', TEMP_ROOF_INIT, 'K (', NUM_URBAN_LAYERS, 'layers)'
+      write(*,*) '  Impervious road layers:', TEMP_ROAD_INIT, 'K (', NUM_SOIL_LAYERS, 'layers)'
+      write(*,*) '  Pervious road layers:', TEMP_ROAD_INIT, 'K (', NUM_SOIL_LAYERS, 'layers)'
+      write(*,*) '  Sunlit wall layers:', TEMP_WALL_INIT, 'K (', NUM_URBAN_LAYERS, 'layers)'
+      write(*,*) '  Shaded wall layers:', TEMP_WALL_INIT, 'K (', NUM_URBAN_LAYERS, 'layers)'
+    end if
+
+    deallocate(tempRoof)
+    deallocate(tempImpRoad)
+    deallocate(tempPervRoad)
+    deallocate(tempSunlitWall)
+    deallocate(tempShadedWall)
+  end subroutine SetLayerTemperatures
+
   subroutine SetWtRoof(urban, numLandunits, mpi_rank)
     type(UrbanType), intent(in) :: urban
     integer(c_int), intent(in) :: numLandunits
