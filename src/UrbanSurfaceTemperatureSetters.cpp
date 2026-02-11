@@ -120,12 +120,20 @@ void UrbanSetFractionWetImperviousRoad(UrbanType urban, const double *values,
   if (!ValidateInputsWithData(urban, values, status))
     return;
 
+  // Validate that fraction wet values are within [0, 1]
+  if (!ValidateRange(values, length, 0.0, 1.0, status))
+    return;
+
   SetView1D(urban->imperviousRoad.FractionWet, values, length, status);
 }
 
 void UrbanSetFractionWetRoof(UrbanType urban, const double *values, int length,
                              UrbanErrorCode *status) {
   if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  // Validate that fraction wet values are within [0, 1]
+  if (!ValidateRange(values, length, 0.0, 1.0, status))
     return;
 
   SetView1D(urban->roof.FractionWet, values, length, status);

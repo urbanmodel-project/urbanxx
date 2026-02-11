@@ -486,6 +486,28 @@ TEST_F(TemperatureSetterTest, SetFractionWetImperviousRoad_NullUrban) {
       << "UrbanSetFractionWetImperviousRoad should fail with null urban object";
 }
 
+// Test: UrbanSetFractionWetImperviousRoad with negative values (out of range)
+TEST_F(TemperatureSetterTest, SetFractionWetImperviousRoad_NegativeValue) {
+  std::vector<double> values(numLandunits, -0.1);
+  UrbanErrorCode status;
+
+  UrbanSetFractionWetImperviousRoad(urban, values.data(), numLandunits, &status);
+
+  EXPECT_EQ(status, URBAN_ERR_INVALID_ARGUMENT)
+      << "UrbanSetFractionWetImperviousRoad should fail with negative values";
+}
+
+// Test: UrbanSetFractionWetImperviousRoad with values > 1 (out of range)
+TEST_F(TemperatureSetterTest, SetFractionWetImperviousRoad_ValueAboveOne) {
+  std::vector<double> values(numLandunits, 1.5);
+  UrbanErrorCode status;
+
+  UrbanSetFractionWetImperviousRoad(urban, values.data(), numLandunits, &status);
+
+  EXPECT_EQ(status, URBAN_ERR_INVALID_ARGUMENT)
+      << "UrbanSetFractionWetImperviousRoad should fail with values > 1";
+}
+
 // Test: UrbanSetFractionWetRoof with valid data
 TEST_F(TemperatureSetterTest, SetFractionWetRoof_ValidData) {
   std::vector<double> values(numLandunits, 0.3);
@@ -527,6 +549,28 @@ TEST_F(TemperatureSetterTest, SetFractionWetRoof_NullUrban) {
 
   EXPECT_EQ(status, URBAN_ERR_INVALID_ARGUMENT)
       << "UrbanSetFractionWetRoof should fail with null urban object";
+}
+
+// Test: UrbanSetFractionWetRoof with negative values (out of range)
+TEST_F(TemperatureSetterTest, SetFractionWetRoof_NegativeValue) {
+  std::vector<double> values(numLandunits, -0.2);
+  UrbanErrorCode status;
+
+  UrbanSetFractionWetRoof(urban, values.data(), numLandunits, &status);
+
+  EXPECT_EQ(status, URBAN_ERR_INVALID_ARGUMENT)
+      << "UrbanSetFractionWetRoof should fail with negative values";
+}
+
+// Test: UrbanSetFractionWetRoof with values > 1 (out of range)
+TEST_F(TemperatureSetterTest, SetFractionWetRoof_ValueAboveOne) {
+  std::vector<double> values(numLandunits, 2.0);
+  UrbanErrorCode status;
+
+  UrbanSetFractionWetRoof(urban, values.data(), numLandunits, &status);
+
+  EXPECT_EQ(status, URBAN_ERR_INVALID_ARGUMENT)
+      << "UrbanSetFractionWetRoof should fail with values > 1";
 }
 
 // =============================================================================
