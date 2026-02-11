@@ -469,15 +469,15 @@ KOKKOS_INLINE_FUNCTION
 void ComputeNewTafAndQaf(Real canyonWind, Real thm, Real rahu, Real rawu,
                          const CanyonAirData &canyon,
                          const SurfaceTempHumidData &surfaces, Real qaf,
-                         Real fwetRoadImperv, Real &tafNew, Real &qafNew,
-                         SurfaceFluxConductances &condcs) {
+                         Real fwetRoof, Real fwetRoadImperv, Real &tafNew,
+                         Real &qafNew, SurfaceFluxConductances &condcs) {
 
   const Real qSunwall = 0.0;
   const Real qShadewall = 0.0;
 
   Real canyonResistance = CPAIR * canyon.forcRho / (11.8 + 4.2 * canyonWind);
 
-  const Real fwetRoof = 0.0;
+  // fwetRoof is now passed as parameter from FractionWet view
   const Real wtusRoof = canyon.wtRoof / canyonResistance;
   const Real wtusRoofUnscl = 1.0 / canyonResistance;
   const Real wtuqRoof = fwetRoof * canyon.wtRoof / canyonResistance;
@@ -813,10 +813,11 @@ void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
               urban.shadedWall.EffectiveSurfTemp(l)};
 
           Real tafNew, qafNew;
+          const Real fwetRoof = urban.roof.FractionWet(l);
           const Real fwetRoadImperv = urban.imperviousRoad.FractionWet(l);
           ComputeNewTafAndQaf(canyonWind, thm, rahu, rawu, canyonData,
-                              surfaceData, qaf, fwetRoadImperv, tafNew, qafNew,
-                              condcs);
+                              surfaceData, qaf, fwetRoof, fwetRoadImperv,
+                              tafNew, qafNew, condcs);
           taf = tafNew;
           qaf = qafNew;
 

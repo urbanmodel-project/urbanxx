@@ -941,13 +941,14 @@ void SetHydrologyBoundaryConditions(UrbanType urban, int numLandunits,
   UrbanCall(UrbanSetTranspirationFlux(urban, qflxTran, size2D, &ierr), &ierr);
   free(qflxTran);
 
-  // Set fraction wet for impervious road (1D: per landunit)
+  // Set fraction wet for impervious road and roof (1D: per landunit)
   const double FWET_INITIAL = 0.0; // fraction of surface that is wet [-]
   double *fwet = AllocateArray(numLandunits, "fwet");
   for (int i = 0; i < numLandunits; ++i) {
     fwet[i] = FWET_INITIAL;
   }
   UrbanCall(UrbanSetFractionWetImperviousRoad(urban, fwet, numLandunits, &ierr), &ierr);
+  UrbanCall(UrbanSetFractionWetRoof(urban, fwet, numLandunits, &ierr), &ierr);
   free(fwet);
 
   if (mpi_rank == 0) {
@@ -957,6 +958,7 @@ void SetHydrologyBoundaryConditions(UrbanType urban, int numLandunits,
     std::cout << "  Infiltration flux: " << QFLX_INFL << " mm/s" << std::endl;
     std::cout << "  Transpiration flux: 0.0 mm/s (all layers)" << std::endl;
     std::cout << "  Fraction wet (impervious road): " << FWET_INITIAL << std::endl;
+    std::cout << "  Fraction wet (roof): " << FWET_INITIAL << std::endl;
   }
 }
 

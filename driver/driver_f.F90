@@ -1185,10 +1185,12 @@ contains
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
     deallocate(qflxTran)
 
-    ! Set fraction wet for impervious road (1D: per landunit)
+    ! Set fraction wet for impervious road and roof (1D: per landunit)
     allocate(fwet(numLandunits))
     fwet(:) = FWET_INITIAL
     call UrbanSetFractionWetImperviousRoad(urban, c_loc(fwet), numLandunits, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+    call UrbanSetFractionWetRoof(urban, c_loc(fwet), numLandunits, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
     deallocate(fwet)
 
@@ -1198,6 +1200,7 @@ contains
       write(*,*) '  Infiltration flux:', QFLX_INFL, 'mm/s'
       write(*,*) '  Transpiration flux: 0.0 mm/s (all layers)'
       write(*,*) '  Fraction wet (impervious road):', FWET_INITIAL
+      write(*,*) '  Fraction wet (roof):', FWET_INITIAL
     end if
   end subroutine SetHydrologyBoundaryConditions
 

@@ -407,7 +407,7 @@ module urban_mod
       integer(c_int) :: status
     end subroutine UrbanSetCanyonSpecificHumidity
 
-    ! Surface wetness setter function
+    ! Surface wetness setter functions
     subroutine UrbanSetFractionWetImperviousRoad(urban, values, length, &
       status) bind(C, name="UrbanSetFractionWetImperviousRoad")
       import :: c_ptr, c_int, UrbanType
@@ -416,6 +416,15 @@ module urban_mod
       integer(c_int), value :: length
       integer(c_int) :: status
     end subroutine UrbanSetFractionWetImperviousRoad
+
+    subroutine UrbanSetFractionWetRoof(urban, values, length, &
+      status) bind(C, name="UrbanSetFractionWetRoof")
+      import :: c_ptr, c_int, UrbanType
+      type(UrbanType), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetFractionWetRoof
 
     ! Setup and initialization functions
     subroutine UrbanSetup(urban, status) bind(C, name="UrbanSetup")

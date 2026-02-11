@@ -271,12 +271,15 @@ struct WallDataType : SurfaceDataBase {
 };
 
 struct RoofDataType : SnowCoveredSurfaceData {
+  DECLARE_DEVICE_VIEW(1DR8, FractionWet) // fraction of surface that is wet [-]
   // Inherits all fields from SnowCoveredSurfaceData and SurfaceDataBase
 
   RoofDataType(int numLandunits, int numRadBands, int numRadTypes,
                int numLayers)
       : SnowCoveredSurfaceData(numLandunits, numRadBands, numRadTypes,
-                               numLayers) {}
+                               numLayers) {
+    ALLOCATE_DEVICE_VIEW(FractionWet, Array1DR8, numLandunits)
+  }
 };
 } // namespace URBANXX
 
