@@ -950,7 +950,7 @@ void SetHydrologyBoundaryConditions(UrbanType urban, int numLandunits,
   }
 }
 
-void SetCanyonAirProperties(UrbanType urban, int numLandunits, int mpi_rank) {
+void SetCanyonAirStates(UrbanType urban, int numLandunits, int mpi_rank) {
   UrbanErrorCode ierr;
 
   const double TEMP_CANYON_AIR_INIT = 283.0; // K
@@ -985,7 +985,7 @@ void SetUrbanParameters(UrbanType urban, int numLandunits, int mpi_rank) {
   SetBuildingTemperature(urban, numLandunits, mpi_rank);
   SetSurfaceTemperatures(urban, numLandunits, mpi_rank);
   SetLayerTemperatures(urban, numLandunits, mpi_rank);
-  SetCanyonAirProperties(urban, numLandunits, mpi_rank);
+  SetCanyonAirStates(urban, numLandunits, mpi_rank);
   SetAlbedo(urban, numLandunits, mpi_rank);
   SetEmissivity(urban, numLandunits, mpi_rank);
   SetNumberOfActiveLayersImperviousRoad(urban, numLandunits, mpi_rank);

@@ -1191,7 +1191,7 @@ contains
     end if
   end subroutine SetHydrologyBoundaryConditions
 
-  subroutine SetCanyonAirProperties(urban, numLandunits, mpi_rank)
+  subroutine SetCanyonAirStates(urban, numLandunits, mpi_rank)
     use iso_c_binding, only: c_int, c_double, c_loc
     implicit none
     type(UrbanType), intent(in) :: urban
@@ -1226,7 +1226,7 @@ contains
       print *, '  Canyon air temperature: ', TEMP_CANYON_AIR_INIT, ' K'
       print *, '  Canyon specific humidity: ', QAF_INIT, ' kg/kg'
     end if
-  end subroutine SetCanyonAirProperties
+  end subroutine SetCanyonAirStates
 
   subroutine SetUrbanParameters(urban, numLandunits, mpi_rank)
     type(UrbanType), intent(in) :: urban
@@ -1240,7 +1240,7 @@ contains
     call SetBuildingTemperature(urban, numLandunits, mpi_rank)
     call SetSurfaceTemperatures(urban, numLandunits, mpi_rank)
     call SetLayerTemperatures(urban, numLandunits, mpi_rank)
-    call SetCanyonAirProperties(urban, numLandunits, mpi_rank)
+    call SetCanyonAirStates(urban, numLandunits, mpi_rank)
     call SetAlbedo(urban, numLandunits, mpi_rank)
     call SetEmissivity(urban, numLandunits, mpi_rank)
     call SetNumberOfActiveLayersImperviousRoad(urban, numLandunits, mpi_rank)
