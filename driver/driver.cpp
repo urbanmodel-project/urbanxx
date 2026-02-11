@@ -824,7 +824,7 @@ void SetLayerTemperatures(UrbanType urban, int numLandunits, int mpi_rank) {
   // Fill arrays based on memory layout
   int idx = 0;
   if (isLayoutLeft) {
-    // LayoutLeft: iterate landunits in outer loop, layers in inner loop
+    // LayoutLeft: iterate layers in outer loop, landunits in inner loop
     for (int j = 0; j < NUM_URBAN_LAYERS; ++j) {
       for (int i = 0; i < numLandunits; ++i) {
         tempRoof[idx] = TEMP_ROOF_INIT;
@@ -843,7 +843,7 @@ void SetLayerTemperatures(UrbanType urban, int numLandunits, int mpi_rank) {
       }
     }
   } else {
-    // LayoutRight: iterate layers in outer loop, landunits in inner loop
+    // LayoutRight: iterate landunits in outer loop, layers in inner loop
     for (int i = 0; i < numLandunits; ++i) {
       for (int j = 0; j < NUM_URBAN_LAYERS; ++j) {
         tempRoof[idx] = TEMP_ROOF_INIT;

@@ -368,7 +368,7 @@ contains
         end do
       end do
     else
-      ! LayoutRight: iterate layers in outer loop, landunits in inner loop
+      ! LayoutRight: iterate landunits in outer loop, layers in inner loop
       idx = 0
       do i = 1, numLandunits
         do j = 1, NUM_URBAN_LAYERS
