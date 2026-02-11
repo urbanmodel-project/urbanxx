@@ -114,4 +114,13 @@ void UrbanSetCanyonSpecificHumidity(UrbanType urban, const double *values,
   SetView1D(urban->urbanCanyon.Qaf, values, length, status);
 }
 
+// Surface wetness setter function (1D)
+void UrbanSetFractionWetImperviousRoad(UrbanType urban, const double *values,
+                                       int length, UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  SetView1D(urban->imperviousRoad.FractionWet, values, length, status);
+}
+
 } // extern "C"

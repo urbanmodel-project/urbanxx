@@ -199,6 +199,7 @@ struct SnowCoveredSurfaceData : SurfaceDataBase {
 
 struct ImperviousRoadDataType : SnowCoveredSurfaceData {
   DECLARE_DEVICE_VIEW(1DI4, NumberOfActiveLayers) // number of active layers
+  DECLARE_DEVICE_VIEW(1DR8, FractionWet) // fraction of surface that is wet [-]
   // Inherits all fields from SnowCoveredSurfaceData and SurfaceDataBase
   ImperviousRoadDataType(int numLandunits, int numRadBands, int numRadTypes,
                          int numLayers)
@@ -207,6 +208,7 @@ struct ImperviousRoadDataType : SnowCoveredSurfaceData {
     // Don't initialize to 0 - must be set via
     // UrbanSetNumberOfActiveLayersImperviousRoad
     ALLOCATE_VIEW_NO_INIT(NumberOfActiveLayers, Array1DI4, numLandunits)
+    ALLOCATE_DEVICE_VIEW(FractionWet, Array1DR8, numLandunits)
   }
 };
 

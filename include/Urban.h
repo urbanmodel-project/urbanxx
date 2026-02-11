@@ -234,6 +234,12 @@ URBAN_EXTERN void UrbanSetCanyonSpecificHumidity(UrbanType urban,
                                                  int length,
                                                  UrbanErrorCode *status);
 
+// Surface wetness setter function
+URBAN_EXTERN void UrbanSetFractionWetImperviousRoad(UrbanType urban,
+                                                    const double *values,
+                                                    int length,
+                                                    UrbanErrorCode *status);
+
 // Kokkos utility functions
 URBAN_EXTERN bool UrbanKokkosIsLayoutRight(void);
 URBAN_EXTERN bool UrbanKokkosIsLayoutLeft(void);

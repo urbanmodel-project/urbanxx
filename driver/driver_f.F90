@@ -1126,11 +1126,13 @@ contains
     real(c_double), allocatable, target :: zwt(:)
     real(c_double), allocatable, target :: qflxInfl(:)
     real(c_double), allocatable, target :: qflxTran(:)
+    real(c_double), allocatable, target :: fwet(:)
     logical(c_bool) :: isLayoutLeft
 
     ! Constants
     real(c_double), parameter :: ZWT_INITIAL = 4.8018819123227204d0  ! m (initial water table depth)
     real(c_double), parameter :: QFLX_INFL = 0.0d0                   ! mm/s (infiltration flux)
+    real(c_double), parameter :: FWET_INITIAL = 0.0d0                ! fraction of surface that is wet [-]
 
     ! Set water table depth (1D: per landunit)
     allocate(zwt(numLandunits))
@@ -1183,11 +1185,19 @@ contains
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
     deallocate(qflxTran)
 
+    ! Set fraction wet for impervious road (1D: per landunit)
+    allocate(fwet(numLandunits))
+    fwet(:) = FWET_INITIAL
+    call UrbanSetFractionWetImperviousRoad(urban, c_loc(fwet), numLandunits, status)
+    if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
+    deallocate(fwet)
+
     if (mpi_rank == 0) then
       write(*,*) 'Set hydrology boundary conditions:'
       write(*,*) '  Initial water table depth:', ZWT_INITIAL, 'm'
       write(*,*) '  Infiltration flux:', QFLX_INFL, 'mm/s'
       write(*,*) '  Transpiration flux: 0.0 mm/s (all layers)'
+      write(*,*) '  Fraction wet (impervious road):', FWET_INITIAL
     end if
   end subroutine SetHydrologyBoundaryConditions
 
