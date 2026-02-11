@@ -11,71 +11,6 @@ struct _p_UrbanType : public URBANXX::_p_UrbanType {
 
 using namespace URBANXX;
 
-// Internal function to initialize temperatures
-// Note: Parameters are pre-validated by caller (UrbanSetup)
-// Exception handling is done by the caller
-static void UrbanInitializeTemperature(UrbanType urban) {
-  // Get references to temperature views
-  auto &roofTemp = urban->roof.EffectiveSurfTemp;
-  auto &imperviousRoadTemp = urban->imperviousRoad.EffectiveSurfTemp;
-  auto &perviousRoadTemp = urban->perviousRoad.EffectiveSurfTemp;
-  auto &sunlitWallTemp = urban->sunlitWall.EffectiveSurfTemp;
-  auto &shadedWallTemp = urban->shadedWall.EffectiveSurfTemp;
-
-  // Get references to layer temperature views
-  auto &roofLayerTemp = urban->roof.Temperature;
-  auto &imperviousRoadLayerTemp = urban->imperviousRoad.Temperature;
-  auto &perviousRoadLayerTemp = urban->perviousRoad.Temperature;
-  auto &sunlitWallLayerTemp = urban->sunlitWall.Temperature;
-  auto &shadedWallLayerTemp = urban->shadedWall.Temperature;
-  auto &buildingTemp = urban->building.Temperature;
-
-  // Get references to canyon air properties
-  auto &taf = urban->urbanCanyon.Taf;
-  auto &qaf = urban->urbanCanyon.Qaf;
-
-  const int numLandunits = urban->numLandunits;
-  const int numUrbanLayers = urban->numUrbanLayers;
-  const int numSoilLayers = urban->numSoilLayers;
-
-  // Temperature initialization constants
-  constexpr Real TEMP_ROOF_INIT = 292.0;
-  constexpr Real TEMP_WALL_INIT = 292.0;
-  constexpr Real TEMP_ROAD_INIT = 274.0;
-  constexpr Real TEMP_CANYON_AIR_INIT = 283.0;
-  constexpr Real QAF_INIT = 1.e-4; // kg/kg
-
-  // Initialize surface temperatures and canyon air properties
-  Kokkos::parallel_for(
-      "InitializeSurfaceTemperatures", numLandunits, KOKKOS_LAMBDA(int l) {
-        // Initialize effective surface temperatures
-        roofTemp(l) = TEMP_ROOF_INIT;
-        imperviousRoadTemp(l) = TEMP_ROAD_INIT;
-        perviousRoadTemp(l) = TEMP_ROAD_INIT;
-        sunlitWallTemp(l) = TEMP_WALL_INIT;
-        shadedWallTemp(l) = TEMP_WALL_INIT;
-        buildingTemp(l) = TEMP_WALL_INIT;
-
-        // Initialize layer temperatures for urban surfaces (numUrbanLayers)
-        for (int k = 0; k < numUrbanLayers; ++k) {
-          roofLayerTemp(l, k) = TEMP_ROOF_INIT;
-          sunlitWallLayerTemp(l, k) = TEMP_WALL_INIT;
-          shadedWallLayerTemp(l, k) = TEMP_WALL_INIT;
-        }
-
-        // Initialize road layer temperatures (numSoilLayers)
-        for (int k = 0; k < numSoilLayers; ++k) {
-          imperviousRoadLayerTemp(l, k) = TEMP_ROAD_INIT;
-          perviousRoadLayerTemp(l, k) = TEMP_ROAD_INIT;
-        }
-
-        // Initialize canyon air properties
-        taf(l) = TEMP_CANYON_AIR_INIT; // Initialize to canyon air temperature
-        qaf(l) = QAF_INIT; // Initialize to reasonable humidity value (kg/kg)
-      });
-  Kokkos::fence();
-}
-
 // Helper function to compute vertical discretization for a surface with uniform
 // layers
 template <typename ViewType>
@@ -590,7 +525,6 @@ void UrbanSetup(UrbanType urban, UrbanErrorCode *status) {
 
   try {
     // Initialize surface temperatures
-    UrbanInitializeTemperature(urban);
     UrbanInitializeVerticalDiscretization(urban);
     UrbanInitializeThermalProperties(urban);
     UrbanInitializeInterfaceThermalProperties(urban);

@@ -127,3 +127,17 @@ target_link_libraries(test_canyon_air_getters
 
 # Register the test with CTest
 add_test(NAME CanyonAirGetterTests COMMAND test_canyon_air_getters)
+
+# Test executable for temperature setters
+add_executable(test_temperature_setters
+    test_temperature_setters.cpp
+)
+
+target_link_libraries(test_temperature_setters
+    urban
+    kokkoscore
+    gtest
+)
+
+# Register the test with CTest
+add_test(NAME TemperatureSetterTests COMMAND test_temperature_setters)
