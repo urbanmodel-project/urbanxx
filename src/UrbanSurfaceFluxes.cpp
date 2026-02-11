@@ -478,11 +478,14 @@ void ComputeNewTafAndQaf(Real canyonWind, Real thm, Real rahu, Real rawu,
   Real canyonResistance = CPAIR * canyon.forcRho / (11.8 + 4.2 * canyonWind);
 
   // fwetRoof is now passed as parameter from FractionWet view
+  Real fwetRoofLocal = fwetRoof;
+  if (qaf > surfaces.qRoof) {
+    fwetRoofLocal = 1.0;
+  }
   const Real wtusRoof = canyon.wtRoof / canyonResistance;
   const Real wtusRoofUnscl = 1.0 / canyonResistance;
-  const Real wtuqRoof = fwetRoof * canyon.wtRoof / canyonResistance;
-  const Real wtuqRoofUnscl = fwetRoof / canyonResistance;
-
+  const Real wtuqRoof = fwetRoofLocal * canyon.wtRoof / canyonResistance;
+  const Real wtuqRoofUnscl = fwetRoofLocal / canyonResistance;
   const Real wtusRoadPerv =
       canyon.wtRoadPerv * (1.0 - canyon.wtRoof) / canyonResistance;
   const Real wtusRoadPervUnscl = 1.0 / canyonResistance;
@@ -491,10 +494,14 @@ void ComputeNewTafAndQaf(Real canyonWind, Real thm, Real rahu, Real rawu,
   const Real wtuqRoadPervUnscl = 1.0 / canyonResistance;
 
   // fwetRoadImperv is now passed as parameter from FractionWet view
+  Real fwetRoadImpervLocal = fwetRoadImperv;
+  if (qaf > surfaces.qRoadImperv) {
+    fwetRoadImpervLocal = 1.0;
+  }
   const Real wtusRoadImperv =
       (1.0 - canyon.wtRoadPerv) * (1.0 - canyon.wtRoof) / canyonResistance;
   const Real wtusRoadImpervUnscl = 1.0 / canyonResistance;
-  const Real wtuqRoadImperv = fwetRoadImperv * (1.0 - canyon.wtRoadPerv) *
+  const Real wtuqRoadImperv = fwetRoadImpervLocal * (1.0 - canyon.wtRoadPerv) *
                               (1.0 - canyon.wtRoof) / canyonResistance;
   const Real wtuqRoadImpervUnscl = 1.0 / canyonResistance;
 
@@ -936,6 +943,10 @@ void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
   if (0) {
     std::cout << "ComputeSurfaceFluxes completed for " << numLandunits
               << " landunits" << std::endl;
+  }
+  if (0) {
+    print_view_1d(urban.urbanCanyon.Taf, "urbanCanyon.Taf");
+    print_view_1d(urban.urbanCanyon.Qaf, "urbanCanyon.Qaf");
   }
 }
 
