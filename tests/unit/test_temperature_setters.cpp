@@ -443,8 +443,8 @@ TEST_F(TemperatureSetterTest, SetCanyonSpecificHumidity_NullUrban) {
 // Main function
 // =============================================================================
 int main(int argc, char **argv) {
-  Kokkos::initialize(argc, argv);
   ::testing::InitGoogleTest(&argc, argv);
+  Kokkos::initialize(argc, argv);
   int result = RUN_ALL_TESTS();
   Kokkos::finalize();
   return result;
