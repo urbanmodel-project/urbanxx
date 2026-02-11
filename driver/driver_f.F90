@@ -348,7 +348,7 @@ contains
 
     ! Fill arrays based on memory layout
     if (isLayoutLeft) then
-      ! LayoutLeft: iterate landunits in outer loop, layers in inner loop
+      ! LayoutLeft: iterate layers in outer loop, landunits in inner loop
       idx = 0
       do j = 1, NUM_URBAN_LAYERS
         do i = 1, numLandunits
