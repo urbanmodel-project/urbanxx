@@ -35,4 +35,23 @@ static inline bool ValidateInputsWithSize(UrbanType urban, const void *data,
   return true;
 }
 
+// Validate that all values in an array are within a specified range [min, max]
+static inline bool ValidateRange(const double *values, int length, double min,
+                                 double max, UrbanErrorCode *status) {
+  if (values == nullptr || status == nullptr) {
+    if (status)
+      *status = URBAN_ERR_INVALID_ARGUMENT;
+    return false;
+  }
+
+  for (int i = 0; i < length; ++i) {
+    if (values[i] < min || values[i] > max) {
+      *status = URBAN_ERR_INVALID_ARGUMENT;
+      return false;
+    }
+  }
+
+  return true;
+}
+
 #endif // URBAN_VALIDATION_H

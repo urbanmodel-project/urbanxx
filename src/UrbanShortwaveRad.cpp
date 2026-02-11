@@ -521,28 +521,20 @@ void ComputeNetShortwave(URBANXX::_p_UrbanType &urban) {
 
   // Debug output (disabled by default)
   if (0) {
-    std::cout << "ShadedWall.DownwellingShortRad:" << std::endl;
-    print_view_3d(shadedWall_downRad);
-    std::cout << "SunlitWall.DownwellingShortRad:" << std::endl;
-    print_view_3d(sunlitWall_downRad);
-    std::cout << "CompositeRoad.DownwellingShortRad:" << std::endl;
-    print_view_3d(road_downRad);
-
-    std::cout << "Roof.BaseAlbedo:" << std::endl;
-    print_view_3d(urban.urbanParams.albedo.Roof, "Roof.BaseAlbedo");
-    std::cout << "ImperviousRoad.BaseAlbedo:" << std::endl;
-    print_view_3d(urban.urbanParams.albedo.ImperviousRoad,
-                  "ImperviousRoad.BaseAlbedo");
-    std::cout << "PerviousRoad.BaseAlbedo:" << std::endl;
-    print_view_3d(urban.urbanParams.albedo.PerviousRoad,
-                  "PerviousRoad.BaseAlbedo");
-
-    std::cout << "Roof.AlbedoWithSnowEffects:" << std::endl;
-    print_view_3d(urban.roof.AlbedoWithSnowEffects);
-    std::cout << "ImperviousRoad.AlbedoWithSnowEffects:" << std::endl;
-    print_view_3d(urban.imperviousRoad.AlbedoWithSnowEffects);
-    std::cout << "PerviousRoad.AlbedoWithSnowEffects:" << std::endl;
-    print_view_3d(urban.perviousRoad.AlbedoWithSnowEffects);
+    std::cout << "Roof.ReflectedShortRad:" << std::endl;
+    print_view_3d(urban.roof.ReflectedShortRad, "Roof.ReflectedShortRad");
+    std::cout << "SunlitWall.ReflectedShortRad:" << std::endl;
+    print_view_3d(urban.sunlitWall.ReflectedShortRad,
+                  "SunlitWall.ReflectedShortRad");
+    std::cout << "ShadedWall.ReflectedShortRad:" << std::endl;
+    print_view_3d(urban.shadedWall.ReflectedShortRad,
+                  "ShadedWall.ReflectedShortRad");
+    std::cout << "ImperviousRoad.ReflectedShortRad:" << std::endl;
+    print_view_3d(urban.imperviousRoad.ReflectedShortRad,
+                  "ImperviousRoad.ReflectedShortRad");
+    std::cout << "PerviousRoad.ReflectedShortRad:" << std::endl;
+    print_view_3d(urban.perviousRoad.ReflectedShortRad,
+                  "PerviousRoad.ReflectedShortRad");
   }
 }
 
