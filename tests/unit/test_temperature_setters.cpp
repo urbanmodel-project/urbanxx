@@ -440,6 +440,96 @@ TEST_F(TemperatureSetterTest, SetCanyonSpecificHumidity_NullUrban) {
 }
 
 // =============================================================================
+// Fraction Wet Setter Tests (1D)
+// =============================================================================
+
+// Test: UrbanSetFractionWetImperviousRoad with valid data
+TEST_F(TemperatureSetterTest, SetFractionWetImperviousRoad_ValidData) {
+  std::vector<double> values(numLandunits, 0.5);
+  UrbanErrorCode status;
+
+  UrbanSetFractionWetImperviousRoad(urban, values.data(), numLandunits, &status);
+
+  EXPECT_EQ(status, URBAN_SUCCESS)
+      << "UrbanSetFractionWetImperviousRoad should succeed with valid data";
+}
+
+// Test: UrbanSetFractionWetImperviousRoad with size mismatch
+TEST_F(TemperatureSetterTest, SetFractionWetImperviousRoad_SizeMismatch) {
+  std::vector<double> values(5, 0.5);
+  UrbanErrorCode status;
+
+  UrbanSetFractionWetImperviousRoad(urban, values.data(), 5, &status);
+
+  EXPECT_EQ(status, URBAN_ERR_SIZE_MISMATCH)
+      << "UrbanSetFractionWetImperviousRoad should fail with size mismatch";
+}
+
+// Test: UrbanSetFractionWetImperviousRoad with null pointer
+TEST_F(TemperatureSetterTest, SetFractionWetImperviousRoad_NullPointer) {
+  UrbanErrorCode status;
+
+  UrbanSetFractionWetImperviousRoad(urban, nullptr, numLandunits, &status);
+
+  EXPECT_EQ(status, URBAN_ERR_INVALID_ARGUMENT)
+      << "UrbanSetFractionWetImperviousRoad should fail with null data pointer";
+}
+
+// Test: UrbanSetFractionWetImperviousRoad with null urban
+TEST_F(TemperatureSetterTest, SetFractionWetImperviousRoad_NullUrban) {
+  std::vector<double> values(numLandunits, 0.5);
+  UrbanErrorCode status;
+
+  UrbanSetFractionWetImperviousRoad(nullptr, values.data(), numLandunits, &status);
+
+  EXPECT_EQ(status, URBAN_ERR_INVALID_ARGUMENT)
+      << "UrbanSetFractionWetImperviousRoad should fail with null urban object";
+}
+
+// Test: UrbanSetFractionWetRoof with valid data
+TEST_F(TemperatureSetterTest, SetFractionWetRoof_ValidData) {
+  std::vector<double> values(numLandunits, 0.3);
+  UrbanErrorCode status;
+
+  UrbanSetFractionWetRoof(urban, values.data(), numLandunits, &status);
+
+  EXPECT_EQ(status, URBAN_SUCCESS)
+      << "UrbanSetFractionWetRoof should succeed with valid data";
+}
+
+// Test: UrbanSetFractionWetRoof with size mismatch
+TEST_F(TemperatureSetterTest, SetFractionWetRoof_SizeMismatch) {
+  std::vector<double> values(5, 0.3);
+  UrbanErrorCode status;
+
+  UrbanSetFractionWetRoof(urban, values.data(), 5, &status);
+
+  EXPECT_EQ(status, URBAN_ERR_SIZE_MISMATCH)
+      << "UrbanSetFractionWetRoof should fail with size mismatch";
+}
+
+// Test: UrbanSetFractionWetRoof with null pointer
+TEST_F(TemperatureSetterTest, SetFractionWetRoof_NullPointer) {
+  UrbanErrorCode status;
+
+  UrbanSetFractionWetRoof(urban, nullptr, numLandunits, &status);
+
+  EXPECT_EQ(status, URBAN_ERR_INVALID_ARGUMENT)
+      << "UrbanSetFractionWetRoof should fail with null data pointer";
+}
+
+// Test: UrbanSetFractionWetRoof with null urban
+TEST_F(TemperatureSetterTest, SetFractionWetRoof_NullUrban) {
+  std::vector<double> values(numLandunits, 0.3);
+  UrbanErrorCode status;
+
+  UrbanSetFractionWetRoof(nullptr, values.data(), numLandunits, &status);
+
+  EXPECT_EQ(status, URBAN_ERR_INVALID_ARGUMENT)
+      << "UrbanSetFractionWetRoof should fail with null urban object";
+}
+
+// =============================================================================
 // Main function
 // =============================================================================
 int main(int argc, char **argv) {
