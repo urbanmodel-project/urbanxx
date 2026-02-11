@@ -503,7 +503,7 @@ void ComputeNewTafAndQaf(Real canyonWind, Real thm, Real rahu, Real rawu,
   const Real wtusRoadImpervUnscl = 1.0 / canyonResistance;
   const Real wtuqRoadImperv = fwetRoadImpervLocal * (1.0 - canyon.wtRoadPerv) *
                               (1.0 - canyon.wtRoof) / canyonResistance;
-  const Real wtuqRoadImpervUnscl = 1.0 / canyonResistance;
+  const Real wtuqRoadImpervUnscl = fwetRoadImpervLocal * 1.0 / canyonResistance;
 
   const Real wtusSunwall =
       canyon.hwrVal * (1.0 - canyon.wtRoof) / canyonResistance;
