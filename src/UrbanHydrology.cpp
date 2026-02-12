@@ -136,8 +136,7 @@ void SetupHydrologyTridiagonal(UrbanType urban, Real dtime) {
   Kokkos::parallel_for(
       "SetupHydrologyTridiagonal", nlandunits, KOKKOS_LAMBDA(const int l) {
         const Real zwtmm = zwt(l) * 1000.0;
-        const int jwt_l =
-            jwt(l) - 1; // Converting from 1-based to 0-based index
+        const int jwt_l = jwt(l);
 
         // Compute equilibrium matric potentials for each layer
         Real zq[NUM_SOIL_LAYERS + 1];
@@ -153,7 +152,7 @@ void SetupHydrologyTridiagonal(UrbanType urban, Real dtime) {
         }
 
         // Aquifer layer (if water table below soil column)
-        if (jwt_l == nlevbed - 1) {
+        if (jwt_l == nlevbed) {
           const Real z_top = zi(l, nlevbed) * 1000.0;
           const Real delta_z_zwt = Kokkos::fmax(zwtmm - z_top, 1.0);
 
