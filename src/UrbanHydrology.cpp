@@ -136,7 +136,8 @@ void SetupHydrologyTridiagonal(UrbanType urban, Real dtime) {
   Kokkos::parallel_for(
       "SetupHydrologyTridiagonal", nlandunits, KOKKOS_LAMBDA(const int l) {
         const Real zwtmm = zwt(l) * 1000.0;
-        const int jwt_l = jwt(l) - 1; // Converting from 1-based to 0-based index
+        const int jwt_l =
+            jwt(l) - 1; // Converting from 1-based to 0-based index
 
         // Compute equilibrium matric potentials for each layer
         Real zq[NUM_SOIL_LAYERS + 1];
@@ -157,17 +158,20 @@ void SetupHydrologyTridiagonal(UrbanType urban, Real dtime) {
           const Real delta_z_zwt = Kokkos::fmax(zwtmm - z_top, 1.0);
 
           // Cannot use ComputeEquilibriumWaterContent for aquifer layer since
-          // the algorithm here is slightly different than what is used for soil layers
+          // the algorithm here is slightly different than what is used for soil
+          // layers
           const Real zwt_loc = zwtmm;
           const Real watsat_loc = watsat(l, nlevbed - 1);
           const Real sucsat_loc = sucsat(l, nlevbed - 1);
           const Real bsw_loc = bsw(l, nlevbed - 1);
           const Real temp_i = 1.0;
-          const Real temp_0 =
-              Kokkos::pow((sucsat_loc + zwt_loc - z_top) / sucsat_loc, 1.0 - 1.0 / bsw_loc);
-          const Real vol_eq1 = -sucsat_loc * watsat_loc / (1.0 - 1.0 / bsw_loc) / (delta_z_zwt) *
-                              (temp_i - temp_0);
-          const Real vol_eq = Kokkos::fmin(watsat_loc, Kokkos::fmax(vol_eq1, 0.0));
+          const Real temp_0 = Kokkos::pow(
+              (sucsat_loc + zwt_loc - z_top) / sucsat_loc, 1.0 - 1.0 / bsw_loc);
+          const Real vol_eq1 = -sucsat_loc * watsat_loc /
+                               (1.0 - 1.0 / bsw_loc) / (delta_z_zwt) *
+                               (temp_i - temp_0);
+          const Real vol_eq =
+              Kokkos::fmin(watsat_loc, Kokkos::fmax(vol_eq1, 0.0));
 
           zq[nlevbed] = ComputeEquilibriumMatricPotential(
               vol_eq, watsat(l, nlevbed - 1), sucsat(l, nlevbed - 1),
@@ -213,7 +217,8 @@ void SetupHydrologyTridiagonal(UrbanType urban, Real dtime) {
               ComputeMatricPotentialDerivative(smp(l, j), vol_liq, bsw(l, j));
         }
 
-        // Initialize tridiagonal matrix coefficients for layers below soil column
+        // Initialize tridiagonal matrix coefficients for layers below soil
+        // column
         for (int j = nlevbed; j < NUM_SOIL_LAYERS; ++j) {
           amx(l, j) = 0.0;
           bmx(l, j) = 1.0;

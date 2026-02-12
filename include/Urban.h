@@ -184,12 +184,10 @@ URBAN_EXTERN void UrbanSetWaterTableDepth(UrbanType urban, const double *values,
                                           int length, UrbanErrorCode *status);
 
 // Soil water content setter functions
-URBAN_EXTERN void UrbanSetSoilLiquidWater(UrbanType urban,
-                                          const double *values,
+URBAN_EXTERN void UrbanSetSoilLiquidWater(UrbanType urban, const double *values,
                                           const int size[2],
                                           UrbanErrorCode *status);
-URBAN_EXTERN void UrbanSetSoilIceContent(UrbanType urban,
-                                         const double *values,
+URBAN_EXTERN void UrbanSetSoilIceContent(UrbanType urban, const double *values,
                                          const int size[2],
                                          UrbanErrorCode *status);
 URBAN_EXTERN void UrbanSetSoilVolumetricWater(UrbanType urban,
