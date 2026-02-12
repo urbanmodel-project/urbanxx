@@ -37,4 +37,28 @@ void UrbanSetWaterTableDepth(UrbanType urban, const double *values, int length,
   SetView1D(urban->perviousRoad.Zwt, values, length, status);
 }
 
+void UrbanSetSoilLiquidWater(UrbanType urban, const double *values,
+                             const int size[2], UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
+    return;
+
+  SetView2D(urban->perviousRoad.H2OSoiLiq, values, size, status);
+}
+
+void UrbanSetSoilIceContent(UrbanType urban, const double *values,
+                            const int size[2], UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
+    return;
+
+  SetView2D(urban->perviousRoad.H2OSoiIce, values, size, status);
+}
+
+void UrbanSetSoilVolumetricWater(UrbanType urban, const double *values,
+                                 const int size[2], UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
+    return;
+
+  SetView2D(urban->perviousRoad.H2OSoiVol, values, size, status);
+}
+
 } // extern "C"
