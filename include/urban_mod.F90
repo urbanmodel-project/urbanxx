@@ -459,6 +459,13 @@ module urban_mod
       integer(c_int) :: status
     end subroutine UrbanComputeSurfaceFluxes_C
 
+    subroutine UrbanComputeHydrology_C(urban, dtime, status) bind(C, name="UrbanComputeHydrology")
+      import :: c_ptr, c_int, c_double
+      type(c_ptr), value :: urban
+      real(c_double), value :: dtime
+      integer(c_int) :: status
+    end subroutine UrbanComputeHydrology_C
+
     ! Atmospheric forcing setter functions
     subroutine UrbanSetAtmTemp_C(urban, values, length, status) bind(C, name="UrbanSetAtmTemp")
       import :: c_ptr, c_int
@@ -1008,6 +1015,13 @@ module urban_mod
     integer(c_int), intent(out) :: status
     call UrbanComputeSurfaceFluxes_C(urban%ptr, status)
   end subroutine UrbanComputeSurfaceFluxes
+
+  subroutine UrbanComputeHydrology(urban, dtime, status)
+    type(UrbanType), intent(in) :: urban
+    real(c_double), value :: dtime
+    integer(c_int), intent(out) :: status
+    call UrbanComputeHydrology_C(urban%ptr, dtime, status)
+  end subroutine UrbanComputeHydrology
 
   subroutine UrbanSetAtmTemp(urban, values, length, status)
     type(UrbanType), intent(in) :: urban
