@@ -107,7 +107,7 @@ void ComputeHydraulicProperties(UrbanType urban) {
 
 void SetupHydrologyTridiagonal(UrbanType urban, Real dtime) {
   const int nlandunits = urban->numLandunits;
-  const int nlevbed = NUM_SOIL_LAYERS;
+  const int nlevbed = NUM_LAYERS_ABV_BEDROCK;
 
   auto h2osoi_liq = urban->perviousRoad.H2OSoiLiq;
   auto h2osoi_ice = urban->perviousRoad.H2OSoiIce;
@@ -136,7 +136,7 @@ void SetupHydrologyTridiagonal(UrbanType urban, Real dtime) {
   Kokkos::parallel_for(
       "SetupHydrologyTridiagonal", nlandunits, KOKKOS_LAMBDA(const int l) {
         const Real zwtmm = zwt(l) * 1000.0;
-        const int jwt_l = jwt(l);
+        const int jwt_l = jwt(l) - 1; // Converting from 1-based to 0-based index
 
         // Compute equilibrium matric potentials for each layer
         Real zq[NUM_SOIL_LAYERS + 1];
@@ -153,12 +153,21 @@ void SetupHydrologyTridiagonal(UrbanType urban, Real dtime) {
 
         // Aquifer layer (if water table below soil column)
         if (jwt_l == nlevbed - 1) {
-          const Real z_top = zi(l, nlevbed - 1) * 1000.0;
+          const Real z_top = zi(l, nlevbed) * 1000.0;
           const Real delta_z_zwt = Kokkos::fmax(zwtmm - z_top, 1.0);
 
-          const Real vol_eq = ComputeEquilibriumWaterContent(
-              zwtmm, z_top, zwtmm, watsat(l, nlevbed - 1),
-              sucsat(l, nlevbed - 1), bsw(l, nlevbed - 1));
+          // Cannot use ComputeEquilibriumWaterContent for aquifer layer since
+          // the algorithm here is slightly different than what is used for soil layers
+          const Real zwt_loc = zwtmm;
+          const Real watsat_loc = watsat(l, nlevbed - 1);
+          const Real sucsat_loc = sucsat(l, nlevbed - 1);
+          const Real bsw_loc = bsw(l, nlevbed - 1);
+          const Real temp_i = 1.0;
+          const Real temp_0 =
+              Kokkos::pow((sucsat_loc + zwt_loc - z_top) / sucsat_loc, 1.0 - 1.0 / bsw_loc);
+          const Real vol_eq1 = -sucsat_loc * watsat_loc / (1.0 - 1.0 / bsw_loc) / (delta_z_zwt) *
+                              (temp_i - temp_0);
+          const Real vol_eq = Kokkos::fmin(watsat_loc, Kokkos::fmax(vol_eq1, 0.0));
 
           zq[nlevbed] = ComputeEquilibriumMatricPotential(
               vol_eq, watsat(l, nlevbed - 1), sucsat(l, nlevbed - 1),
@@ -202,6 +211,14 @@ void SetupHydrologyTridiagonal(UrbanType urban, Real dtime) {
 
           dsmpdw[j] =
               ComputeMatricPotentialDerivative(smp(l, j), vol_liq, bsw(l, j));
+        }
+
+        // Initialize tridiagonal matrix coefficients for layers below soil column
+        for (int j = nlevbed; j < NUM_SOIL_LAYERS; ++j) {
+          amx(l, j) = 0.0;
+          bmx(l, j) = 1.0;
+          cmx(l, j) = 0.0;
+          rmx(l, j) = 0.0;
         }
 
         // Layer j=0 (top layer)
@@ -362,14 +379,14 @@ void SolveHydrologyTridiagonal(UrbanType urban) {
   Kokkos::parallel_for(
       "SolveHydrologyTridiagonal", nlandunits, KOKKOS_LAMBDA(const int l) {
         // Determine number of active layers (including aquifer if needed)
-        const int nlayers = (jwt(l) == nlevbed - 1) ? nlevbed + 1 : nlevbed;
+        const int nlayers = NUM_SOIL_LAYERS;
 
         // Extract local arrays for this landunit
-        Real a_local[NUM_SOIL_LAYERS + 1];
-        Real b_local[NUM_SOIL_LAYERS + 1];
-        Real c_local[NUM_SOIL_LAYERS + 1];
-        Real r_local[NUM_SOIL_LAYERS + 1];
-        Real x_local[NUM_SOIL_LAYERS + 1];
+        Real a_local[NUM_SOIL_LAYERS];
+        Real b_local[NUM_SOIL_LAYERS];
+        Real c_local[NUM_SOIL_LAYERS];
+        Real r_local[NUM_SOIL_LAYERS];
+        Real x_local[NUM_SOIL_LAYERS];
 
         for (int j = 0; j < nlayers; ++j) {
           a_local[j] = amx(l, j);
@@ -378,21 +395,10 @@ void SolveHydrologyTridiagonal(UrbanType urban) {
           r_local[j] = rmx(l, j);
         }
 
-        // Make layers below NUM_LAYERS_ABV_BEDROCK inactive by setting diagonal
-        // to 1 and rhs to 0
-        for (int j = 0; j < nlayers; ++j) {
-          if (j >= NUM_LAYERS_ABV_BEDROCK - 1) {
-            a_local[j] = 0.0;
-            b_local[j] = 1.0;
-            c_local[j] = 0.0;
-            r_local[j] = 0.0;
-          }
-        }
-
         // Solve tridiagonal system using Thomas algorithm
         // Solves: a[i]*x[i-1] + b[i]*x[i] + c[i]*x[i+1] = r[i]
-        Real cp[NUM_SOIL_LAYERS + 1]; // Modified upper diagonal
-        Real rp[NUM_SOIL_LAYERS + 1]; // Modified right-hand side
+        Real cp[NUM_SOIL_LAYERS]; // Modified upper diagonal
+        Real rp[NUM_SOIL_LAYERS]; // Modified right-hand side
 
         // Forward elimination
         cp[0] = c_local[0] / b_local[0];
