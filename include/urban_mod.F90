@@ -580,6 +580,31 @@ module urban_mod
       integer(c_int) :: status
     end subroutine UrbanSetWaterTableDepth_C
 
+    ! Soil water content setter functions
+    subroutine UrbanSetSoilLiquidWater_C(urban, values, size, status) bind(C, name="UrbanSetSoilLiquidWater")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), dimension(2) :: size
+      integer(c_int) :: status
+    end subroutine UrbanSetSoilLiquidWater_C
+
+    subroutine UrbanSetSoilIceContent_C(urban, values, size, status) bind(C, name="UrbanSetSoilIceContent")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), dimension(2) :: size
+      integer(c_int) :: status
+    end subroutine UrbanSetSoilIceContent_C
+
+    subroutine UrbanSetSoilVolumetricWater_C(urban, values, size, status) bind(C, name="UrbanSetSoilVolumetricWater")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), dimension(2) :: size
+      integer(c_int) :: status
+    end subroutine UrbanSetSoilVolumetricWater_C
+
     ! Shortwave radiation getter functions - Absorbed
     subroutine UrbanGetAbsorbedShortwaveRoof_C(urban, values, size, status) bind(C, name="UrbanGetAbsorbedShortwaveRoof")
       import :: c_ptr, c_int
@@ -1135,6 +1160,31 @@ module urban_mod
     integer(c_int), intent(out) :: status
     call UrbanSetWaterTableDepth_C(urban%ptr, values, length, status)
   end subroutine UrbanSetWaterTableDepth
+
+  ! Soil water content setter functions
+  subroutine UrbanSetSoilLiquidWater(urban, values, size, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), dimension(2), intent(in) :: size
+    integer(c_int), intent(out) :: status
+    call UrbanSetSoilLiquidWater_C(urban%ptr, values, size, status)
+  end subroutine UrbanSetSoilLiquidWater
+
+  subroutine UrbanSetSoilIceContent(urban, values, size, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), dimension(2), intent(in) :: size
+    integer(c_int), intent(out) :: status
+    call UrbanSetSoilIceContent_C(urban%ptr, values, size, status)
+  end subroutine UrbanSetSoilIceContent
+
+  subroutine UrbanSetSoilVolumetricWater(urban, values, size, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), dimension(2), intent(in) :: size
+    integer(c_int), intent(out) :: status
+    call UrbanSetSoilVolumetricWater_C(urban%ptr, values, size, status)
+  end subroutine UrbanSetSoilVolumetricWater
 
   ! Shortwave radiation getter functions - Absorbed
   subroutine UrbanGetAbsorbedShortwaveRoof(urban, values, size, status)
