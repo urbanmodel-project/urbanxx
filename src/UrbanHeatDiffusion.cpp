@@ -2,10 +2,18 @@
 // 1D heat diffusion dynamics for Urban Surfaces
 // Based on ELM SoilTemperature.F90
 
+#include "Urban.h"
 #include "private/UrbanHeatDiffusionImpl.h"
 #include "private/UrbanThermalFunctions.h"
 #include "private/UrbanTypeImpl.h"
 #include <Kokkos_Core.hpp>
+
+// Define the C struct to match the C++ class
+struct _p_UrbanType : public URBANXX::_p_UrbanType {
+  using URBANXX::_p_UrbanType::_p_UrbanType;
+};
+
+using namespace URBANXX;
 
 namespace URBANXX {
 
@@ -547,3 +555,27 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
 }
 
 } // namespace URBANXX
+
+// ============================================================================
+// Public C API
+// ============================================================================
+
+extern "C" {
+
+void UrbanComputeHeatDiffusion(UrbanType urban,
+                               UrbanErrorCode *status) {
+  if (urban == nullptr || status == nullptr) {
+    if (status)
+      *status = URBAN_ERR_INVALID_ARGUMENT;
+    return;
+  }
+
+  try {
+    URBANXX::ComputeHeatDiffusion(*urban);
+    *status = URBAN_SUCCESS;
+  } catch (...) {
+    *status = URBAN_ERR_INTERNAL;
+  }
+}
+
+} // extern "C"
