@@ -512,24 +512,6 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
         const bool hasBottomBC_building = true;
         const Real noBottomTemp = 0.0; // Not used for road surfaces
 
-        // Solve heat diffusion for pervious road
-        SurfaceProperties perv_surf(l, numSoilLayers, perv_temp, perv_zc,
-                                    perv_zi, perv_dz, perv_tkInterface,
-                                    perv_tkLayer, perv_cv_times_dz);
-        BoundaryConditions perv_bc(perv_EflxGnet, perv_DEflxGnet_DTemp,
-                                   useTopAdjustment_road, capr,
-                                   hasBottomBC_road, noBottomTemp);
-        Solve1DHeatDiffusion(dtime, perv_surf, perv_bc);
-
-        // Solve heat diffusion for impervious road
-        SurfaceProperties imperv_surf(l, numSoilLayers, imperv_temp, imperv_zc,
-                                      imperv_zi, imperv_dz, imperv_tkInterface,
-                                      imperv_tkLayer, imperv_cv_times_dz);
-        BoundaryConditions imperv_bc(imperv_EflxGnet, imperv_DEflxGnet_DTemp,
-                                     useTopAdjustment_road, capr,
-                                     hasBottomBC_road, noBottomTemp);
-        Solve1DHeatDiffusion(dtime, imperv_surf, imperv_bc);
-
         // Solve heat diffusion for roof
         SurfaceProperties roof_surf(l, numUrbanLayers, roof_temp, roof_zc,
                                     roof_zi, roof_dz, roof_tkInterface,
@@ -558,6 +540,24 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
                                         useTopAdjustment_building, capr,
                                         hasBottomBC_building, building_temp(l));
         Solve1DHeatDiffusion(dtime, shadewall_surf, shadewall_bc);
+
+        // Solve heat diffusion for impervious road
+        SurfaceProperties imperv_surf(l, numSoilLayers, imperv_temp, imperv_zc,
+                                      imperv_zi, imperv_dz, imperv_tkInterface,
+                                      imperv_tkLayer, imperv_cv_times_dz);
+        BoundaryConditions imperv_bc(imperv_EflxGnet, imperv_DEflxGnet_DTemp,
+                                     useTopAdjustment_road, capr,
+                                     hasBottomBC_road, noBottomTemp);
+        Solve1DHeatDiffusion(dtime, imperv_surf, imperv_bc);
+
+        // Solve heat diffusion for pervious road
+        SurfaceProperties perv_surf(l, numSoilLayers, perv_temp, perv_zc,
+                                    perv_zi, perv_dz, perv_tkInterface,
+                                    perv_tkLayer, perv_cv_times_dz);
+        BoundaryConditions perv_bc(perv_EflxGnet, perv_DEflxGnet_DTemp,
+                                   useTopAdjustment_road, capr,
+                                   hasBottomBC_road, noBottomTemp);
+        Solve1DHeatDiffusion(dtime, perv_surf, perv_bc);
       });
   Kokkos::fence();
 }
