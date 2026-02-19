@@ -147,6 +147,10 @@ URBAN_EXTERN void UrbanSetBuildingMinTemperature(UrbanType urban,
                                                  const double *values,
                                                  int length,
                                                  UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetBuildingTemperature(UrbanType urban,
+                                              const double *values,
+                                              int length,
+                                              UrbanErrorCode *status);
 URBAN_EXTERN void UrbanSetBuildingWallThickness(UrbanType urban,
                                                 const double *values,
                                                 int length,

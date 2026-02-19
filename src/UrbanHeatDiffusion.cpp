@@ -222,6 +222,14 @@ KOKKOS_INLINE_FUNCTION void Solve1DHeatDiffusion(
   Real r[NUM_SOIL_LAYERS];
   Real newTemp[NUM_SOIL_LAYERS];
 
+  // initialize arrays
+  for (int j = 0; j < NUM_SOIL_LAYERS; ++j) {
+    a[j] = 0.0;
+    b[j] = 1.0;
+    c[j] = 0.0;
+    r[j] = 0.0;
+  }
+
   // Compute factors and interface fluxes
   // Top layer
   level = 0;

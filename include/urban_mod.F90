@@ -279,6 +279,14 @@ module urban_mod
       integer(c_int) :: status
     end subroutine UrbanSetBuildingMinTemperature
 
+    subroutine UrbanSetBuildingTemperature(urban, values, length, status) bind(C, name="UrbanSetBuildingTemperature")
+      import :: c_ptr, c_int, UrbanType
+      type(UrbanType), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetBuildingTemperature
+
     subroutine UrbanSetBuildingWallThickness(urban, values, length, status) bind(C, name="UrbanSetBuildingWallThickness")
       import :: c_ptr, c_int, UrbanType
       type(UrbanType), value :: urban
