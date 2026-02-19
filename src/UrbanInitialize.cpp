@@ -171,7 +171,8 @@ static void UrbanInitializeThermalPropertiesWall(UrbanType urban) {
 
   // Copy thermal properties
   Kokkos::parallel_for(
-      "UrbanInitializeThermalPropertiesWall", numLandunits, KOKKOS_LAMBDA(int l) {
+      "UrbanInitializeThermalPropertiesWall", numLandunits,
+      KOKKOS_LAMBDA(int l) {
         // Copy wall thermal properties to both sunlit and shaded walls
         CopyThermalProperties(numUrbanLayers, l, tk_wall_params, cv_wall_params,
                               tk_sunlit_wall, cv_sunlit_wall,
@@ -199,7 +200,8 @@ static void UrbanInitializeThermalPropertiesRoof(UrbanType urban) {
 
   // Copy thermal properties
   Kokkos::parallel_for(
-      "UrbanInitializeThermalPropertiesRoof", numLandunits, KOKKOS_LAMBDA(int l) {
+      "UrbanInitializeThermalPropertiesRoof", numLandunits,
+      KOKKOS_LAMBDA(int l) {
         // Copy roof thermal properties
         CopyThermalProperties(numUrbanLayers, l, tk_roof_params, cv_roof_params,
                               tk_roof, cv_roof, cv_times_dz_roof, dz_roof);
@@ -228,24 +230,34 @@ static void UrbanInitializeThermalPropertiesImperviousRoad(UrbanType urban) {
 
   // Copy thermal properties
   Kokkos::parallel_for(
-      "UrbanInitializeThermalPropertiesImperviousRoad", numLandunits, KOKKOS_LAMBDA(int l) {
+      "UrbanInitializeThermalPropertiesImperviousRoad", numLandunits,
+      KOKKOS_LAMBDA(int l) {
         CopyThermalProperties(numSoilLayers, l, tk_road_params, cv_road_params,
                               tk_impervious_road, cv_impervious_road,
                               cv_times_dz_impervious_road, dz_impervious_road);
         for (int k = 0; k < numberOfActiveLayers(l); k++) {
           tk_impervious_road(l, k) = tk_road_params(l, k);
           cv_impervious_road(l, k) = cv_road_params(l, k);
-          cv_times_dz_impervious_road(l, k) = cv_road_params(l, k) * dz_impervious_road(l, k);
+          cv_times_dz_impervious_road(l, k) =
+              cv_road_params(l, k) * dz_impervious_road(l, k);
         }
         for (int k = numberOfActiveLayers(l); k < NUM_LAYERS_ABV_BEDROCK; k++) {
           tk_impervious_road(l, k) = perv_road_tk_dry(l, k);
-          cv_impervious_road(l, k) = perv_road_cv_solids(l, k) * (1.0 - perv_road_watsat(l,k));
-          cv_times_dz_impervious_road(l, k) = perv_road_cv_solids(l, k) * (1.0 - perv_road_watsat(l,k)) * dz_impervious_road(l, k);
+          cv_impervious_road(l, k) =
+              perv_road_cv_solids(l, k) * (1.0 - perv_road_watsat(l, k));
+          cv_times_dz_impervious_road(l, k) = perv_road_cv_solids(l, k) *
+                                              (1.0 - perv_road_watsat(l, k)) *
+                                              dz_impervious_road(l, k);
         }
         for (int k = NUM_LAYERS_ABV_BEDROCK; k < NUM_SOIL_LAYERS; k++) {
           tk_impervious_road(l, k) = TK_BEDROCK;
-          cv_impervious_road(l, k) = CSOL_BEDROCK * (1.0 - perv_road_watsat(l, NUM_LAYERS_ABV_BEDROCK - 1));
-          cv_times_dz_impervious_road(l, k) = CSOL_BEDROCK * (1.0 - perv_road_watsat(l, NUM_LAYERS_ABV_BEDROCK - 1)) * dz_impervious_road(l, k);
+          cv_impervious_road(l, k) =
+              CSOL_BEDROCK *
+              (1.0 - perv_road_watsat(l, NUM_LAYERS_ABV_BEDROCK - 1));
+          cv_times_dz_impervious_road(l, k) =
+              CSOL_BEDROCK *
+              (1.0 - perv_road_watsat(l, NUM_LAYERS_ABV_BEDROCK - 1)) *
+              dz_impervious_road(l, k);
         }
       });
   Kokkos::fence();
@@ -540,9 +552,9 @@ static void UrbanInitializeInterfaceThermalProperties(UrbanType urban) {
       "UrbanInitializeInterfaceThermalProperties", numLandunits,
       KOKKOS_LAMBDA(int l) {
         // Impervious road: variable active layers based on density class
-        ComputeInterfaceThermalConductivity(
-            l, numSoilLayers, numSoilLayers, imperv_tkLayer,
-            imperv_tkInterface, imperv_zc, imperv_zi, TK_BEDROCK);
+        ComputeInterfaceThermalConductivity(l, numSoilLayers, numSoilLayers,
+                                            imperv_tkLayer, imperv_tkInterface,
+                                            imperv_zc, imperv_zi, TK_BEDROCK);
 
         // Sunlit wall: all urban layers are active
         ComputeInterfaceThermalConductivity(

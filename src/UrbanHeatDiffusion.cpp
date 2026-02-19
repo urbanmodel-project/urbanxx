@@ -570,8 +570,7 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
 
 extern "C" {
 
-void UrbanComputeHeatDiffusion(UrbanType urban,
-                               UrbanErrorCode *status) {
+void UrbanComputeHeatDiffusion(UrbanType urban, UrbanErrorCode *status) {
   if (urban == nullptr || status == nullptr) {
     if (status)
       *status = URBAN_ERR_INVALID_ARGUMENT;
