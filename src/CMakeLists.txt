@@ -4,6 +4,9 @@ set(URBAN_SOURCES
     UrbanParamsType.cpp
     UrbanInitialize.cpp
     UrbanRadiationGetters.cpp
+    UrbanSurfaceFluxesGetters.cpp
+    UrbanHeatDiffusionGetters.cpp
+    UrbanHydrologyGetters.cpp
     AtmosphereType.cpp
     UrbanLongwaveRad.cpp
     UrbanShortwaveRad.cpp

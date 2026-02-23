@@ -202,4 +202,45 @@ void UrbanGetCanyonAirHumidity(UrbanType urban, double *values, int length,
   GetView1D(urban->urbanCanyon.Qaf, values, length, status);
 }
 
+// Net shortwave radiation getter functions
+void UrbanGetNetShortwaveRoof(UrbanType urban, double *values, int length,
+                              UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  GetView1D(urban->roof.NetShortRad, values, length, status);
+}
+
+void UrbanGetNetShortwaveImperviousRoad(UrbanType urban, double *values,
+                                        int length, UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  GetView1D(urban->imperviousRoad.NetShortRad, values, length, status);
+}
+
+void UrbanGetNetShortwavePerviousRoad(UrbanType urban, double *values,
+                                      int length, UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  GetView1D(urban->perviousRoad.NetShortRad, values, length, status);
+}
+
+void UrbanGetNetShortwaveSunlitWall(UrbanType urban, double *values, int length,
+                                    UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  GetView1D(urban->sunlitWall.NetShortRad, values, length, status);
+}
+
+void UrbanGetNetShortwaveShadedWall(UrbanType urban, double *values, int length,
+                                    UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  GetView1D(urban->shadedWall.NetShortRad, values, length, status);
+}
+
 } // extern "C"
