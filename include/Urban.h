@@ -411,6 +411,34 @@ URBAN_EXTERN void UrbanGetEvapFluxPerviousRoad(UrbanType urban, double *values,
                                                int length,
                                                UrbanErrorCode *status);
 
+// Cgrnds (d(sensible heat flux)/dT) getter functions
+URBAN_EXTERN void UrbanGetCgrndsRoof(UrbanType urban, double *values,
+                                     int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetCgrndsImperviousRoad(UrbanType urban, double *values,
+                                               int length,
+                                               UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetCgrndsPerviousRoad(UrbanType urban, double *values,
+                                             int length,
+                                             UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetCgrndsSunlitWall(UrbanType urban, double *values,
+                                           int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetCgrndsShadedWall(UrbanType urban, double *values,
+                                           int length, UrbanErrorCode *status);
+
+// Cgrndl (d(latent heat flux)/dT) getter functions
+URBAN_EXTERN void UrbanGetCgrndlRoof(UrbanType urban, double *values,
+                                     int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetCgrndlImperviousRoad(UrbanType urban, double *values,
+                                               int length,
+                                               UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetCgrndlPerviousRoad(UrbanType urban, double *values,
+                                             int length,
+                                             UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetCgrndlSunlitWall(UrbanType urban, double *values,
+                                           int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetCgrndlShadedWall(UrbanType urban, double *values,
+                                           int length, UrbanErrorCode *status);
+
 // Layer temperature getter functions
 URBAN_EXTERN void UrbanGetLayerTempRoof(UrbanType urban, double *values,
                                         const int size[2],

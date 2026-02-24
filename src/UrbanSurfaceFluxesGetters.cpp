@@ -80,4 +80,86 @@ void UrbanGetEvapFluxPerviousRoad(UrbanType urban, double *values, int length,
   GetView1D(urban->perviousRoad.QflxEvapSoil, values, length, status);
 }
 
+// Cgrnds (d(sensible heat flux)/dT) getter functions
+void UrbanGetCgrndsRoof(UrbanType urban, double *values, int length,
+                        UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  GetView1D(urban->roof.Cgrnds, values, length, status);
+}
+
+void UrbanGetCgrndsImperviousRoad(UrbanType urban, double *values, int length,
+                                  UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  GetView1D(urban->imperviousRoad.Cgrnds, values, length, status);
+}
+
+void UrbanGetCgrndsPerviousRoad(UrbanType urban, double *values, int length,
+                                UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  GetView1D(urban->perviousRoad.Cgrnds, values, length, status);
+}
+
+void UrbanGetCgrndsSunlitWall(UrbanType urban, double *values, int length,
+                              UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  GetView1D(urban->sunlitWall.Cgrnds, values, length, status);
+}
+
+void UrbanGetCgrndsShadedWall(UrbanType urban, double *values, int length,
+                              UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  GetView1D(urban->shadedWall.Cgrnds, values, length, status);
+}
+
+// Cgrndl (d(latent heat flux)/dT) getter functions
+void UrbanGetCgrndlRoof(UrbanType urban, double *values, int length,
+                        UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  GetView1D(urban->roof.Cgrndl, values, length, status);
+}
+
+void UrbanGetCgrndlImperviousRoad(UrbanType urban, double *values, int length,
+                                  UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  GetView1D(urban->imperviousRoad.Cgrndl, values, length, status);
+}
+
+void UrbanGetCgrndlPerviousRoad(UrbanType urban, double *values, int length,
+                                UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  GetView1D(urban->perviousRoad.Cgrndl, values, length, status);
+}
+
+void UrbanGetCgrndlSunlitWall(UrbanType urban, double *values, int length,
+                              UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  GetView1D(urban->sunlitWall.Cgrndl, values, length, status);
+}
+
+void UrbanGetCgrndlShadedWall(UrbanType urban, double *values, int length,
+                              UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  GetView1D(urban->shadedWall.Cgrndl, values, length, status);
+}
+
 } // extern "C"
