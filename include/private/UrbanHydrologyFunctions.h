@@ -26,7 +26,7 @@ KOKKOS_INLINE_FUNCTION Real ComputeHydraulicConductivity(
     const Real bsw,     // Clapp-Hornberger b parameter [-]
     const Real imped) { // ice impedance factor [-]
 
-  const Real s_clamped = Kokkos::fmin(1.0, Kokkos::fmax(s, 0.01));
+  const Real s_clamped = Kokkos::fmin(1.0, Kokkos::fmax(s, 0.00));
   const Real s2 = hksat * Kokkos::pow(s_clamped, 2.0 * bsw + 2.0);
   return imped * s_clamped * s2;
 }
@@ -40,9 +40,9 @@ KOKKOS_INLINE_FUNCTION Real ComputeHydraulicConductivityDerivative(
     const Real imped,    // ice impedance factor [-]
     const Real watsat) { // saturated water content [-]
 
-  const Real s_clamped = Kokkos::fmin(1.0, Kokkos::fmax(s, 0.01));
+  const Real s_clamped = Kokkos::fmin(1.0, Kokkos::fmax(s, 0.00));
   const Real s2 = hksat * Kokkos::pow(s_clamped, 2.0 * bsw + 2.0);
-  return imped * (2.0 * bsw + 3.0) * s2 / watsat;
+  return imped * (2.0 * bsw + 3.0) * s2 * (1.0 / watsat);
 }
 
 // Compute ice impedance factor
@@ -64,7 +64,7 @@ ComputeMatricPotential(const Real s,        // relative saturation [-]
                        const Real bsw,      // Clapp-Hornberger b parameter [-]
                        const Real smpmin) { // minimum matric potential [mm]
 
-  const Real s_clamped = Kokkos::fmax(s, 0.01);
+  const Real s_clamped = Kokkos::fmax(s, 0.00);
   const Real smp = -sucsat * Kokkos::pow(s_clamped, -bsw);
   return Kokkos::fmax(smpmin, smp);
 }
