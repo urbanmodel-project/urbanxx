@@ -544,7 +544,8 @@ void ComputeNetShortwave(URBANXX::_p_UrbanType &urban) {
 // For each of the five urban surfaces (roof, impervious road, pervious road,
 // sunlit wall, shaded wall), compute:
 //
-//   NetShortRad(l) = SUM over bands,types [ AbsorbedShortRad(l,b,t) * ForcSRad(l,b,t) ]
+//   NetShortRad(l) = SUM over bands,types [ AbsorbedShortRad(l,b,t) *
+//   ForcSRad(l,b,t) ]
 //
 // This matches the ELM formula:
 //   sabg = sabs_dir(l,VIS)*solad(t,VIS) + sabs_dif(l,VIS)*solai(t,VIS)
@@ -568,8 +569,7 @@ void ComputeNetShortwaveRadiation(URBANXX::_p_UrbanType &urban) {
   auto netShadWall = urban.shadedWall.NetShortRad;
 
   Kokkos::parallel_for(
-      "ComputeNetShortwaveRadiation", numLandunits,
-      KOKKOS_LAMBDA(const int l) {
+      "ComputeNetShortwaveRadiation", numLandunits, KOKKOS_LAMBDA(const int l) {
         Real sumRoof = 0.0, sumImp = 0.0, sumPer = 0.0;
         Real sumSun = 0.0, sumShad = 0.0;
         for (int b = 0; b < numBands; ++b) {
