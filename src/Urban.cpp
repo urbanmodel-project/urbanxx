@@ -127,4 +127,20 @@ void UrbanComputeSurfaceFluxes(UrbanType urban, UrbanErrorCode *status) {
   }
 }
 
+void UrbanComputeNetShortwaveRadiation(UrbanType urban,
+                                       UrbanErrorCode *status) {
+  if (urban == nullptr || status == nullptr) {
+    if (status)
+      *status = URBAN_ERR_INVALID_ARGUMENT;
+    return;
+  }
+
+  try {
+    URBANXX::ComputeNetShortwaveRadiation(*urban);
+    *status = URBAN_SUCCESS;
+  } catch (...) {
+    *status = URBAN_ERR_INTERNAL;
+  }
+}
+
 } // extern "C"

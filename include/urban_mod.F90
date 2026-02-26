@@ -279,6 +279,14 @@ module urban_mod
       integer(c_int) :: status
     end subroutine UrbanSetBuildingMinTemperature
 
+    subroutine UrbanSetBuildingTemperature(urban, values, length, status) bind(C, name="UrbanSetBuildingTemperature")
+      import :: c_ptr, c_int, UrbanType
+      type(UrbanType), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetBuildingTemperature
+
     subroutine UrbanSetBuildingWallThickness(urban, values, length, status) bind(C, name="UrbanSetBuildingWallThickness")
       import :: c_ptr, c_int, UrbanType
       type(UrbanType), value :: urban
@@ -465,6 +473,18 @@ module urban_mod
       real(c_double), value :: dtime
       integer(c_int) :: status
     end subroutine UrbanComputeHydrology_C
+
+    subroutine UrbanComputeHeatDiffusion_C(urban, status) bind(C, name="UrbanComputeHeatDiffusion")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      integer(c_int) :: status
+    end subroutine UrbanComputeHeatDiffusion_C
+
+    subroutine UrbanComputeNetShortwaveRadiation_C(urban, status) bind(C, name="UrbanComputeNetShortwaveRadiation")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      integer(c_int) :: status
+    end subroutine UrbanComputeNetShortwaveRadiation_C
 
     ! Atmospheric forcing setter functions
     subroutine UrbanSetAtmTemp_C(urban, values, length, status) bind(C, name="UrbanSetAtmTemp")
@@ -806,6 +826,301 @@ module urban_mod
       integer(c_int), value :: length
       integer(c_int) :: status
     end subroutine UrbanGetCanyonAirHumidity_C
+
+    ! Net shortwave radiation getter functions
+    subroutine UrbanGetNetShortwaveRoof_C(urban, values, length, status) &
+      bind(C, name="UrbanGetNetShortwaveRoof")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetNetShortwaveRoof_C
+
+    subroutine UrbanGetNetShortwaveImperviousRoad_C(urban, values, length, status) &
+      bind(C, name="UrbanGetNetShortwaveImperviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetNetShortwaveImperviousRoad_C
+
+    subroutine UrbanGetNetShortwavePerviousRoad_C(urban, values, length, status) &
+      bind(C, name="UrbanGetNetShortwavePerviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetNetShortwavePerviousRoad_C
+
+    subroutine UrbanGetNetShortwaveSunlitWall_C(urban, values, length, status) &
+      bind(C, name="UrbanGetNetShortwaveSunlitWall")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetNetShortwaveSunlitWall_C
+
+    subroutine UrbanGetNetShortwaveShadedWall_C(urban, values, length, status) &
+      bind(C, name="UrbanGetNetShortwaveShadedWall")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetNetShortwaveShadedWall_C
+
+    ! Sensible heat flux getter functions
+    subroutine UrbanGetSensibleHeatFluxRoof_C(urban, values, length, status) &
+      bind(C, name="UrbanGetSensibleHeatFluxRoof")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetSensibleHeatFluxRoof_C
+
+    subroutine UrbanGetSensibleHeatFluxImperviousRoad_C(urban, values, length, status) &
+      bind(C, name="UrbanGetSensibleHeatFluxImperviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetSensibleHeatFluxImperviousRoad_C
+
+    subroutine UrbanGetSensibleHeatFluxPerviousRoad_C(urban, values, length, status) &
+      bind(C, name="UrbanGetSensibleHeatFluxPerviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetSensibleHeatFluxPerviousRoad_C
+
+    subroutine UrbanGetSensibleHeatFluxSunlitWall_C(urban, values, length, status) &
+      bind(C, name="UrbanGetSensibleHeatFluxSunlitWall")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetSensibleHeatFluxSunlitWall_C
+
+    subroutine UrbanGetSensibleHeatFluxShadedWall_C(urban, values, length, status) &
+      bind(C, name="UrbanGetSensibleHeatFluxShadedWall")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetSensibleHeatFluxShadedWall_C
+
+    ! Soil evaporation flux getter functions
+    subroutine UrbanGetEvapFluxRoof_C(urban, values, length, status) &
+      bind(C, name="UrbanGetEvapFluxRoof")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetEvapFluxRoof_C
+
+    subroutine UrbanGetEvapFluxImperviousRoad_C(urban, values, length, status) &
+      bind(C, name="UrbanGetEvapFluxImperviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetEvapFluxImperviousRoad_C
+
+    subroutine UrbanGetEvapFluxPerviousRoad_C(urban, values, length, status) &
+      bind(C, name="UrbanGetEvapFluxPerviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetEvapFluxPerviousRoad_C
+
+    ! Cgrnds (d(sensible heat flux)/dT) getter functions
+    subroutine UrbanGetCgrndsRoof_C(urban, values, length, status) &
+      bind(C, name="UrbanGetCgrndsRoof")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetCgrndsRoof_C
+
+    subroutine UrbanGetCgrndsImperviousRoad_C(urban, values, length, status) &
+      bind(C, name="UrbanGetCgrndsImperviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetCgrndsImperviousRoad_C
+
+    subroutine UrbanGetCgrndsPerviousRoad_C(urban, values, length, status) &
+      bind(C, name="UrbanGetCgrndsPerviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetCgrndsPerviousRoad_C
+
+    subroutine UrbanGetCgrndsSunlitWall_C(urban, values, length, status) &
+      bind(C, name="UrbanGetCgrndsSunlitWall")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetCgrndsSunlitWall_C
+
+    subroutine UrbanGetCgrndsShadedWall_C(urban, values, length, status) &
+      bind(C, name="UrbanGetCgrndsShadedWall")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetCgrndsShadedWall_C
+
+    ! Cgrndl (d(latent heat flux)/dT) getter functions
+    subroutine UrbanGetCgrndlRoof_C(urban, values, length, status) &
+      bind(C, name="UrbanGetCgrndlRoof")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetCgrndlRoof_C
+
+    subroutine UrbanGetCgrndlImperviousRoad_C(urban, values, length, status) &
+      bind(C, name="UrbanGetCgrndlImperviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetCgrndlImperviousRoad_C
+
+    subroutine UrbanGetCgrndlPerviousRoad_C(urban, values, length, status) &
+      bind(C, name="UrbanGetCgrndlPerviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetCgrndlPerviousRoad_C
+
+    subroutine UrbanGetCgrndlSunlitWall_C(urban, values, length, status) &
+      bind(C, name="UrbanGetCgrndlSunlitWall")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetCgrndlSunlitWall_C
+
+    subroutine UrbanGetCgrndlShadedWall_C(urban, values, length, status) &
+      bind(C, name="UrbanGetCgrndlShadedWall")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetCgrndlShadedWall_C
+
+    ! Layer temperature getter functions (2D)
+    subroutine UrbanGetLayerTempRoof_C(urban, values, size, status) &
+      bind(C, name="UrbanGetLayerTempRoof")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), dimension(2) :: size
+      integer(c_int) :: status
+    end subroutine UrbanGetLayerTempRoof_C
+
+    subroutine UrbanGetLayerTempImperviousRoad_C(urban, values, size, status) &
+      bind(C, name="UrbanGetLayerTempImperviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), dimension(2) :: size
+      integer(c_int) :: status
+    end subroutine UrbanGetLayerTempImperviousRoad_C
+
+    subroutine UrbanGetLayerTempPerviousRoad_C(urban, values, size, status) &
+      bind(C, name="UrbanGetLayerTempPerviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), dimension(2) :: size
+      integer(c_int) :: status
+    end subroutine UrbanGetLayerTempPerviousRoad_C
+
+    subroutine UrbanGetLayerTempSunlitWall_C(urban, values, size, status) &
+      bind(C, name="UrbanGetLayerTempSunlitWall")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), dimension(2) :: size
+      integer(c_int) :: status
+    end subroutine UrbanGetLayerTempSunlitWall_C
+
+    subroutine UrbanGetLayerTempShadedWall_C(urban, values, size, status) &
+      bind(C, name="UrbanGetLayerTempShadedWall")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), dimension(2) :: size
+      integer(c_int) :: status
+    end subroutine UrbanGetLayerTempShadedWall_C
+
+    ! Hydrology getter functions (pervious road)
+    subroutine UrbanGetSoilLiquidWaterPerviousRoad_C(urban, values, size, status) &
+      bind(C, name="UrbanGetSoilLiquidWaterPerviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), dimension(2) :: size
+      integer(c_int) :: status
+    end subroutine UrbanGetSoilLiquidWaterPerviousRoad_C
+
+    subroutine UrbanGetSoilVolumetricWaterPerviousRoad_C(urban, values, size, status) &
+      bind(C, name="UrbanGetSoilVolumetricWaterPerviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), dimension(2) :: size
+      integer(c_int) :: status
+    end subroutine UrbanGetSoilVolumetricWaterPerviousRoad_C
+
+    subroutine UrbanGetAquiferRechargeRatePerviousRoad_C(urban, values, length, status) &
+      bind(C, name="UrbanGetAquiferRechargeRatePerviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetAquiferRechargeRatePerviousRoad_C
+
+    subroutine UrbanGetWaterDeficitFluxPerviousRoad_C(urban, values, length, status) &
+      bind(C, name="UrbanGetWaterDeficitFluxPerviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetWaterDeficitFluxPerviousRoad_C
   end interface
 
   contains
@@ -1047,6 +1362,18 @@ module urban_mod
     integer(c_int), intent(out) :: status
     call UrbanComputeHydrology_C(urban%ptr, dtime, status)
   end subroutine UrbanComputeHydrology
+
+  subroutine UrbanComputeHeatDiffusion(urban, status)
+    type(UrbanType), intent(in) :: urban
+    integer(c_int), intent(out) :: status
+    call UrbanComputeHeatDiffusion_C(urban%ptr, status)
+  end subroutine UrbanComputeHeatDiffusion
+
+  subroutine UrbanComputeNetShortwaveRadiation(urban, status)
+    type(UrbanType), intent(in) :: urban
+    integer(c_int), intent(out) :: status
+    call UrbanComputeNetShortwaveRadiation_C(urban%ptr, status)
+  end subroutine UrbanComputeNetShortwaveRadiation
 
   subroutine UrbanSetAtmTemp(urban, values, length, status)
     type(UrbanType), intent(in) :: urban
@@ -1366,6 +1693,269 @@ module urban_mod
     integer(c_int), intent(out) :: status
     call UrbanGetCanyonAirHumidity_C(urban%ptr, values, length, status)
   end subroutine UrbanGetCanyonAirHumidity
+
+  ! Net shortwave radiation getter subroutines
+  subroutine UrbanGetNetShortwaveRoof(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetNetShortwaveRoof_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetNetShortwaveRoof
+
+  subroutine UrbanGetNetShortwaveImperviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetNetShortwaveImperviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetNetShortwaveImperviousRoad
+
+  subroutine UrbanGetNetShortwavePerviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetNetShortwavePerviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetNetShortwavePerviousRoad
+
+  subroutine UrbanGetNetShortwaveSunlitWall(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetNetShortwaveSunlitWall_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetNetShortwaveSunlitWall
+
+  subroutine UrbanGetNetShortwaveShadedWall(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetNetShortwaveShadedWall_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetNetShortwaveShadedWall
+
+  ! Sensible heat flux getter subroutines
+  subroutine UrbanGetSensibleHeatFluxRoof(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetSensibleHeatFluxRoof_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetSensibleHeatFluxRoof
+
+  subroutine UrbanGetSensibleHeatFluxImperviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetSensibleHeatFluxImperviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetSensibleHeatFluxImperviousRoad
+
+  subroutine UrbanGetSensibleHeatFluxPerviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetSensibleHeatFluxPerviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetSensibleHeatFluxPerviousRoad
+
+  subroutine UrbanGetSensibleHeatFluxSunlitWall(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetSensibleHeatFluxSunlitWall_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetSensibleHeatFluxSunlitWall
+
+  subroutine UrbanGetSensibleHeatFluxShadedWall(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetSensibleHeatFluxShadedWall_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetSensibleHeatFluxShadedWall
+
+  ! Soil evaporation flux getter subroutines
+  subroutine UrbanGetEvapFluxRoof(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetEvapFluxRoof_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetEvapFluxRoof
+
+  subroutine UrbanGetEvapFluxImperviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetEvapFluxImperviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetEvapFluxImperviousRoad
+
+  subroutine UrbanGetEvapFluxPerviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetEvapFluxPerviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetEvapFluxPerviousRoad
+
+  ! Cgrnds (d(sensible heat flux)/dT) getter subroutines
+  subroutine UrbanGetCgrndsRoof(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetCgrndsRoof_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetCgrndsRoof
+
+  subroutine UrbanGetCgrndsImperviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetCgrndsImperviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetCgrndsImperviousRoad
+
+  subroutine UrbanGetCgrndsPerviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetCgrndsPerviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetCgrndsPerviousRoad
+
+  subroutine UrbanGetCgrndsSunlitWall(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetCgrndsSunlitWall_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetCgrndsSunlitWall
+
+  subroutine UrbanGetCgrndsShadedWall(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetCgrndsShadedWall_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetCgrndsShadedWall
+
+  ! Cgrndl (d(latent heat flux)/dT) getter subroutines
+  subroutine UrbanGetCgrndlRoof(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetCgrndlRoof_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetCgrndlRoof
+
+  subroutine UrbanGetCgrndlImperviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetCgrndlImperviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetCgrndlImperviousRoad
+
+  subroutine UrbanGetCgrndlPerviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetCgrndlPerviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetCgrndlPerviousRoad
+
+  subroutine UrbanGetCgrndlSunlitWall(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetCgrndlSunlitWall_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetCgrndlSunlitWall
+
+  subroutine UrbanGetCgrndlShadedWall(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetCgrndlShadedWall_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetCgrndlShadedWall
+
+  ! Layer temperature getter subroutines (2D)
+  subroutine UrbanGetLayerTempRoof(urban, values, size, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), dimension(2), intent(in) :: size
+    integer(c_int), intent(out) :: status
+    call UrbanGetLayerTempRoof_C(urban%ptr, values, size, status)
+  end subroutine UrbanGetLayerTempRoof
+
+  subroutine UrbanGetLayerTempImperviousRoad(urban, values, size, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), dimension(2), intent(in) :: size
+    integer(c_int), intent(out) :: status
+    call UrbanGetLayerTempImperviousRoad_C(urban%ptr, values, size, status)
+  end subroutine UrbanGetLayerTempImperviousRoad
+
+  subroutine UrbanGetLayerTempPerviousRoad(urban, values, size, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), dimension(2), intent(in) :: size
+    integer(c_int), intent(out) :: status
+    call UrbanGetLayerTempPerviousRoad_C(urban%ptr, values, size, status)
+  end subroutine UrbanGetLayerTempPerviousRoad
+
+  subroutine UrbanGetLayerTempSunlitWall(urban, values, size, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), dimension(2), intent(in) :: size
+    integer(c_int), intent(out) :: status
+    call UrbanGetLayerTempSunlitWall_C(urban%ptr, values, size, status)
+  end subroutine UrbanGetLayerTempSunlitWall
+
+  subroutine UrbanGetLayerTempShadedWall(urban, values, size, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), dimension(2), intent(in) :: size
+    integer(c_int), intent(out) :: status
+    call UrbanGetLayerTempShadedWall_C(urban%ptr, values, size, status)
+  end subroutine UrbanGetLayerTempShadedWall
+
+  ! Hydrology getter subroutines (pervious road)
+  subroutine UrbanGetSoilLiquidWaterPerviousRoad(urban, values, size, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), dimension(2), intent(in) :: size
+    integer(c_int), intent(out) :: status
+    call UrbanGetSoilLiquidWaterPerviousRoad_C(urban%ptr, values, size, status)
+  end subroutine UrbanGetSoilLiquidWaterPerviousRoad
+
+  subroutine UrbanGetSoilVolumetricWaterPerviousRoad(urban, values, size, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), dimension(2), intent(in) :: size
+    integer(c_int), intent(out) :: status
+    call UrbanGetSoilVolumetricWaterPerviousRoad_C(urban%ptr, values, size, status)
+  end subroutine UrbanGetSoilVolumetricWaterPerviousRoad
+
+  subroutine UrbanGetAquiferRechargeRatePerviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetAquiferRechargeRatePerviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetAquiferRechargeRatePerviousRoad
+
+  subroutine UrbanGetWaterDeficitFluxPerviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetWaterDeficitFluxPerviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetWaterDeficitFluxPerviousRoad
 
   ! Error handling subroutine
   subroutine UrbanError(rank, line, status)

@@ -241,9 +241,10 @@ struct PerviousRoadDataType : SnowCoveredSurfaceData {
       : SnowCoveredSurfaceData(numLandunits, numRadBands, numRadTypes,
                                numSoilLayers),
         soil(numLandunits, numSoilLayers) {
-    ALLOCATE_DEVICE_VIEW(H2OSoiLiq, Array2DR8, numLandunits, numSoilLayers)
-    ALLOCATE_DEVICE_VIEW(H2OSoiIce, Array2DR8, numLandunits, numSoilLayers)
-    ALLOCATE_DEVICE_VIEW(H2OSoiVol, Array2DR8, numLandunits, numSoilLayers)
+    // Alias soil views so hydrology and heat diffusion share the same data
+    H2OSoiLiq = soil.WaterLiquid;
+    H2OSoiIce = soil.WaterIce;
+    H2OSoiVol = soil.WaterVolumetric;
     ALLOCATE_DEVICE_VIEW(EffPorosity, Array2DR8, numLandunits, numSoilLayers)
     ALLOCATE_DEVICE_VIEW(Hk, Array2DR8, numLandunits, numSoilLayers)
     ALLOCATE_DEVICE_VIEW(Smp, Array2DR8, numLandunits, numSoilLayers)

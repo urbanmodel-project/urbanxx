@@ -6,6 +6,13 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Prevent CMake from adding SDK include paths that conflict with compiler's standard library
+# This is particularly important when using non-Apple compilers on macOS
+if(APPLE)
+    set(CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES "")
+    set(CMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES "")
+endif()
+
 # Options for Kokkos backends
 option(ENABLE_CUDA "Enable CUDA backend" OFF)
 option(ENABLE_HIP "Enable HIP backend" OFF)

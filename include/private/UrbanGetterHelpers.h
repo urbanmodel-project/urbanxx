@@ -46,6 +46,41 @@ static void GetView3D(const ViewType &view, double *values, const int size[3],
   }
 }
 
+// Base template function for getting 2D views
+template <typename ViewType>
+static void GetView2D(const ViewType &view, double *values, const int size[2],
+                      UrbanErrorCode *status) {
+  using namespace URBANXX;
+
+  if (values == nullptr || size == nullptr || status == nullptr) {
+    if (status)
+      *status = URBAN_ERR_INVALID_ARGUMENT;
+    return;
+  }
+
+  try {
+    // Check if each dimension matches the view extent
+    if (size[0] != static_cast<int>(view.extent(0)) ||
+        size[1] != static_cast<int>(view.extent(1))) {
+      *status = URBAN_ERR_SIZE_MISMATCH;
+      return;
+    }
+
+    // Create an unmanaged host view wrapping the output array
+    using target_layout = typename ViewType::array_layout;
+    auto values_view = Kokkos::View<double **, target_layout, Kokkos::HostSpace,
+                                    Kokkos::MemoryTraits<Kokkos::Unmanaged>>(
+        values, size[0], size[1]);
+
+    // Deep copy from the device view to the host view
+    Kokkos::deep_copy(values_view, view);
+
+    *status = URBAN_SUCCESS;
+  } catch (...) {
+    *status = URBAN_ERR_INTERNAL;
+  }
+}
+
 // Base template function for getting 1D views
 template <typename ViewType>
 static void GetView1D(const ViewType &view, double *values, int length,

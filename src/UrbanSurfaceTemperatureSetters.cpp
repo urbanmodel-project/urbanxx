@@ -114,6 +114,15 @@ void UrbanSetCanyonSpecificHumidity(UrbanType urban, const double *values,
   SetView1D(urban->urbanCanyon.Qaf, values, length, status);
 }
 
+// Building temperature setter function (1D)
+void UrbanSetBuildingTemperature(UrbanType urban, const double *values,
+                                 int length, UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  SetView1D(urban->building.Temperature, values, length, status);
+}
+
 // Surface wetness setter functions (1D)
 void UrbanSetFractionWetImperviousRoad(UrbanType urban, const double *values,
                                        int length, UrbanErrorCode *status) {

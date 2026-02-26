@@ -151,18 +151,13 @@ CopyThermalProperties(const int numLevels, const int l, const ViewType &src_tk,
   }
 }
 
-static void UrbanInitializeThermalProperties(UrbanType urban) {
+static void UrbanInitializeThermalPropertiesWall(UrbanType urban) {
   const int numLandunits = urban->numLandunits;
   const int numUrbanLayers = urban->numUrbanLayers;
-  const int numSoilLayers = urban->numSoilLayers;
 
   // Access parameter thermal properties
   auto &tk_wall_params = urban->urbanParams.tk.Wall;
   auto &cv_wall_params = urban->urbanParams.cv.Wall;
-  auto &tk_roof_params = urban->urbanParams.tk.Roof;
-  auto &cv_roof_params = urban->urbanParams.cv.Roof;
-  auto &tk_road_params = urban->urbanParams.tk.Road;
-  auto &cv_road_params = urban->urbanParams.cv.Road;
 
   // Access surface thermal properties
   auto &tk_sunlit_wall = urban->sunlitWall.TkLayer;
@@ -173,22 +168,11 @@ static void UrbanInitializeThermalProperties(UrbanType urban) {
   auto &cv_shaded_wall = urban->shadedWall.Cv;
   auto &cv_times_dz_shaded_wall = urban->shadedWall.CvTimesDz;
   auto &dz_shaded_wall = urban->shadedWall.Dz;
-  auto &tk_roof = urban->roof.TkLayer;
-  auto &cv_roof = urban->roof.Cv;
-  auto &cv_times_dz_roof = urban->roof.CvTimesDz;
-  auto &dz_roof = urban->roof.Dz;
-  auto &tk_pervious_road = urban->perviousRoad.TkLayer;
-  auto &cv_pervious_road = urban->perviousRoad.Cv;
-  auto &cv_times_dz_pervious_road = urban->perviousRoad.CvTimesDz;
-  auto &dz_pervious_road = urban->perviousRoad.Dz;
-  auto &tk_impervious_road = urban->imperviousRoad.TkLayer;
-  auto &cv_impervious_road = urban->imperviousRoad.Cv;
-  auto &cv_times_dz_impervious_road = urban->imperviousRoad.CvTimesDz;
-  auto &dz_impervious_road = urban->imperviousRoad.Dz;
 
   // Copy thermal properties
   Kokkos::parallel_for(
-      "UrbanInitializeThermalProperties", numLandunits, KOKKOS_LAMBDA(int l) {
+      "UrbanInitializeThermalPropertiesWall", numLandunits,
+      KOKKOS_LAMBDA(int l) {
         // Copy wall thermal properties to both sunlit and shaded walls
         CopyThermalProperties(numUrbanLayers, l, tk_wall_params, cv_wall_params,
                               tk_sunlit_wall, cv_sunlit_wall,
@@ -196,18 +180,85 @@ static void UrbanInitializeThermalProperties(UrbanType urban) {
         CopyThermalProperties(numUrbanLayers, l, tk_wall_params, cv_wall_params,
                               tk_shaded_wall, cv_shaded_wall,
                               cv_times_dz_shaded_wall, dz_shaded_wall);
+      });
+  Kokkos::fence();
+}
 
+static void UrbanInitializeThermalPropertiesRoof(UrbanType urban) {
+  const int numLandunits = urban->numLandunits;
+  const int numUrbanLayers = urban->numUrbanLayers;
+
+  // Access parameter thermal properties
+  auto &tk_roof_params = urban->urbanParams.tk.Roof;
+  auto &cv_roof_params = urban->urbanParams.cv.Roof;
+
+  // Access surface thermal properties
+  auto &tk_roof = urban->roof.TkLayer;
+  auto &cv_roof = urban->roof.Cv;
+  auto &cv_times_dz_roof = urban->roof.CvTimesDz;
+  auto &dz_roof = urban->roof.Dz;
+
+  // Copy thermal properties
+  Kokkos::parallel_for(
+      "UrbanInitializeThermalPropertiesRoof", numLandunits,
+      KOKKOS_LAMBDA(int l) {
         // Copy roof thermal properties
         CopyThermalProperties(numUrbanLayers, l, tk_roof_params, cv_roof_params,
                               tk_roof, cv_roof, cv_times_dz_roof, dz_roof);
+      });
+  Kokkos::fence();
+}
 
-        // Copy road thermal properties to both pervious and impervious roads
-        CopyThermalProperties(numSoilLayers, l, tk_road_params, cv_road_params,
-                              tk_pervious_road, cv_pervious_road,
-                              cv_times_dz_pervious_road, dz_pervious_road);
+static void UrbanInitializeThermalPropertiesImperviousRoad(UrbanType urban) {
+  const int numLandunits = urban->numLandunits;
+  const int numSoilLayers = urban->numSoilLayers;
+
+  // Access parameter thermal properties
+  auto &tk_road_params = urban->urbanParams.tk.Road;
+  auto &cv_road_params = urban->urbanParams.cv.Road;
+
+  // Access surface thermal properties
+  auto &tk_impervious_road = urban->imperviousRoad.TkLayer;
+  auto &cv_impervious_road = urban->imperviousRoad.Cv;
+  auto &cv_times_dz_impervious_road = urban->imperviousRoad.CvTimesDz;
+  auto &dz_impervious_road = urban->imperviousRoad.Dz;
+  auto &numberOfActiveLayers = urban->imperviousRoad.NumberOfActiveLayers;
+
+  auto &perv_road_tk_dry = urban->perviousRoad.soil.TkDry;
+  auto &perv_road_cv_solids = urban->perviousRoad.soil.CvSolids;
+  auto &perv_road_watsat = urban->perviousRoad.soil.WatSat;
+
+  // Copy thermal properties
+  Kokkos::parallel_for(
+      "UrbanInitializeThermalPropertiesImperviousRoad", numLandunits,
+      KOKKOS_LAMBDA(int l) {
         CopyThermalProperties(numSoilLayers, l, tk_road_params, cv_road_params,
                               tk_impervious_road, cv_impervious_road,
                               cv_times_dz_impervious_road, dz_impervious_road);
+        for (int k = 0; k < numberOfActiveLayers(l); k++) {
+          tk_impervious_road(l, k) = tk_road_params(l, k);
+          cv_impervious_road(l, k) = cv_road_params(l, k);
+          cv_times_dz_impervious_road(l, k) =
+              cv_road_params(l, k) * dz_impervious_road(l, k);
+        }
+        for (int k = numberOfActiveLayers(l); k < NUM_LAYERS_ABV_BEDROCK; k++) {
+          tk_impervious_road(l, k) = perv_road_tk_dry(l, k);
+          cv_impervious_road(l, k) =
+              perv_road_cv_solids(l, k) * (1.0 - perv_road_watsat(l, k));
+          cv_times_dz_impervious_road(l, k) = perv_road_cv_solids(l, k) *
+                                              (1.0 - perv_road_watsat(l, k)) *
+                                              dz_impervious_road(l, k);
+        }
+        for (int k = NUM_LAYERS_ABV_BEDROCK; k < NUM_SOIL_LAYERS; k++) {
+          tk_impervious_road(l, k) = TK_BEDROCK;
+          cv_impervious_road(l, k) =
+              CSOL_BEDROCK *
+              (1.0 - perv_road_watsat(l, NUM_LAYERS_ABV_BEDROCK - 1));
+          cv_times_dz_impervious_road(l, k) =
+              CSOL_BEDROCK *
+              (1.0 - perv_road_watsat(l, NUM_LAYERS_ABV_BEDROCK - 1)) *
+              dz_impervious_road(l, k);
+        }
       });
   Kokkos::fence();
 }
@@ -264,7 +315,14 @@ static void UrbanInitializePerviousRoadSoils(UrbanType urban) {
   const int numSoilLayers = urban->numSoilLayers;
   const int numUrbanLayers = urban->numUrbanLayers;
 
+  // Access parameter thermal properties
+  auto &tk_road_params = urban->urbanParams.tk.Road;
+  auto &cv_road_params = urban->urbanParams.cv.Road;
+
   // Access soil property views for pervious road
+  auto &cv_pervious_road = urban->perviousRoad.Cv;
+  auto &cv_times_dz_pervious_road = urban->perviousRoad.CvTimesDz;
+  auto &dz_pervious_road = urban->perviousRoad.Dz;
   auto &sand = urban->perviousRoad.soil.Sand;
   auto &clay = urban->perviousRoad.soil.Clay;
   auto &organic = urban->perviousRoad.soil.Organic;
@@ -297,6 +355,11 @@ static void UrbanInitializePerviousRoadSoils(UrbanType urban) {
   // Initialize soil properties based on sand, clay, and organic matter inputs
   Kokkos::parallel_for(
       "UrbanInitializeSoilProperties", numLandunits, KOKKOS_LAMBDA(int l) {
+        // Copy road thermal properties to both pervious and impervious roads
+        CopyThermalProperties(numSoilLayers, l, tk_road_params, cv_road_params,
+                              tkLayer, cv_pervious_road,
+                              cv_times_dz_pervious_road, dz_pervious_road);
+
         // Soil vertical discretization parameters (same as ELM)
         constexpr Real scalez = 0.025;
         constexpr Real zecoeff = 0.5;
@@ -465,7 +528,6 @@ static void UrbanInitializeInterfaceThermalProperties(UrbanType urban) {
   auto &imperv_tkInterface = urban->imperviousRoad.TkInterface;
   auto &imperv_zc = urban->imperviousRoad.Zc;
   auto &imperv_zi = urban->imperviousRoad.Zi;
-  auto &imperv_numActiveLayers = urban->imperviousRoad.NumberOfActiveLayers;
 
   // Access sunlit wall views
   auto &sunlit_tkLayer = urban->sunlitWall.TkLayer;
@@ -490,9 +552,9 @@ static void UrbanInitializeInterfaceThermalProperties(UrbanType urban) {
       "UrbanInitializeInterfaceThermalProperties", numLandunits,
       KOKKOS_LAMBDA(int l) {
         // Impervious road: variable active layers based on density class
-        ComputeInterfaceThermalConductivity(
-            l, numSoilLayers, imperv_numActiveLayers(l), imperv_tkLayer,
-            imperv_tkInterface, imperv_zc, imperv_zi, 0.0);
+        ComputeInterfaceThermalConductivity(l, numSoilLayers, numSoilLayers,
+                                            imperv_tkLayer, imperv_tkInterface,
+                                            imperv_zc, imperv_zi, TK_BEDROCK);
 
         // Sunlit wall: all urban layers are active
         ComputeInterfaceThermalConductivity(
@@ -526,9 +588,11 @@ void UrbanSetup(UrbanType urban, UrbanErrorCode *status) {
   try {
     // Initialize surface temperatures
     UrbanInitializeVerticalDiscretization(urban);
-    UrbanInitializeThermalProperties(urban);
-    UrbanInitializeInterfaceThermalProperties(urban);
     UrbanInitializePerviousRoadSoils(urban);
+    UrbanInitializeThermalPropertiesWall(urban);
+    UrbanInitializeThermalPropertiesRoof(urban);
+    UrbanInitializeThermalPropertiesImperviousRoad(urban);
+    UrbanInitializeInterfaceThermalProperties(urban);
 
     *status = URBAN_SUCCESS;
   } catch (...) {

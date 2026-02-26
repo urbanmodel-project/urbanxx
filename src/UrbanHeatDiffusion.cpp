@@ -2,10 +2,18 @@
 // 1D heat diffusion dynamics for Urban Surfaces
 // Based on ELM SoilTemperature.F90
 
+#include "Urban.h"
 #include "private/UrbanHeatDiffusionImpl.h"
 #include "private/UrbanThermalFunctions.h"
 #include "private/UrbanTypeImpl.h"
 #include <Kokkos_Core.hpp>
+
+// Define the C struct to match the C++ class
+struct _p_UrbanType : public URBANXX::_p_UrbanType {
+  using URBANXX::_p_UrbanType::_p_UrbanType;
+};
+
+using namespace URBANXX;
 
 namespace URBANXX {
 
@@ -213,6 +221,14 @@ KOKKOS_INLINE_FUNCTION void Solve1DHeatDiffusion(
   Real c[NUM_SOIL_LAYERS];
   Real r[NUM_SOIL_LAYERS];
   Real newTemp[NUM_SOIL_LAYERS];
+
+  // initialize arrays
+  for (int j = 0; j < NUM_SOIL_LAYERS; ++j) {
+    a[j] = 0.0;
+    b[j] = 1.0;
+    c[j] = 0.0;
+    r[j] = 0.0;
+  }
 
   // Compute factors and interface fluxes
   // Top layer
@@ -496,24 +512,6 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
         const bool hasBottomBC_building = true;
         const Real noBottomTemp = 0.0; // Not used for road surfaces
 
-        // Solve heat diffusion for pervious road
-        SurfaceProperties perv_surf(l, numSoilLayers, perv_temp, perv_zc,
-                                    perv_zi, perv_dz, perv_tkInterface,
-                                    perv_tkLayer, perv_cv_times_dz);
-        BoundaryConditions perv_bc(perv_EflxGnet, perv_DEflxGnet_DTemp,
-                                   useTopAdjustment_road, capr,
-                                   hasBottomBC_road, noBottomTemp);
-        Solve1DHeatDiffusion(dtime, perv_surf, perv_bc);
-
-        // Solve heat diffusion for impervious road
-        SurfaceProperties imperv_surf(l, numSoilLayers, imperv_temp, imperv_zc,
-                                      imperv_zi, imperv_dz, imperv_tkInterface,
-                                      imperv_tkLayer, imperv_cv_times_dz);
-        BoundaryConditions imperv_bc(imperv_EflxGnet, imperv_DEflxGnet_DTemp,
-                                     useTopAdjustment_road, capr,
-                                     hasBottomBC_road, noBottomTemp);
-        Solve1DHeatDiffusion(dtime, imperv_surf, imperv_bc);
-
         // Solve heat diffusion for roof
         SurfaceProperties roof_surf(l, numUrbanLayers, roof_temp, roof_zc,
                                     roof_zi, roof_dz, roof_tkInterface,
@@ -542,8 +540,49 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
                                         useTopAdjustment_building, capr,
                                         hasBottomBC_building, building_temp(l));
         Solve1DHeatDiffusion(dtime, shadewall_surf, shadewall_bc);
+
+        // Solve heat diffusion for impervious road
+        SurfaceProperties imperv_surf(l, numSoilLayers, imperv_temp, imperv_zc,
+                                      imperv_zi, imperv_dz, imperv_tkInterface,
+                                      imperv_tkLayer, imperv_cv_times_dz);
+        BoundaryConditions imperv_bc(imperv_EflxGnet, imperv_DEflxGnet_DTemp,
+                                     useTopAdjustment_road, capr,
+                                     hasBottomBC_road, noBottomTemp);
+        Solve1DHeatDiffusion(dtime, imperv_surf, imperv_bc);
+
+        // Solve heat diffusion for pervious road
+        SurfaceProperties perv_surf(l, numSoilLayers, perv_temp, perv_zc,
+                                    perv_zi, perv_dz, perv_tkInterface,
+                                    perv_tkLayer, perv_cv_times_dz);
+        BoundaryConditions perv_bc(perv_EflxGnet, perv_DEflxGnet_DTemp,
+                                   useTopAdjustment_road, capr,
+                                   hasBottomBC_road, noBottomTemp);
+        Solve1DHeatDiffusion(dtime, perv_surf, perv_bc);
       });
   Kokkos::fence();
 }
 
 } // namespace URBANXX
+
+// ============================================================================
+// Public C API
+// ============================================================================
+
+extern "C" {
+
+void UrbanComputeHeatDiffusion(UrbanType urban, UrbanErrorCode *status) {
+  if (urban == nullptr || status == nullptr) {
+    if (status)
+      *status = URBAN_ERR_INVALID_ARGUMENT;
+    return;
+  }
+
+  try {
+    URBANXX::ComputeHeatDiffusion(*urban);
+    *status = URBAN_SUCCESS;
+  } catch (...) {
+    *status = URBAN_ERR_INTERNAL;
+  }
+}
+
+} // extern "C"

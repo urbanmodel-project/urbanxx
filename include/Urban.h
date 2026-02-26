@@ -147,6 +147,9 @@ URBAN_EXTERN void UrbanSetBuildingMinTemperature(UrbanType urban,
                                                  const double *values,
                                                  int length,
                                                  UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetBuildingTemperature(UrbanType urban,
+                                              const double *values, int length,
+                                              UrbanErrorCode *status);
 URBAN_EXTERN void UrbanSetBuildingWallThickness(UrbanType urban,
                                                 const double *values,
                                                 int length,
@@ -171,6 +174,10 @@ URBAN_EXTERN void UrbanComputeSurfaceFluxes(UrbanType urban,
                                             UrbanErrorCode *status);
 URBAN_EXTERN void UrbanComputeHydrology(UrbanType urban, double dtime,
                                         UrbanErrorCode *status);
+URBAN_EXTERN void UrbanComputeHeatDiffusion(UrbanType urban,
+                                            UrbanErrorCode *status);
+URBAN_EXTERN void UrbanComputeNetShortwaveRadiation(UrbanType urban,
+                                                    UrbanErrorCode *status);
 
 // Hydrology boundary condition setter functions
 URBAN_EXTERN void UrbanSetInfiltrationFlux(UrbanType urban,
@@ -361,6 +368,111 @@ URBAN_EXTERN void UrbanGetCanyonAirTemperature(UrbanType urban, double *values,
                                                UrbanErrorCode *status);
 URBAN_EXTERN void UrbanGetCanyonAirHumidity(UrbanType urban, double *values,
                                             int length, UrbanErrorCode *status);
+
+// Net shortwave radiation getter functions
+URBAN_EXTERN void UrbanGetNetShortwaveRoof(UrbanType urban, double *values,
+                                           int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetNetShortwaveImperviousRoad(UrbanType urban,
+                                                     double *values, int length,
+                                                     UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetNetShortwavePerviousRoad(UrbanType urban,
+                                                   double *values, int length,
+                                                   UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetNetShortwaveSunlitWall(UrbanType urban,
+                                                 double *values, int length,
+                                                 UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetNetShortwaveShadedWall(UrbanType urban,
+                                                 double *values, int length,
+                                                 UrbanErrorCode *status);
+
+// Sensible heat flux getter functions
+URBAN_EXTERN void UrbanGetSensibleHeatFluxRoof(UrbanType urban, double *values,
+                                               int length,
+                                               UrbanErrorCode *status);
+URBAN_EXTERN void
+UrbanGetSensibleHeatFluxImperviousRoad(UrbanType urban, double *values,
+                                       int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetSensibleHeatFluxPerviousRoad(UrbanType urban,
+                                                       double *values,
+                                                       int length,
+                                                       UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetSensibleHeatFluxSunlitWall(UrbanType urban,
+                                                     double *values, int length,
+                                                     UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetSensibleHeatFluxShadedWall(UrbanType urban,
+                                                     double *values, int length,
+                                                     UrbanErrorCode *status);
+
+// Soil evaporation flux getter functions
+URBAN_EXTERN void UrbanGetEvapFluxRoof(UrbanType urban, double *values,
+                                       int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetEvapFluxImperviousRoad(UrbanType urban,
+                                                 double *values, int length,
+                                                 UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetEvapFluxPerviousRoad(UrbanType urban, double *values,
+                                               int length,
+                                               UrbanErrorCode *status);
+
+// Cgrnds (d(sensible heat flux)/dT) getter functions
+URBAN_EXTERN void UrbanGetCgrndsRoof(UrbanType urban, double *values,
+                                     int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetCgrndsImperviousRoad(UrbanType urban, double *values,
+                                               int length,
+                                               UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetCgrndsPerviousRoad(UrbanType urban, double *values,
+                                             int length,
+                                             UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetCgrndsSunlitWall(UrbanType urban, double *values,
+                                           int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetCgrndsShadedWall(UrbanType urban, double *values,
+                                           int length, UrbanErrorCode *status);
+
+// Cgrndl (d(latent heat flux)/dT) getter functions
+URBAN_EXTERN void UrbanGetCgrndlRoof(UrbanType urban, double *values,
+                                     int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetCgrndlImperviousRoad(UrbanType urban, double *values,
+                                               int length,
+                                               UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetCgrndlPerviousRoad(UrbanType urban, double *values,
+                                             int length,
+                                             UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetCgrndlSunlitWall(UrbanType urban, double *values,
+                                           int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetCgrndlShadedWall(UrbanType urban, double *values,
+                                           int length, UrbanErrorCode *status);
+
+// Layer temperature getter functions
+URBAN_EXTERN void UrbanGetLayerTempRoof(UrbanType urban, double *values,
+                                        const int size[2],
+                                        UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetLayerTempImperviousRoad(UrbanType urban,
+                                                  double *values,
+                                                  const int size[2],
+                                                  UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetLayerTempPerviousRoad(UrbanType urban, double *values,
+                                                const int size[2],
+                                                UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetLayerTempSunlitWall(UrbanType urban, double *values,
+                                              const int size[2],
+                                              UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetLayerTempShadedWall(UrbanType urban, double *values,
+                                              const int size[2],
+                                              UrbanErrorCode *status);
+
+// Hydrology getter functions (pervious road)
+URBAN_EXTERN void UrbanGetSoilLiquidWaterPerviousRoad(UrbanType urban,
+                                                      double *values,
+                                                      const int size[2],
+                                                      UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetSoilVolumetricWaterPerviousRoad(
+    UrbanType urban, double *values, const int size[2], UrbanErrorCode *status);
+URBAN_EXTERN void
+UrbanGetAquiferRechargeRatePerviousRoad(UrbanType urban, double *values,
+                                        int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetWaterDeficitFluxPerviousRoad(UrbanType urban,
+                                                       double *values,
+                                                       int length,
+                                                       UrbanErrorCode *status);
 
 #ifdef __cplusplus
 } // extern "C"
