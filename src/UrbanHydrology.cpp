@@ -190,7 +190,7 @@ void SetupHydrologyTridiagonal(UrbanType urban, Real dtime) {
               (dz(l, j_next) * SHR_CONST_RHOWATER);
 
           const Real s_interface =
-              0.5 * (vol_liq / watsat(l, j) + vol_liq_next / watsat(l, j_next));
+              (vol_liq + vol_liq_next) / (watsat(l, j) + watsat(l, j_next));
 
           // Compute ice impedance
           const Real vol_ice = Kokkos::fmin(
@@ -528,15 +528,6 @@ void UpdateSoilWater(UrbanType urban, Real dtime) {
             qflx_deficit(l) -= h2osoi_liq(l, j) / dtime;
             h2osoi_liq(l, j) = 0.0;
           }
-        }
-
-        // Update volumetric water content
-        for (int j = 0; j < nlevbed; ++j) {
-          const Real vol_liq =
-              h2osoi_liq(l, j) / (dz(l, j) * SHR_CONST_RHOWATER);
-          const Real vol_ice = Kokkos::fmin(
-              watsat(l, j), h2osoi_ice(l, j) / (dz(l, j) * SHR_CONST_RHOICE));
-          h2osoi_vol(l, j) = vol_liq + vol_ice;
         }
       });
   Kokkos::fence();
