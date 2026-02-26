@@ -141,3 +141,73 @@ target_link_libraries(test_temperature_setters
 
 # Register the test with CTest
 add_test(NAME TemperatureSetterTests COMMAND test_temperature_setters)
+
+# Test executable for building temperature setter
+add_executable(test_building_temperature_setter
+    test_building_temperature_setter.cpp
+)
+
+target_link_libraries(test_building_temperature_setter
+    urban
+    kokkoscore
+    gtest
+)
+
+# Register the test with CTest
+add_test(NAME BuildingTemperatureSetterTests COMMAND test_building_temperature_setter)
+
+# Test executable for net shortwave getters
+add_executable(test_net_shortwave_getters
+    test_net_shortwave_getters.cpp
+)
+
+target_link_libraries(test_net_shortwave_getters
+    urban
+    kokkoscore
+    gtest
+)
+
+# Register the test with CTest
+add_test(NAME NetShortwaveGetterTests COMMAND test_net_shortwave_getters)
+
+# Test executable for surface flux getters
+add_executable(test_surface_flux_getters
+    test_surface_flux_getters.cpp
+)
+
+target_link_libraries(test_surface_flux_getters
+    urban
+    kokkoscore
+    gtest
+)
+
+# Register the test with CTest
+add_test(NAME SurfaceFluxGetterTests COMMAND test_surface_flux_getters)
+
+# Test executable for layer temperature getters
+add_executable(test_layer_temp_getters
+    test_layer_temp_getters.cpp
+)
+
+target_link_libraries(test_layer_temp_getters
+    urban
+    kokkoscore
+    gtest
+)
+
+# Register the test with CTest
+add_test(NAME LayerTempGetterTests COMMAND test_layer_temp_getters)
+
+# Test executable for hydrology getters
+add_executable(test_hydrology_getters
+    test_hydrology_getters.cpp
+)
+
+target_link_libraries(test_hydrology_getters
+    urban
+    kokkoscore
+    gtest
+)
+
+# Register the test with CTest
+add_test(NAME HydrologyGetterTests COMMAND test_hydrology_getters)
