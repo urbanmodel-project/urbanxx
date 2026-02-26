@@ -538,4 +538,60 @@ void ComputeNetShortwave(URBANXX::_p_UrbanType &urban) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// ComputeNetShortwaveRadiation
+//
+// For each of the five urban surfaces (roof, impervious road, pervious road,
+// sunlit wall, shaded wall), compute:
+//
+//   NetShortRad(l) = SUM over bands,types [ AbsorbedShortRad(l,b,t) * ForcSRad(l,b,t) ]
+//
+// This matches the ELM formula:
+//   sabg = sabs_dir(l,VIS)*solad(t,VIS) + sabs_dif(l,VIS)*solai(t,VIS)
+//        + sabs_dir(l,NIR)*solad(t,NIR) + sabs_dif(l,NIR)*solai(t,NIR)
+// ---------------------------------------------------------------------------
+void ComputeNetShortwaveRadiation(URBANXX::_p_UrbanType &urban) {
+  const int numLandunits = urban.numLandunits;
+  const int numBands = urban.numRadBands;
+  const int numTypes = urban.numRadTypes;
+
+  auto forcSRad = urban.atmosphereData.ForcSRad;
+  auto absRoof = urban.roof.AbsorbedShortRad;
+  auto absImpRoad = urban.imperviousRoad.AbsorbedShortRad;
+  auto absPerRoad = urban.perviousRoad.AbsorbedShortRad;
+  auto absSunWall = urban.sunlitWall.AbsorbedShortRad;
+  auto absShadWall = urban.shadedWall.AbsorbedShortRad;
+  auto netRoof = urban.roof.NetShortRad;
+  auto netImpRoad = urban.imperviousRoad.NetShortRad;
+  auto netPerRoad = urban.perviousRoad.NetShortRad;
+  auto netSunWall = urban.sunlitWall.NetShortRad;
+  auto netShadWall = urban.shadedWall.NetShortRad;
+
+  Kokkos::parallel_for(
+      "ComputeNetShortwaveRadiation", numLandunits,
+      KOKKOS_LAMBDA(const int l) {
+        Real sumRoof = 0.0, sumImp = 0.0, sumPer = 0.0;
+        Real sumSun = 0.0, sumShad = 0.0;
+        for (int b = 0; b < numBands; ++b) {
+          for (int t = 0; t < numTypes; ++t) {
+            const Real forcing = forcSRad(l, b, t);
+            sumRoof += absRoof(l, b, t) * forcing;
+            sumImp += absImpRoad(l, b, t) * forcing;
+            sumPer += absPerRoad(l, b, t) * forcing;
+            sumSun += absSunWall(l, b, t) * forcing;
+            sumShad += absShadWall(l, b, t) * forcing;
+            if (l == 0) {
+              printf("Urbanxx: absSunWall = %18.16f, forcing = %18.16f\n", absSunWall(l, b, t), forcing);
+            }
+          }
+        }
+        netRoof(l) = sumRoof;
+        netImpRoad(l) = sumImp;
+        netPerRoad(l) = sumPer;
+        netSunWall(l) = sumSun;
+        netShadWall(l) = sumShad;
+      });
+  Kokkos::fence();
+}
+
 } // namespace URBANXX

@@ -480,6 +480,12 @@ module urban_mod
       integer(c_int) :: status
     end subroutine UrbanComputeHeatDiffusion_C
 
+    subroutine UrbanComputeNetShortwaveRadiation_C(urban, status) bind(C, name="UrbanComputeNetShortwaveRadiation")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      integer(c_int) :: status
+    end subroutine UrbanComputeNetShortwaveRadiation_C
+
     ! Atmospheric forcing setter functions
     subroutine UrbanSetAtmTemp_C(urban, values, length, status) bind(C, name="UrbanSetAtmTemp")
       import :: c_ptr, c_int
@@ -1362,6 +1368,12 @@ module urban_mod
     integer(c_int), intent(out) :: status
     call UrbanComputeHeatDiffusion_C(urban%ptr, status)
   end subroutine UrbanComputeHeatDiffusion
+
+  subroutine UrbanComputeNetShortwaveRadiation(urban, status)
+    type(UrbanType), intent(in) :: urban
+    integer(c_int), intent(out) :: status
+    call UrbanComputeNetShortwaveRadiation_C(urban%ptr, status)
+  end subroutine UrbanComputeNetShortwaveRadiation
 
   subroutine UrbanSetAtmTemp(urban, values, length, status)
     type(UrbanType), intent(in) :: urban

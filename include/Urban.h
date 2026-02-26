@@ -176,6 +176,8 @@ URBAN_EXTERN void UrbanComputeHydrology(UrbanType urban, double dtime,
                                         UrbanErrorCode *status);
 URBAN_EXTERN void UrbanComputeHeatDiffusion(UrbanType urban,
                                             UrbanErrorCode *status);
+URBAN_EXTERN void UrbanComputeNetShortwaveRadiation(UrbanType urban,
+                                                    UrbanErrorCode *status);
 
 // Hydrology boundary condition setter functions
 URBAN_EXTERN void UrbanSetInfiltrationFlux(UrbanType urban,
