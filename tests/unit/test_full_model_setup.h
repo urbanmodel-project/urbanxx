@@ -34,15 +34,19 @@ static void SetFullModelParameters(UrbanType urban, int N) {
   ASSERT_EQ(ierr, URBAN_SUCCESS);
 
   // --- Height parameters ---
-  std::vector<double> h10(N, 10.0);
-  UrbanSetForcHgtT(urban, h10.data(), N, &ierr);
+  // Values must satisfy: forc_hgt_u > ht_roof > z_d_town > z_0_town
+  // and wind_hgt_canyon < ht_roof, to avoid log(0) in ComputeCanyonUWind.
+  std::vector<double> forc_hgt(N, 30.0); // forcing height above surface (m)
+  UrbanSetForcHgtT(urban, forc_hgt.data(), N, &ierr);
   ASSERT_EQ(ierr, URBAN_SUCCESS);
-  UrbanSetForcHgtU(urban, h10.data(), N, &ierr);
-  ASSERT_EQ(ierr, URBAN_SUCCESS);
-  UrbanSetZDTown(urban, h10.data(), N, &ierr);
+  UrbanSetForcHgtU(urban, forc_hgt.data(), N, &ierr);
   ASSERT_EQ(ierr, URBAN_SUCCESS);
 
-  std::vector<double> z0(N, 0.2);
+  std::vector<double> zd(N, 7.0); // zero-plane displacement (~0.7 * ht_roof)
+  UrbanSetZDTown(urban, zd.data(), N, &ierr);
+  ASSERT_EQ(ierr, URBAN_SUCCESS);
+
+  std::vector<double> z0(N, 0.5); // roughness length (m)
   UrbanSetZ0Town(urban, z0.data(), N, &ierr);
   ASSERT_EQ(ierr, URBAN_SUCCESS);
 
@@ -50,7 +54,7 @@ static void SetFullModelParameters(UrbanType urban, int N) {
   UrbanSetHtRoof(urban, ht_roof.data(), N, &ierr);
   ASSERT_EQ(ierr, URBAN_SUCCESS);
 
-  std::vector<double> wind_hgt(N, 5.0);
+  std::vector<double> wind_hgt(N, 5.0); // mid-canyon height (< ht_roof)
   UrbanSetWindHgtCanyon(urban, wind_hgt.data(), N, &ierr);
   ASSERT_EQ(ierr, URBAN_SUCCESS);
 
@@ -108,6 +112,10 @@ static void SetFullModelParameters(UrbanType urban, int N) {
   ASSERT_EQ(ierr, URBAN_SUCCESS);
   UrbanSetBuildingMaxTemperature(urban, bld_max.data(), N, &ierr);
   ASSERT_EQ(ierr, URBAN_SUCCESS);
+  // Internal building temperature (bottom BC for roof and wall heat diffusion)
+  std::vector<double> bld_temp(N, 295.0);
+  UrbanSetBuildingTemperature(urban, bld_temp.data(), N, &ierr);
+  ASSERT_EQ(ierr, URBAN_SUCCESS);
   std::vector<double> wall_thick(N, 0.286), roof_thick(N, 0.217);
   UrbanSetBuildingWallThickness(urban, wall_thick.data(), N, &ierr);
   ASSERT_EQ(ierr, URBAN_SUCCESS);
@@ -123,6 +131,19 @@ static void SetFullModelParameters(UrbanType urban, int N) {
   UrbanSetClayPerviousRoad(urban, clay.data(), size2D_road, &ierr);
   ASSERT_EQ(ierr, URBAN_SUCCESS);
   UrbanSetOrganicPerviousRoad(urban, organic.data(), size2D_road, &ierr);
+  ASSERT_EQ(ierr, URBAN_SUCCESS);
+
+  // --- Soil water content (2D, pervious road) ---
+  // Needed by ComputeSoilThermalConductivity and ComputeSoilHeatCapacityTimesDz
+  // inside UrbanComputeHeatDiffusion.
+  std::vector<double> soilLiq(N * numSoilLayers, 0.1);
+  UrbanSetSoilLiquidWater(urban, soilLiq.data(), size2D_road, &ierr);
+  ASSERT_EQ(ierr, URBAN_SUCCESS);
+  std::vector<double> soilIce(N * numSoilLayers, 0.0);
+  UrbanSetSoilIceContent(urban, soilIce.data(), size2D_road, &ierr);
+  ASSERT_EQ(ierr, URBAN_SUCCESS);
+  std::vector<double> soilVol(N * numSoilLayers, 0.3);
+  UrbanSetSoilVolumetricWater(urban, soilVol.data(), size2D_road, &ierr);
   ASSERT_EQ(ierr, URBAN_SUCCESS);
 
   // --- Number of active layers ---
