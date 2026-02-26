@@ -580,9 +580,6 @@ void ComputeNetShortwaveRadiation(URBANXX::_p_UrbanType &urban) {
             sumPer += absPerRoad(l, b, t) * forcing;
             sumSun += absSunWall(l, b, t) * forcing;
             sumShad += absShadWall(l, b, t) * forcing;
-            if (l == 0) {
-              printf("Urbanxx: absSunWall = %18.16f, forcing = %18.16f\n", absSunWall(l, b, t), forcing);
-            }
           }
         }
         netRoof(l) = sumRoof;
