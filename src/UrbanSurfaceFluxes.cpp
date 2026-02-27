@@ -785,17 +785,17 @@ void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
 
         // Iteration loop to compute friction velocity and surface fluxes
         Real fm = 0.0;
+        Real ustar, rahu, rawu;
         SurfaceFluxConductances condcs;
         for (int iter = 0; iter < 3; ++iter) {
-          Real ustar;
           Real temp1, temp12m;
           Real temp2, temp22m;
           FrictionVelocity(iter, forcHgtUVal, zDTownVal, z0TownVal, obu, ur, um,
                            ustar, temp1, temp12m, temp2, temp22m, fm);
 
           // Real ramu = 1.0 / (ustar * ustar / um);
-          Real rahu = 1.0 / (temp1 * ustar);
-          Real rawu = 1.0 / (temp2 * ustar);
+          rahu = 1.0 / (temp1 * ustar);
+          rawu = 1.0 / (temp2 * ustar);
 
           Real canyonWindPow2 =
               std::pow(canyonUWind, 2.0) + std::pow(ustar, 2.0);
@@ -852,13 +852,6 @@ void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
 
         // Compute flux derivatives after iteration has converged
         // Need final rahu and rawu from last iteration
-        Real ustar;
-        Real temp1, temp12m;
-        Real temp2, temp22m;
-        FrictionVelocity(2, forcHgtUVal, zDTownVal, z0TownVal, obu, ur, um,
-                         ustar, temp1, temp12m, temp2, temp22m, fm);
-        Real rahu = 1.0 / (temp1 * ustar);
-        Real rawu = 1.0 / (temp2 * ustar);
 
         SurfaceTempHumidData surfaceData = {
             urban.roof.Qs(l),
