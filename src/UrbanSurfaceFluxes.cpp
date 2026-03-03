@@ -175,8 +175,8 @@ void MoninObukIni(Real ur, Real thv, Real dthv, Real zldis, Real z0m, Real &um,
 
   const Real wc = 0.5;
 
-  if (dthv > 0) {
-    um = Kokkos::max(ur, 1.0);
+  if (dthv >= 0) {
+    um = Kokkos::max(ur, 0.1);
   } else {
     um = std::pow(std::pow(ur, 2.0) + std::pow(wc, 2.0), 0.5);
   }
@@ -185,7 +185,7 @@ void MoninObukIni(Real ur, Real thv, Real dthv, Real zldis, Real z0m, Real &um,
 
   Real zeta;
   if (rib >= 0) {
-    zeta = rib * std::log(zldis / z0m) / (1.0 - 0.5 * Kokkos::min(rib, 0.19));
+    zeta = rib * std::log(zldis / z0m) / (1.0 - 5.0 * Kokkos::min(rib, 0.19));
     zeta = Kokkos::min(2.0, Kokkos::max(zeta, 0.01));
   } else {
     zeta = rib * std::log(zldis / z0m);
@@ -204,7 +204,7 @@ void StabilityFunc1(Real zeta, Real &value) {
   Real term1 = 2.0 * std::log((1.0 + chik) * 0.5);
   Real term2 = std::log((1.0 + chik2) * 0.5);
   Real term3 = 2.0 * std::atan(chik);
-  value = term1 + term2 + term3 + M_PI * 0.5;
+  value = term1 + term2 - term3 + M_PI * 0.5;
 }
 
 KOKKOS_INLINE_FUNCTION
@@ -384,7 +384,7 @@ void FrictionVelocity(int iter, Real forc_hgt_u, Real displa, Real z0, Real obu,
     const Real x = std::pow((1.0 - 16.0 * Kokkos::min(zeta, 1.0)), 0.25);
     const Real tmp2 = std::log((1.0 + x * x) / 2.0);
     const Real tmp3 = std::log((1.0 + x) / 2.0);
-    fmnew = 2.0 * tmp3 + tmp2 - std::atan(x) + M_PI / 2.0;
+    fmnew = 2.0 * tmp3 + tmp2 - 2.0 * std::atan(x) + M_PI / 2.0;
   } else {
     fmnew = -5.0 * Kokkos::min(zeta, 1.0);
   }
@@ -837,10 +837,11 @@ void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
           Real zeta =
               zldis * VKC * GRAVITY * thvstar / (std::pow(ustar, 2.0) * thv);
 
-          if (zeta > 0.0) {
+          if (zeta >= 0.0) {
             zeta = Kokkos::min(2.0, Kokkos::max(zeta, 0.01));
             um = Kokkos::max(ur, 0.1);
           } else {
+            zeta = Kokkos::max(-100.0, Kokkos::min(zeta, -0.01));
             const Real beta = 1.0;
             const Real zii = 1000.0;
             const Real wc =
