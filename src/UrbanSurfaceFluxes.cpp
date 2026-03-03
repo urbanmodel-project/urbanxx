@@ -664,19 +664,23 @@ void ComputePerviousRoadHeatFluxes(Real taf, Real qaf, Real tSurf, Real qSurf,
   // Sensible heat flux (W/m²) [+ to atmosphere]
   eflxShGrnd = -forcRho * CPAIR * wtusUnscl * dth;
 
-  // Latent heat flux - partition between soil evaporation and transpiration
-  // If dew (dqh > 0), assign to soil evaporation
-  // For now, we don't have snow fraction or soil moisture data,
-  // so we use simplified logic
+  // Latent heat flux - partition between soil evaporation and transpiration.
+  // Mirrors ELM's UrbanFluxesMod logic for icol_road_perv:
+  //   dqh > 0  → condensation/dew  → assign to soil evaporation
+  //   dqh <= 0 → evaporation       → assign to transpiration
+  // (ELM also routes to soil when frac_sno > 0 or soilalpha_u <= 0, but those
+  // inputs are not available in URBANxx; the check in UrbanxxSurfaceFluxesMod
+  // compares qflx_evap_soi + qflx_tran_veg against qflxEvapSoil, so total
+  // flux is always validated regardless of which bucket ELM uses.)
   if (dqh > 0.0) {
-    // Condensation/dew - assign to soil
+    // Condensation/dew - assign to soil evaporation
     qflxEvapSoil = -forcRho * wtuqUnscl * dqh;
     qflxTranEvap = 0.0;
   } else {
-    // Evaporation - for now assign to soil
-    // TODO: Add soil moisture availability check to partition to transpiration
-    qflxEvapSoil = -forcRho * wtuqUnscl * dqh;
-    qflxTranEvap = 0.0;
+    // Evaporation - assign to transpiration (no vegetation, but ELM uses this
+    // bucket for pervious road evaporation when liquid water is available)
+    qflxEvapSoil = 0.0;
+    qflxTranEvap = -forcRho * wtuqUnscl * dqh;
   }
 }
 
