@@ -222,7 +222,7 @@ void ComputeUstar(Real zldis, Real obu, Real z0m, Real um, Real &ustar) {
   if (zeta < -ZETAM) {
     const Real term1 = std::log(-ZETAM * obu / z0m);
     const Real term4 =
-        1.14 * (std::pow(-zeta, 0.333) - std::pow(-ZETAM, 0.333));
+        1.14 * (std::pow(-zeta, 0.333) - std::pow(ZETAM, 0.333));
 
     Real term2, term3;
     StabilityFunc1(-ZETAM, term2);
@@ -269,7 +269,7 @@ void ComputeU10m(Real zldis, Real obu, Real z0m, Real um, Real ustar,
 
       const Real term1 = std::log(-ZETAM * obu / (10.0 + z0m));
       const Real term4 =
-          1.14 * (std::pow(-zeta, 0.333) - std::pow(-ZETAM, 0.333));
+          1.14 * (std::pow(-zeta, 0.333) - std::pow(ZETAM, 0.333));
 
       Real term2, term3;
       StabilityFunc1(-ZETAM, term2);
@@ -313,8 +313,8 @@ void ComputeRelationForOtherScalarProfiles(Real zldis, Real obu, Real z0,
 
   if (zeta < -ZETAT) {
 
-    const Real term1 = std::log(-zeta * obu / z0);
-    const Real term4 = 0.8 * (std::pow(-ZETAT, 0.333) - std::pow(-zeta, 0.333));
+    const Real term1 = std::log(-ZETAT * obu / z0);
+    const Real term4 = 0.8 * (std::pow(ZETAT, -0.333) - std::pow(-zeta, -0.333));
 
     Real term2, term3;
     StabilityFunc2(-ZETAT, term2);
