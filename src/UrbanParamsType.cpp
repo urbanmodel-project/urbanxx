@@ -210,7 +210,9 @@ void UrbanSetNumberOfActiveLayersImperviousRoad(UrbanType urban,
   } catch (...) {
     *status = URBAN_ERR_INTERNAL;
   }
-} // Thermal conductivity setter functions
+}
+
+// Thermal conductivity setter functions
 void UrbanSetThermalConductivityRoad(UrbanType urban, const double *values,
                                      const int size[2],
                                      UrbanErrorCode *status) {

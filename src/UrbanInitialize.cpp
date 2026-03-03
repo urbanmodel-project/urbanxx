@@ -457,10 +457,16 @@ static void UrbanInitializePerviousRoadSoils(UrbanType urban) {
           tkLayer(l, k) = tkdry; // Initially set to dry thermal conductivity
           cv_solids(l, k) = csol;
 
-          // Initialize volumetric water content
-          // Layers 0-9 (first 10 layers): min(0.3, watsat)
-          // Layers 10-14 (last 5 layers): 0.0 (hydrologically inactive)
-          if (k < 10) {
+          // Initialize volumetric water content and heat capacity
+          // Soil layers (k < NUM_LAYERS_ABV_BEDROCK): use pedotransfer-derived watsat
+          // Bedrock layers (k >= NUM_LAYERS_ABV_BEDROCK):
+          //   - water_vol = 0.0 (hydrologically inactive)
+          //   - cv_solids = CSOL_BEDROCK (= 2.0e6 J/m³/K, matching ELM's csol_bedrock
+          //     override in SoilStateType.F90 for lev > nlevbed)
+          // The watsat for bedrock layers is computed from the last active soil layer's
+          // sand/clay (passed in from Fortran), which matches ELM's formula:
+          //   cv = csol_bedrock * (1 - watsat_last_soil_layer) * dz
+          if (k < NUM_LAYERS_ABV_BEDROCK) {
             water_vol(l, k) = Kokkos::fmin(0.3, watsat_mixed);
           } else {
             water_vol(l, k) = 0.0;
