@@ -350,11 +350,13 @@ void ComputeRelationForOtherScalarProfiles(Real zldis, Real obu, Real z0,
 }
 
 KOKKOS_INLINE_FUNCTION
-void FrictionVelocity(int iter, Real forc_hgt_u, Real displa, Real z0, Real obu,
-                      Real ur, Real um, Real &ustar, Real &temp1, Real &temp12m,
-                      Real &temp2, Real &temp22m, Real &fm) {
+void FrictionVelocity(int iter, Real forc_hgt_u, Real forc_hgt_t, Real displa,
+                      Real z0, Real obu, Real ur, Real um, Real &ustar,
+                      Real &temp1, Real &temp12m, Real &temp2, Real &temp22m,
+                      Real &fm) {
 
   const Real zldis = forc_hgt_u - displa;
+  const Real zldis_t = forc_hgt_t - displa;
   const Real zeta = zldis / obu;
 
   const Real z0m = z0;
@@ -365,8 +367,8 @@ void FrictionVelocity(int iter, Real forc_hgt_u, Real displa, Real z0, Real obu,
   Real u10;
   ComputeU10m(zldis, obu, z0m, um, ustar, u10);
 
-  // Calculate temp1 for the temperature profile
-  ComputeRelationForOtherScalarProfiles(zldis, obu, z0h, temp1);
+  // Calculate temp1 for the temperature profile (uses temperature height)
+  ComputeRelationForOtherScalarProfiles(zldis_t, obu, z0h, temp1);
 
   // Since z0q == z0h, temp2 for the humidity profile is same as
   // that for temperature profile
@@ -794,8 +796,9 @@ void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
         for (int iter = 0; iter < 3; ++iter) {
           Real temp1, temp12m;
           Real temp2, temp22m;
-          FrictionVelocity(iter, forcHgtUVal, zDTownVal, z0TownVal, obu, ur, um,
-                           ustar, temp1, temp12m, temp2, temp22m, fm);
+          FrictionVelocity(iter, forcHgtUVal, forcHgtTVal, zDTownVal,
+                           z0TownVal, obu, ur, um, ustar, temp1, temp12m,
+                           temp2, temp22m, fm);
 
           // Real ramu = 1.0 / (ustar * ustar / um);
           rahu = 1.0 / (temp1 * ustar);
