@@ -221,8 +221,7 @@ void ComputeUstar(Real zldis, Real obu, Real z0m, Real um, Real &ustar) {
 
   if (zeta < -ZETAM) {
     const Real term1 = std::log(-ZETAM * obu / z0m);
-    const Real term4 =
-        1.14 * (std::pow(-zeta, 0.333) - std::pow(ZETAM, 0.333));
+    const Real term4 = 1.14 * (std::pow(-zeta, 0.333) - std::pow(ZETAM, 0.333));
 
     Real term2, term3;
     StabilityFunc1(-ZETAM, term2);
@@ -314,7 +313,8 @@ void ComputeRelationForOtherScalarProfiles(Real zldis, Real obu, Real z0,
   if (zeta < -ZETAT) {
 
     const Real term1 = std::log(-ZETAT * obu / z0);
-    const Real term4 = 0.8 * (std::pow(ZETAT, -0.333) - std::pow(-zeta, -0.333));
+    const Real term4 =
+        0.8 * (std::pow(ZETAT, -0.333) - std::pow(-zeta, -0.333));
 
     Real term2, term3;
     StabilityFunc2(-ZETAT, term2);
@@ -796,9 +796,9 @@ void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
         for (int iter = 0; iter < 3; ++iter) {
           Real temp1, temp12m;
           Real temp2, temp22m;
-          FrictionVelocity(iter, forcHgtUVal, forcHgtTVal, zDTownVal,
-                           z0TownVal, obu, ur, um, ustar, temp1, temp12m,
-                           temp2, temp22m, fm);
+          FrictionVelocity(iter, forcHgtUVal, forcHgtTVal, zDTownVal, z0TownVal,
+                           obu, ur, um, ustar, temp1, temp12m, temp2, temp22m,
+                           fm);
 
           // Real ramu = 1.0 / (ustar * ustar / um);
           rahu = 1.0 / (temp1 * ustar);
