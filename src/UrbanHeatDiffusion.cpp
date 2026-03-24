@@ -117,15 +117,14 @@ KOKKOS_INLINE_FUNCTION void ComputeSoilHeatCapacityTimesDz(
         cv_solids(l, k) * (1.0 - watsat(l, k)) * dz(l, k);
 
     // Heat capacity of water components (ice + liquid)
+    // For bedrock layers (k >= NUM_LAYERS_ABV_BEDROCK), water content is zero
+    // so these terms vanish, but we include them for formula consistency with
+    // ELM.
     const Real cv_water_component =
         water_ice(l, k) * cpice + water_liquid(l, k) * cpliq;
 
     // Total heat capacity times layer thickness
-    if (k < 10) {
-      cvTimesDz(l, k) = cv_solid_component + cv_water_component;
-    } else {
-      cvTimesDz(l, k) = cv_solid_component;
-    }
+    cvTimesDz(l, k) = cv_solid_component + cv_water_component;
   }
 }
 
@@ -558,6 +557,16 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
                                    useTopAdjustment_road, capr,
                                    hasBottomBC_road, noBottomTemp);
         Solve1DHeatDiffusion(dtime, perv_surf, perv_bc);
+
+        // Update EffectiveSurfTemp from the newly computed first-layer
+        // temperature for each surface. This keeps the radiation derivative
+        // term (4·ε·σ·T³) in sync without requiring an explicit setter call
+        // from the host (ELM/Fortran) before the next timestep.
+        roof_Temp(l) = roof_temp(l, 0);
+        sunwall_Temp(l) = sunwall_temp(l, 0);
+        shadewall_Temp(l) = shadewall_temp(l, 0);
+        imperv_Temp(l) = imperv_temp(l, 0);
+        perv_Temp(l) = perv_temp(l, 0);
       });
   Kokkos::fence();
 }

@@ -175,8 +175,8 @@ void MoninObukIni(Real ur, Real thv, Real dthv, Real zldis, Real z0m, Real &um,
 
   const Real wc = 0.5;
 
-  if (dthv > 0) {
-    um = Kokkos::max(ur, 1.0);
+  if (dthv >= 0) {
+    um = Kokkos::max(ur, 0.1);
   } else {
     um = std::pow(std::pow(ur, 2.0) + std::pow(wc, 2.0), 0.5);
   }
@@ -185,7 +185,7 @@ void MoninObukIni(Real ur, Real thv, Real dthv, Real zldis, Real z0m, Real &um,
 
   Real zeta;
   if (rib >= 0) {
-    zeta = rib * std::log(zldis / z0m) / (1.0 - 0.5 * Kokkos::min(rib, 0.19));
+    zeta = rib * std::log(zldis / z0m) / (1.0 - 5.0 * Kokkos::min(rib, 0.19));
     zeta = Kokkos::min(2.0, Kokkos::max(zeta, 0.01));
   } else {
     zeta = rib * std::log(zldis / z0m);
@@ -204,7 +204,7 @@ void StabilityFunc1(Real zeta, Real &value) {
   Real term1 = 2.0 * std::log((1.0 + chik) * 0.5);
   Real term2 = std::log((1.0 + chik2) * 0.5);
   Real term3 = 2.0 * std::atan(chik);
-  value = term1 + term2 + term3 + M_PI * 0.5;
+  value = term1 + term2 - term3 + M_PI * 0.5;
 }
 
 KOKKOS_INLINE_FUNCTION
@@ -221,8 +221,7 @@ void ComputeUstar(Real zldis, Real obu, Real z0m, Real um, Real &ustar) {
 
   if (zeta < -ZETAM) {
     const Real term1 = std::log(-ZETAM * obu / z0m);
-    const Real term4 =
-        1.14 * (std::pow(-zeta, 0.333) - std::pow(-ZETAM, 0.333));
+    const Real term4 = 1.14 * (std::pow(-zeta, 0.333) - std::pow(ZETAM, 0.333));
 
     Real term2, term3;
     StabilityFunc1(-ZETAM, term2);
@@ -269,7 +268,7 @@ void ComputeU10m(Real zldis, Real obu, Real z0m, Real um, Real ustar,
 
       const Real term1 = std::log(-ZETAM * obu / (10.0 + z0m));
       const Real term4 =
-          1.14 * (std::pow(-zeta, 0.333) - std::pow(-ZETAM, 0.333));
+          1.14 * (std::pow(-zeta, 0.333) - std::pow(ZETAM, 0.333));
 
       Real term2, term3;
       StabilityFunc1(-ZETAM, term2);
@@ -313,8 +312,9 @@ void ComputeRelationForOtherScalarProfiles(Real zldis, Real obu, Real z0,
 
   if (zeta < -ZETAT) {
 
-    const Real term1 = std::log(-zeta * obu / z0);
-    const Real term4 = 0.8 * (std::pow(-ZETAT, 0.333) - std::pow(-zeta, 0.333));
+    const Real term1 = std::log(-ZETAT * obu / z0);
+    const Real term4 =
+        0.8 * (std::pow(ZETAT, -0.333) - std::pow(-zeta, -0.333));
 
     Real term2, term3;
     StabilityFunc2(-ZETAT, term2);
@@ -350,11 +350,13 @@ void ComputeRelationForOtherScalarProfiles(Real zldis, Real obu, Real z0,
 }
 
 KOKKOS_INLINE_FUNCTION
-void FrictionVelocity(int iter, Real forc_hgt_u, Real displa, Real z0, Real obu,
-                      Real ur, Real um, Real &ustar, Real &temp1, Real &temp12m,
-                      Real &temp2, Real &temp22m, Real &fm) {
+void FrictionVelocity(int iter, Real forc_hgt_u, Real forc_hgt_t, Real displa,
+                      Real z0, Real obu, Real ur, Real um, Real &ustar,
+                      Real &temp1, Real &temp12m, Real &temp2, Real &temp22m,
+                      Real &fm) {
 
   const Real zldis = forc_hgt_u - displa;
+  const Real zldis_t = forc_hgt_t - displa;
   const Real zeta = zldis / obu;
 
   const Real z0m = z0;
@@ -365,8 +367,8 @@ void FrictionVelocity(int iter, Real forc_hgt_u, Real displa, Real z0, Real obu,
   Real u10;
   ComputeU10m(zldis, obu, z0m, um, ustar, u10);
 
-  // Calculate temp1 for the temperature profile
-  ComputeRelationForOtherScalarProfiles(zldis, obu, z0h, temp1);
+  // Calculate temp1 for the temperature profile (uses temperature height)
+  ComputeRelationForOtherScalarProfiles(zldis_t, obu, z0h, temp1);
 
   // Since z0q == z0h, temp2 for the humidity profile is same as
   // that for temperature profile
@@ -384,7 +386,7 @@ void FrictionVelocity(int iter, Real forc_hgt_u, Real displa, Real z0, Real obu,
     const Real x = std::pow((1.0 - 16.0 * Kokkos::min(zeta, 1.0)), 0.25);
     const Real tmp2 = std::log((1.0 + x * x) / 2.0);
     const Real tmp3 = std::log((1.0 + x) / 2.0);
-    fmnew = 2.0 * tmp3 + tmp2 - std::atan(x) + M_PI / 2.0;
+    fmnew = 2.0 * tmp3 + tmp2 - 2.0 * std::atan(x) + M_PI / 2.0;
   } else {
     fmnew = -5.0 * Kokkos::min(zeta, 1.0);
   }
@@ -664,19 +666,23 @@ void ComputePerviousRoadHeatFluxes(Real taf, Real qaf, Real tSurf, Real qSurf,
   // Sensible heat flux (W/m²) [+ to atmosphere]
   eflxShGrnd = -forcRho * CPAIR * wtusUnscl * dth;
 
-  // Latent heat flux - partition between soil evaporation and transpiration
-  // If dew (dqh > 0), assign to soil evaporation
-  // For now, we don't have snow fraction or soil moisture data,
-  // so we use simplified logic
+  // Latent heat flux - partition between soil evaporation and transpiration.
+  // Mirrors ELM's UrbanFluxesMod logic for icol_road_perv:
+  //   dqh > 0  → condensation/dew  → assign to soil evaporation
+  //   dqh <= 0 → evaporation       → assign to transpiration
+  // (ELM also routes to soil when frac_sno > 0 or soilalpha_u <= 0, but those
+  // inputs are not available in URBANxx; the check in UrbanxxSurfaceFluxesMod
+  // compares qflx_evap_soi + qflx_tran_veg against qflxEvapSoil, so total
+  // flux is always validated regardless of which bucket ELM uses.)
   if (dqh > 0.0) {
-    // Condensation/dew - assign to soil
+    // Condensation/dew - assign to soil evaporation
     qflxEvapSoil = -forcRho * wtuqUnscl * dqh;
     qflxTranEvap = 0.0;
   } else {
-    // Evaporation - for now assign to soil
-    // TODO: Add soil moisture availability check to partition to transpiration
-    qflxEvapSoil = -forcRho * wtuqUnscl * dqh;
-    qflxTranEvap = 0.0;
+    // Evaporation - assign to transpiration (no vegetation, but ELM uses this
+    // bucket for pervious road evaporation when liquid water is available)
+    qflxEvapSoil = 0.0;
+    qflxTranEvap = -forcRho * wtuqUnscl * dqh;
   }
 }
 
@@ -785,17 +791,18 @@ void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
 
         // Iteration loop to compute friction velocity and surface fluxes
         Real fm = 0.0;
+        Real ustar, rahu, rawu;
         SurfaceFluxConductances condcs;
         for (int iter = 0; iter < 3; ++iter) {
-          Real ustar;
           Real temp1, temp12m;
           Real temp2, temp22m;
-          FrictionVelocity(iter, forcHgtUVal, zDTownVal, z0TownVal, obu, ur, um,
-                           ustar, temp1, temp12m, temp2, temp22m, fm);
+          FrictionVelocity(iter, forcHgtUVal, forcHgtTVal, zDTownVal, z0TownVal,
+                           obu, ur, um, ustar, temp1, temp12m, temp2, temp22m,
+                           fm);
 
           // Real ramu = 1.0 / (ustar * ustar / um);
-          Real rahu = 1.0 / (temp1 * ustar);
-          Real rawu = 1.0 / (temp2 * ustar);
+          rahu = 1.0 / (temp1 * ustar);
+          rawu = 1.0 / (temp2 * ustar);
 
           Real canyonWindPow2 =
               std::pow(canyonUWind, 2.0) + std::pow(ustar, 2.0);
@@ -837,10 +844,11 @@ void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
           Real zeta =
               zldis * VKC * GRAVITY * thvstar / (std::pow(ustar, 2.0) * thv);
 
-          if (zeta > 0.0) {
+          if (zeta >= 0.0) {
             zeta = Kokkos::min(2.0, Kokkos::max(zeta, 0.01));
             um = Kokkos::max(ur, 0.1);
           } else {
+            zeta = Kokkos::max(-100.0, Kokkos::min(zeta, -0.01));
             const Real beta = 1.0;
             const Real zii = 1000.0;
             const Real wc =
@@ -852,13 +860,6 @@ void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
 
         // Compute flux derivatives after iteration has converged
         // Need final rahu and rawu from last iteration
-        Real ustar;
-        Real temp1, temp12m;
-        Real temp2, temp22m;
-        FrictionVelocity(2, forcHgtUVal, zDTownVal, z0TownVal, obu, ur, um,
-                         ustar, temp1, temp12m, temp2, temp22m, fm);
-        Real rahu = 1.0 / (temp1 * ustar);
-        Real rawu = 1.0 / (temp2 * ustar);
 
         SurfaceTempHumidData surfaceData = {
             urban.roof.Qs(l),
