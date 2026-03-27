@@ -17,6 +17,21 @@ module urban_mod
 
   ! Low-level C interface declarations (private)
   interface
+        subroutine UrbanSetAtmRain_C(urban, values, length, status) bind(C, name="UrbanSetAtmRain")
+          import :: c_ptr, c_int
+          type(c_ptr), value :: urban
+          type(c_ptr), value :: values
+          integer(c_int), value :: length
+          integer(c_int) :: status
+        end subroutine UrbanSetAtmRain_C
+
+        subroutine UrbanSetAtmSnow_C(urban, values, length, status) bind(C, name="UrbanSetAtmSnow")
+          import :: c_ptr, c_int
+          type(c_ptr), value :: urban
+          type(c_ptr), value :: values
+          integer(c_int), value :: length
+          integer(c_int) :: status
+        end subroutine UrbanSetAtmSnow_C
     subroutine UrbanCreate_C(numLandunits, urban, status) bind(C, name="UrbanCreate")
       import :: c_ptr, c_int
       integer(c_int), value :: numLandunits
@@ -1078,6 +1093,22 @@ module urban_mod
   end interface
 
   contains
+
+  subroutine UrbanSetAtmRain(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), value :: length
+    integer(c_int), intent(out) :: status
+    call UrbanSetAtmRain_C(urban%ptr, values, length, status)
+  end subroutine UrbanSetAtmRain
+
+  subroutine UrbanSetAtmSnow(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), value :: length
+    integer(c_int), intent(out) :: status
+    call UrbanSetAtmSnow_C(urban%ptr, values, length, status)
+  end subroutine UrbanSetAtmSnow
 
   ! High-level wrapper subroutines that accept UrbanType
 
