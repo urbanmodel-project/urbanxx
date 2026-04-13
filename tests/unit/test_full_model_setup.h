@@ -151,19 +151,6 @@ static void SetFullModelParameters(UrbanType urban, int N) {
   UrbanSetNumberOfActiveLayersImperviousRoad(urban, nActLayers.data(), N, &ierr);
   ASSERT_EQ(ierr, URBAN_SUCCESS);
 
-  // --- Surface temperatures ---
-  std::vector<double> tsurf(N, 292.0), tsurfRoad(N, 274.0);
-  UrbanSetEffectiveSurfTempRoof(urban, tsurf.data(), N, &ierr);
-  ASSERT_EQ(ierr, URBAN_SUCCESS);
-  UrbanSetEffectiveSurfTempImperviousRoad(urban, tsurf.data(), N, &ierr);
-  ASSERT_EQ(ierr, URBAN_SUCCESS);
-  UrbanSetEffectiveSurfTempPerviousRoad(urban, tsurfRoad.data(), N, &ierr);
-  ASSERT_EQ(ierr, URBAN_SUCCESS);
-  UrbanSetEffectiveSurfTempSunlitWall(urban, tsurf.data(), N, &ierr);
-  ASSERT_EQ(ierr, URBAN_SUCCESS);
-  UrbanSetEffectiveSurfTempShadedWall(urban, tsurf.data(), N, &ierr);
-  ASSERT_EQ(ierr, URBAN_SUCCESS);
-
   // --- Layer temperatures (2D) ---
   std::vector<double> ltemp_urban(N * numUrbanLayers, 292.0);
   std::vector<double> ltemp_road(N * numSoilLayers, 274.0);

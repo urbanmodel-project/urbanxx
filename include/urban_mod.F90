@@ -304,52 +304,6 @@ module urban_mod
       integer(c_int) :: status
     end subroutine UrbanSetBuildingRoofThickness
 
-    ! Surface temperature setter functions (1D)
-    subroutine UrbanSetEffectiveSurfTempRoof(urban, values, length, status) &
-      bind(C, name="UrbanSetEffectiveSurfTempRoof")
-      import :: c_ptr, c_int, UrbanType
-      type(UrbanType), value :: urban
-      type(c_ptr), value :: values
-      integer(c_int), value :: length
-      integer(c_int) :: status
-    end subroutine UrbanSetEffectiveSurfTempRoof
-
-    subroutine UrbanSetEffectiveSurfTempImperviousRoad(urban, values, length, status) &
-      bind(C, name="UrbanSetEffectiveSurfTempImperviousRoad")
-      import :: c_ptr, c_int, UrbanType
-      type(UrbanType), value :: urban
-      type(c_ptr), value :: values
-      integer(c_int), value :: length
-      integer(c_int) :: status
-    end subroutine UrbanSetEffectiveSurfTempImperviousRoad
-
-    subroutine UrbanSetEffectiveSurfTempPerviousRoad(urban, values, length, status) &
-      bind(C, name="UrbanSetEffectiveSurfTempPerviousRoad")
-      import :: c_ptr, c_int, UrbanType
-      type(UrbanType), value :: urban
-      type(c_ptr), value :: values
-      integer(c_int), value :: length
-      integer(c_int) :: status
-    end subroutine UrbanSetEffectiveSurfTempPerviousRoad
-
-    subroutine UrbanSetEffectiveSurfTempSunlitWall(urban, values, length, status) &
-      bind(C, name="UrbanSetEffectiveSurfTempSunlitWall")
-      import :: c_ptr, c_int, UrbanType
-      type(UrbanType), value :: urban
-      type(c_ptr), value :: values
-      integer(c_int), value :: length
-      integer(c_int) :: status
-    end subroutine UrbanSetEffectiveSurfTempSunlitWall
-
-    subroutine UrbanSetEffectiveSurfTempShadedWall(urban, values, length, status) &
-      bind(C, name="UrbanSetEffectiveSurfTempShadedWall")
-      import :: c_ptr, c_int, UrbanType
-      type(UrbanType), value :: urban
-      type(c_ptr), value :: values
-      integer(c_int), value :: length
-      integer(c_int) :: status
-    end subroutine UrbanSetEffectiveSurfTempShadedWall
-
     ! Layer temperature setter functions (2D)
     subroutine UrbanSetLayerTempRoof(urban, values, size, status) &
       bind(C, name="UrbanSetLayerTempRoof")

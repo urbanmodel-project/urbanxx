@@ -202,27 +202,6 @@ URBAN_EXTERN void UrbanSetSoilVolumetricWater(UrbanType urban,
                                               const int size[2],
                                               UrbanErrorCode *status);
 
-// Surface temperature setter functions
-URBAN_EXTERN void UrbanSetEffectiveSurfTempRoof(UrbanType urban,
-                                                const double *values,
-                                                int length,
-                                                UrbanErrorCode *status);
-URBAN_EXTERN void
-UrbanSetEffectiveSurfTempImperviousRoad(UrbanType urban, const double *values,
-                                        int length, UrbanErrorCode *status);
-URBAN_EXTERN void UrbanSetEffectiveSurfTempPerviousRoad(UrbanType urban,
-                                                        const double *values,
-                                                        int length,
-                                                        UrbanErrorCode *status);
-URBAN_EXTERN void UrbanSetEffectiveSurfTempSunlitWall(UrbanType urban,
-                                                      const double *values,
-                                                      int length,
-                                                      UrbanErrorCode *status);
-URBAN_EXTERN void UrbanSetEffectiveSurfTempShadedWall(UrbanType urban,
-                                                      const double *values,
-                                                      int length,
-                                                      UrbanErrorCode *status);
-
 // Layer temperature setter functions
 URBAN_EXTERN void UrbanSetLayerTempRoof(UrbanType urban, const double *values,
                                         const int size[2],

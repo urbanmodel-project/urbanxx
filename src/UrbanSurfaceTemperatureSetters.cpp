@@ -13,48 +13,6 @@ extern "C" {
 
 using namespace URBANXX;
 
-void UrbanSetEffectiveSurfTempRoof(UrbanType urban, const double *values,
-                                   int length, UrbanErrorCode *status) {
-  if (!ValidateInputsWithData(urban, values, status))
-    return;
-
-  SetView1D(urban->roof.EffectiveSurfTemp, values, length, status);
-}
-
-void UrbanSetEffectiveSurfTempImperviousRoad(UrbanType urban,
-                                             const double *values, int length,
-                                             UrbanErrorCode *status) {
-  if (!ValidateInputsWithData(urban, values, status))
-    return;
-
-  SetView1D(urban->imperviousRoad.EffectiveSurfTemp, values, length, status);
-}
-
-void UrbanSetEffectiveSurfTempPerviousRoad(UrbanType urban,
-                                           const double *values, int length,
-                                           UrbanErrorCode *status) {
-  if (!ValidateInputsWithData(urban, values, status))
-    return;
-
-  SetView1D(urban->perviousRoad.EffectiveSurfTemp, values, length, status);
-}
-
-void UrbanSetEffectiveSurfTempSunlitWall(UrbanType urban, const double *values,
-                                         int length, UrbanErrorCode *status) {
-  if (!ValidateInputsWithData(urban, values, status))
-    return;
-
-  SetView1D(urban->sunlitWall.EffectiveSurfTemp, values, length, status);
-}
-
-void UrbanSetEffectiveSurfTempShadedWall(UrbanType urban, const double *values,
-                                         int length, UrbanErrorCode *status) {
-  if (!ValidateInputsWithData(urban, values, status))
-    return;
-
-  SetView1D(urban->shadedWall.EffectiveSurfTemp, values, length, status);
-}
-
 // Layer temperature setter functions (2D)
 void UrbanSetLayerTempRoof(UrbanType urban, const double *values,
                            const int size[2], UrbanErrorCode *status) {
@@ -62,6 +20,10 @@ void UrbanSetLayerTempRoof(UrbanType urban, const double *values,
     return;
 
   SetView2D(urban->roof.Temperature, values, size, status);
+  if (*status == URBAN_SUCCESS) {
+    auto col0 = Kokkos::subview(urban->roof.Temperature, Kokkos::ALL(), 0);
+    Kokkos::deep_copy(urban->roof.EffectiveSurfTemp, col0);
+  }
 }
 
 void UrbanSetLayerTempImperviousRoad(UrbanType urban, const double *values,
@@ -71,6 +33,11 @@ void UrbanSetLayerTempImperviousRoad(UrbanType urban, const double *values,
     return;
 
   SetView2D(urban->imperviousRoad.Temperature, values, size, status);
+  if (*status == URBAN_SUCCESS) {
+    auto col0 =
+        Kokkos::subview(urban->imperviousRoad.Temperature, Kokkos::ALL(), 0);
+    Kokkos::deep_copy(urban->imperviousRoad.EffectiveSurfTemp, col0);
+  }
 }
 
 void UrbanSetLayerTempPerviousRoad(UrbanType urban, const double *values,
@@ -79,6 +46,11 @@ void UrbanSetLayerTempPerviousRoad(UrbanType urban, const double *values,
     return;
 
   SetView2D(urban->perviousRoad.Temperature, values, size, status);
+  if (*status == URBAN_SUCCESS) {
+    auto col0 =
+        Kokkos::subview(urban->perviousRoad.Temperature, Kokkos::ALL(), 0);
+    Kokkos::deep_copy(urban->perviousRoad.EffectiveSurfTemp, col0);
+  }
 }
 
 void UrbanSetLayerTempSunlitWall(UrbanType urban, const double *values,
@@ -87,6 +59,11 @@ void UrbanSetLayerTempSunlitWall(UrbanType urban, const double *values,
     return;
 
   SetView2D(urban->sunlitWall.Temperature, values, size, status);
+  if (*status == URBAN_SUCCESS) {
+    auto col0 =
+        Kokkos::subview(urban->sunlitWall.Temperature, Kokkos::ALL(), 0);
+    Kokkos::deep_copy(urban->sunlitWall.EffectiveSurfTemp, col0);
+  }
 }
 
 void UrbanSetLayerTempShadedWall(UrbanType urban, const double *values,
@@ -95,6 +72,11 @@ void UrbanSetLayerTempShadedWall(UrbanType urban, const double *values,
     return;
 
   SetView2D(urban->shadedWall.Temperature, values, size, status);
+  if (*status == URBAN_SUCCESS) {
+    auto col0 =
+        Kokkos::subview(urban->shadedWall.Temperature, Kokkos::ALL(), 0);
+    Kokkos::deep_copy(urban->shadedWall.EffectiveSurfTemp, col0);
+  }
 }
 
 // Canyon air property setter functions (1D)
