@@ -200,6 +200,10 @@ struct SnowCoveredSurfaceData : SurfaceDataBase {
 struct ImperviousRoadDataType : SnowCoveredSurfaceData {
   DECLARE_DEVICE_VIEW(1DI4, NumberOfActiveLayers) // number of active layers
   DECLARE_DEVICE_VIEW(1DR8, FractionWet) // fraction of surface that is wet [-]
+  DECLARE_DEVICE_VIEW(
+      1DR8, TopH2OSoiLiq) // liquid water content in top soil layer [kg/m^2]
+  DECLARE_DEVICE_VIEW(
+      1DR8, TopH2OSoiIce) // ice water content in top soil layer [kg/m^2]
   // Inherits all fields from SnowCoveredSurfaceData and SurfaceDataBase
   ImperviousRoadDataType(int numLandunits, int numRadBands, int numRadTypes,
                          int numLayers)
@@ -209,6 +213,8 @@ struct ImperviousRoadDataType : SnowCoveredSurfaceData {
     // UrbanSetNumberOfActiveLayersImperviousRoad
     ALLOCATE_VIEW_NO_INIT(NumberOfActiveLayers, Array1DI4, numLandunits)
     ALLOCATE_DEVICE_VIEW(FractionWet, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(TopH2OSoiLiq, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(TopH2OSoiIce, Array1DR8, numLandunits)
   }
 };
 
@@ -273,6 +279,10 @@ struct WallDataType : SurfaceDataBase {
 
 struct RoofDataType : SnowCoveredSurfaceData {
   DECLARE_DEVICE_VIEW(1DR8, FractionWet) // fraction of surface that is wet [-]
+  DECLARE_DEVICE_VIEW(
+      1DR8, TopH2OSoiLiq) // liquid water content in top soil layer [kg/m^2]
+  DECLARE_DEVICE_VIEW(
+      1DR8, TopH2OSoiIce) // ice water content in top soil layer [kg/m^2]
   // Inherits all fields from SnowCoveredSurfaceData and SurfaceDataBase
 
   RoofDataType(int numLandunits, int numRadBands, int numRadTypes,
@@ -280,6 +290,8 @@ struct RoofDataType : SnowCoveredSurfaceData {
       : SnowCoveredSurfaceData(numLandunits, numRadBands, numRadTypes,
                                numLayers) {
     ALLOCATE_DEVICE_VIEW(FractionWet, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(TopH2OSoiLiq, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(TopH2OSoiIce, Array1DR8, numLandunits)
   }
 };
 } // namespace URBANXX
