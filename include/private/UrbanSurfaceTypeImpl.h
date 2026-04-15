@@ -223,6 +223,7 @@ struct ImperviousRoadDataType : SnowCoveredSurfaceData {
       1DR8, TopH2OSoiLiq) // liquid water content in top soil layer [kg/m^2]
   DECLARE_DEVICE_VIEW(
       1DR8, TopH2OSoiIce) // ice water content in top soil layer [kg/m^2]
+  DECLARE_DEVICE_VIEW(1DR8, QflxSurf) // surface runoff (mm/s)
   // Inherits all fields from SnowCoveredSurfaceData and SurfaceDataBase
   ImperviousRoadDataType(int numLandunits, int numRadBands, int numRadTypes,
                          int numLayers)
@@ -234,6 +235,7 @@ struct ImperviousRoadDataType : SnowCoveredSurfaceData {
     ALLOCATE_DEVICE_VIEW(FractionWet, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(TopH2OSoiLiq, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(TopH2OSoiIce, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(QflxSurf, Array1DR8, numLandunits)
   }
 };
 
@@ -259,6 +261,15 @@ struct PerviousRoadDataType : SnowCoveredSurfaceData {
   DECLARE_DEVICE_VIEW(1DI4, Jwt)         // layer index above water table [-]
   DECLARE_DEVICE_VIEW(1DR8, QflxDeficit) // water deficit flux [mm/s]
 
+  // Surface runoff inputs
+  DECLARE_DEVICE_VIEW(1DR8, Wtfact) // max saturated fraction [-]
+  DECLARE_DEVICE_VIEW(1DR8,
+                      Fover) // decay factor for saturation fraction [m^-1]
+  DECLARE_DEVICE_VIEW(1DR8, FrostTable) // frost table depth [m]
+  DECLARE_DEVICE_VIEW(1DR8, ZwtPerched) // perched water table depth [m]
+  // Surface runoff output
+  DECLARE_DEVICE_VIEW(1DR8, QflxSurf) // surface runoff (mm/s)
+
   // Inherits all fields from SnowCoveredSurfaceData and SurfaceDataBase
   // Also includes soil data for pervious road
   PerviousRoadDataType(int numLandunits, int numRadBands, int numRadTypes,
@@ -279,6 +290,11 @@ struct PerviousRoadDataType : SnowCoveredSurfaceData {
     ALLOCATE_DEVICE_VIEW(Qcharge, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(Jwt, Array1DI4, numLandunits)
     ALLOCATE_DEVICE_VIEW(QflxDeficit, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(Wtfact, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(Fover, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(FrostTable, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(ZwtPerched, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(QflxSurf, Array1DR8, numLandunits)
   }
 };
 
@@ -286,6 +302,8 @@ struct WallDataType : SurfaceDataBase {
   DECLARE_DEVICE_VIEW(
       3DR8,
       DownwellingShortRad) // downwelling shortwave radiation per unit wall area
+  DECLARE_DEVICE_VIEW(1DR8,
+                      QflxSurf) // surface runoff — always zero for walls (mm/s)
   // Inherits common radiative fields from SurfaceDataBase
 
   WallDataType(int numLandunits, int numRadBands, int numRadTypes,
@@ -293,6 +311,7 @@ struct WallDataType : SurfaceDataBase {
       : SurfaceDataBase(numLandunits, numRadBands, numRadTypes, numLayers) {
     ALLOCATE_DEVICE_VIEW(DownwellingShortRad, Array3DR8, numLandunits,
                          numRadBands, numRadTypes)
+    ALLOCATE_DEVICE_VIEW(QflxSurf, Array1DR8, numLandunits)
   }
 };
 
@@ -302,6 +321,7 @@ struct RoofDataType : SnowCoveredSurfaceData {
       1DR8, TopH2OSoiLiq) // liquid water content in top soil layer [kg/m^2]
   DECLARE_DEVICE_VIEW(
       1DR8, TopH2OSoiIce) // ice water content in top soil layer [kg/m^2]
+  DECLARE_DEVICE_VIEW(1DR8, QflxSurf) // surface runoff (mm/s)
   // Inherits all fields from SnowCoveredSurfaceData and SurfaceDataBase
 
   RoofDataType(int numLandunits, int numRadBands, int numRadTypes,
@@ -311,6 +331,7 @@ struct RoofDataType : SnowCoveredSurfaceData {
     ALLOCATE_DEVICE_VIEW(FractionWet, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(TopH2OSoiLiq, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(TopH2OSoiIce, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(QflxSurf, Array1DR8, numLandunits)
   }
 };
 } // namespace URBANXX

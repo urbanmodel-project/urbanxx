@@ -527,6 +527,48 @@ URBAN_EXTERN void UrbanGetQflxDewGrndPerviousRoad(UrbanType urban,
                                                   double *values, int length,
                                                   UrbanErrorCode *status);
 
+// Surface runoff setter functions (pervious road inputs)
+URBAN_EXTERN void UrbanSetWtfactPerviousRoad(UrbanType urban,
+                                             const double *values, int length,
+                                             UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetFoverPerviousRoad(UrbanType urban,
+                                            const double *values, int length,
+                                            UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetFrostTablePerviousRoad(UrbanType urban,
+                                                 const double *values,
+                                                 int length,
+                                                 UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetZwtPerchedPerviousRoad(UrbanType urban,
+                                                 const double *values,
+                                                 int length,
+                                                 UrbanErrorCode *status);
+
+// Surface runoff compute function
+URBAN_EXTERN void UrbanComputeSurfaceRunoff(UrbanType urban, double dtime,
+                                            UrbanErrorCode *status);
+
+// Surface runoff getter functions (QflxSurf — all five surfaces)
+URBAN_EXTERN void UrbanGetQflxSurfRoof(UrbanType urban, double *values,
+                                       int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetQflxSurfImperviousRoad(UrbanType urban,
+                                                 double *values, int length,
+                                                 UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetQflxSurfPerviousRoad(UrbanType urban, double *values,
+                                               int length,
+                                               UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetQflxSurfSunlitWall(UrbanType urban, double *values,
+                                             int length,
+                                             UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetQflxSurfShadedWall(UrbanType urban, double *values,
+                                             int length,
+                                             UrbanErrorCode *status);
+// Updated TopH2OSoiLiq after ponding (roof and impervious road)
+URBAN_EXTERN void UrbanGetTopH2OSoiLiqRoof(UrbanType urban, double *values,
+                                           int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetTopH2OSoiLiqImperviousRoad(UrbanType urban,
+                                                     double *values, int length,
+                                                     UrbanErrorCode *status);
+
 #ifdef __cplusplus
 } // extern "C"
 #endif
