@@ -16,7 +16,8 @@ using namespace URBANXX;
 // Top-layer soil water setter functions (for soil flux partitioning on
 // roof and impervious road surfaces).  Pervious road does not need these
 // setters because UrbanComputeSoilFluxes reads H2OSoiLiq(l,0)/H2OSoiIce(l,0)
-// directly from the 2D hydrology array set by UrbanSetSoilLiquidWater.
+// directly from the 2D hydrology array set by
+// UrbanSetSoilLiquidWaterForPerviousRoad.
 
 void UrbanSetTopH2OSoiLiqRoof(UrbanType urban, const double *values, int length,
                               UrbanErrorCode *status) {

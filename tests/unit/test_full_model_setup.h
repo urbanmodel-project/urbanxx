@@ -137,13 +137,13 @@ static void SetFullModelParameters(UrbanType urban, int N) {
   // Needed by ComputeSoilThermalConductivity and ComputeSoilHeatCapacityTimesDz
   // inside UrbanComputeHeatDiffusion.
   std::vector<double> soilLiq(N * numSoilLayers, 0.1);
-  UrbanSetSoilLiquidWater(urban, soilLiq.data(), size2D_road, &ierr);
+  UrbanSetSoilLiquidWaterForPerviousRoad(urban, soilLiq.data(), size2D_road, &ierr);
   ASSERT_EQ(ierr, URBAN_SUCCESS);
   std::vector<double> soilIce(N * numSoilLayers, 0.0);
-  UrbanSetSoilIceContent(urban, soilIce.data(), size2D_road, &ierr);
+  UrbanSetSoilIceContentForPerviousRoad(urban, soilIce.data(), size2D_road, &ierr);
   ASSERT_EQ(ierr, URBAN_SUCCESS);
   std::vector<double> soilVol(N * numSoilLayers, 0.3);
-  UrbanSetSoilVolumetricWater(urban, soilVol.data(), size2D_road, &ierr);
+  UrbanSetSoilVolumetricWaterForPerviousRoad(urban, soilVol.data(), size2D_road, &ierr);
   ASSERT_EQ(ierr, URBAN_SUCCESS);
 
   // --- Number of active layers ---
@@ -208,11 +208,11 @@ static void SetFullModelParameters(UrbanType urban, int N) {
   ASSERT_EQ(ierr, URBAN_SUCCESS);
 
   std::vector<double> qinfl(N, 0.0);
-  UrbanSetInfiltrationFlux(urban, qinfl.data(), N, &ierr);
+  UrbanSetInfiltrationFluxForPerviousRoad(urban, qinfl.data(), N, &ierr);
   ASSERT_EQ(ierr, URBAN_SUCCESS);
 
   std::vector<double> qtran(N * numSoilLayers, 0.0);
-  UrbanSetTranspirationFlux(urban, qtran.data(), size2D_road, &ierr);
+  UrbanSetTranspirationFluxForPerviousRoad(urban, qtran.data(), size2D_road, &ierr);
   ASSERT_EQ(ierr, URBAN_SUCCESS);
 
   std::vector<double> fwet(N, 0.0);

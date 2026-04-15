@@ -182,27 +182,48 @@ URBAN_EXTERN void UrbanComputeSoilFluxes(UrbanType urban,
                                          UrbanErrorCode *status);
 
 // Hydrology boundary condition setter functions
-URBAN_EXTERN void UrbanSetInfiltrationFlux(UrbanType urban,
-                                           const double *values, int length,
-                                           UrbanErrorCode *status);
-URBAN_EXTERN void UrbanSetTranspirationFlux(UrbanType urban,
-                                            const double *values,
-                                            const int size[2],
-                                            UrbanErrorCode *status);
+URBAN_EXTERN void
+UrbanSetInfiltrationFluxForPerviousRoad(UrbanType urban, const double *values,
+                                        int length, UrbanErrorCode *status);
+URBAN_EXTERN void
+UrbanSetTranspirationFluxForPerviousRoad(UrbanType urban, const double *values,
+                                         const int size[2],
+                                         UrbanErrorCode *status);
 URBAN_EXTERN void UrbanSetWaterTableDepth(UrbanType urban, const double *values,
                                           int length, UrbanErrorCode *status);
 
+// Infiltration input setter functions (pervious road)
+URBAN_EXTERN void UrbanSetSurfaceRunoffForPerviousRoad(UrbanType urban,
+                                                       const double *values,
+                                                       int length,
+                                                       UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetGroundEvapFluxForPerviousRoad(UrbanType urban,
+                                                        const double *values,
+                                                        int length,
+                                                        UrbanErrorCode *status);
+
+// Infiltration compute function (no dtime needed — pure arithmetic)
+URBAN_EXTERN void UrbanComputeInfiltration(UrbanType urban,
+                                           UrbanErrorCode *status);
+
+// Infiltration getter function
+URBAN_EXTERN void UrbanGetInfiltrationFluxPerviousRoad(UrbanType urban,
+                                                       double *values,
+                                                       int length,
+                                                       UrbanErrorCode *status);
+
 // Soil water content setter functions
-URBAN_EXTERN void UrbanSetSoilLiquidWater(UrbanType urban, const double *values,
-                                          const int size[2],
-                                          UrbanErrorCode *status);
-URBAN_EXTERN void UrbanSetSoilIceContent(UrbanType urban, const double *values,
-                                         const int size[2],
-                                         UrbanErrorCode *status);
-URBAN_EXTERN void UrbanSetSoilVolumetricWater(UrbanType urban,
-                                              const double *values,
-                                              const int size[2],
-                                              UrbanErrorCode *status);
+URBAN_EXTERN void
+UrbanSetSoilLiquidWaterForPerviousRoad(UrbanType urban, const double *values,
+                                       const int size[2],
+                                       UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetSoilIceContentForPerviousRoad(UrbanType urban,
+                                                        const double *values,
+                                                        const int size[2],
+                                                        UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetSoilVolumetricWaterForPerviousRoad(
+    UrbanType urban, const double *values, const int size[2],
+    UrbanErrorCode *status);
 
 // Layer temperature setter functions
 URBAN_EXTERN void UrbanSetLayerTempRoof(UrbanType urban, const double *values,

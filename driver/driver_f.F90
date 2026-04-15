@@ -1077,7 +1077,7 @@ contains
     do i = 1, numLandunits
       qflxInfl(i) = QFLX_INFL
     end do
-    call UrbanSetInfiltrationFlux(urban, c_loc(qflxInfl), numLandunits, status)
+    call UrbanSetInfiltrationFluxForPerviousRoad(urban, c_loc(qflxInfl), numLandunits, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
     deallocate(qflxInfl)
 
@@ -1110,7 +1110,7 @@ contains
       end do
     end if
 
-    call UrbanSetTranspirationFlux(urban, c_loc(qflxTran), size2D, status)
+    call UrbanSetTranspirationFluxForPerviousRoad(urban, c_loc(qflxTran), size2D, status)
     if (status /= URBAN_SUCCESS) call UrbanError(mpi_rank, __LINE__, status)
     deallocate(qflxTran)
 

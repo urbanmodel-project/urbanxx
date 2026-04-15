@@ -856,21 +856,23 @@ module urban_mod
     end subroutine UrbanSetAtmShortwaveDown_C
 
     ! Hydrology boundary condition setter functions
-    subroutine UrbanSetInfiltrationFlux_C(urban, values, length, status) bind(C, name="UrbanSetInfiltrationFlux")
+    subroutine UrbanSetInfiltrationFluxForPerviousRoad_C(urban, values, length, status) &
+      bind(C, name="UrbanSetInfiltrationFluxForPerviousRoad")
       import :: c_ptr, c_int
       type(c_ptr), value :: urban
       type(c_ptr), value :: values
       integer(c_int), value :: length
       integer(c_int) :: status
-    end subroutine UrbanSetInfiltrationFlux_C
+    end subroutine UrbanSetInfiltrationFluxForPerviousRoad_C
 
-    subroutine UrbanSetTranspirationFlux_C(urban, values, size, status) bind(C, name="UrbanSetTranspirationFlux")
+    subroutine UrbanSetTranspirationFluxForPerviousRoad_C(urban, values, size, status) &
+      bind(C, name="UrbanSetTranspirationFluxForPerviousRoad")
       import :: c_ptr, c_int
       type(c_ptr), value :: urban
       type(c_ptr), value :: values
       integer(c_int), dimension(2) :: size
       integer(c_int) :: status
-    end subroutine UrbanSetTranspirationFlux_C
+    end subroutine UrbanSetTranspirationFluxForPerviousRoad_C
 
     subroutine UrbanSetWaterTableDepth_C(urban, values, length, status) bind(C, name="UrbanSetWaterTableDepth")
       import :: c_ptr, c_int
@@ -881,29 +883,32 @@ module urban_mod
     end subroutine UrbanSetWaterTableDepth_C
 
     ! Soil water content setter functions
-    subroutine UrbanSetSoilLiquidWater_C(urban, values, size, status) bind(C, name="UrbanSetSoilLiquidWater")
+    subroutine UrbanSetSoilLiquidWaterForPerviousRoad_C(urban, values, size, status) &
+      bind(C, name="UrbanSetSoilLiquidWaterForPerviousRoad")
       import :: c_ptr, c_int
       type(c_ptr), value :: urban
       type(c_ptr), value :: values
       integer(c_int), dimension(2) :: size
       integer(c_int) :: status
-    end subroutine UrbanSetSoilLiquidWater_C
+    end subroutine UrbanSetSoilLiquidWaterForPerviousRoad_C
 
-    subroutine UrbanSetSoilIceContent_C(urban, values, size, status) bind(C, name="UrbanSetSoilIceContent")
+    subroutine UrbanSetSoilIceContentForPerviousRoad_C(urban, values, size, status) &
+      bind(C, name="UrbanSetSoilIceContentForPerviousRoad")
       import :: c_ptr, c_int
       type(c_ptr), value :: urban
       type(c_ptr), value :: values
       integer(c_int), dimension(2) :: size
       integer(c_int) :: status
-    end subroutine UrbanSetSoilIceContent_C
+    end subroutine UrbanSetSoilIceContentForPerviousRoad_C
 
-    subroutine UrbanSetSoilVolumetricWater_C(urban, values, size, status) bind(C, name="UrbanSetSoilVolumetricWater")
+    subroutine UrbanSetSoilVolumetricWaterForPerviousRoad_C(urban, values, size, status) &
+      bind(C, name="UrbanSetSoilVolumetricWaterForPerviousRoad")
       import :: c_ptr, c_int
       type(c_ptr), value :: urban
       type(c_ptr), value :: values
       integer(c_int), dimension(2) :: size
       integer(c_int) :: status
-    end subroutine UrbanSetSoilVolumetricWater_C
+    end subroutine UrbanSetSoilVolumetricWaterForPerviousRoad_C
 
     ! Shortwave radiation getter functions - Absorbed
     subroutine UrbanGetAbsorbedShortwaveRoof_C(urban, values, size, status) bind(C, name="UrbanGetAbsorbedShortwaveRoof")
@@ -1401,6 +1406,43 @@ module urban_mod
       integer(c_int), value :: length
       integer(c_int) :: status
     end subroutine UrbanGetWaterDeficitFluxPerviousRoad_C
+
+    ! Infiltration input setter C interfaces
+    subroutine UrbanSetSurfaceRunoffForPerviousRoad_C(urban, values, length, status) &
+      bind(C, name="UrbanSetSurfaceRunoffForPerviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetSurfaceRunoffForPerviousRoad_C
+
+    subroutine UrbanSetGroundEvapFluxForPerviousRoad_C(urban, values, length, status) &
+      bind(C, name="UrbanSetGroundEvapFluxForPerviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetGroundEvapFluxForPerviousRoad_C
+
+    ! Infiltration compute C interface
+    subroutine UrbanComputeInfiltration_C(urban, status) &
+      bind(C, name="UrbanComputeInfiltration")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      integer(c_int) :: status
+    end subroutine UrbanComputeInfiltration_C
+
+    ! Infiltration getter C interface
+    subroutine UrbanGetInfiltrationFluxPerviousRoad_C(urban, values, length, status) &
+      bind(C, name="UrbanGetInfiltrationFluxPerviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetInfiltrationFluxPerviousRoad_C
   end interface
 
   contains
@@ -1760,21 +1802,21 @@ module urban_mod
   end subroutine UrbanSetAtmShortwaveDown
 
   ! Hydrology boundary condition setter functions
-  subroutine UrbanSetInfiltrationFlux(urban, values, length, status)
+  subroutine UrbanSetInfiltrationFluxForPerviousRoad(urban, values, length, status)
     type(UrbanType), intent(in) :: urban
     type(c_ptr), value :: values
     integer(c_int), value :: length
     integer(c_int), intent(out) :: status
-    call UrbanSetInfiltrationFlux_C(urban%ptr, values, length, status)
-  end subroutine UrbanSetInfiltrationFlux
+    call UrbanSetInfiltrationFluxForPerviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanSetInfiltrationFluxForPerviousRoad
 
-  subroutine UrbanSetTranspirationFlux(urban, values, size, status)
+  subroutine UrbanSetTranspirationFluxForPerviousRoad(urban, values, size, status)
     type(UrbanType), intent(in) :: urban
     type(c_ptr), value :: values
     integer(c_int), dimension(2), intent(in) :: size
     integer(c_int), intent(out) :: status
-    call UrbanSetTranspirationFlux_C(urban%ptr, values, size, status)
-  end subroutine UrbanSetTranspirationFlux
+    call UrbanSetTranspirationFluxForPerviousRoad_C(urban%ptr, values, size, status)
+  end subroutine UrbanSetTranspirationFluxForPerviousRoad
 
   subroutine UrbanSetWaterTableDepth(urban, values, length, status)
     type(UrbanType), intent(in) :: urban
@@ -1785,29 +1827,29 @@ module urban_mod
   end subroutine UrbanSetWaterTableDepth
 
   ! Soil water content setter functions
-  subroutine UrbanSetSoilLiquidWater(urban, values, size, status)
+  subroutine UrbanSetSoilLiquidWaterForPerviousRoad(urban, values, size, status)
     type(UrbanType), intent(in) :: urban
     type(c_ptr), value :: values
     integer(c_int), dimension(2), intent(in) :: size
     integer(c_int), intent(out) :: status
-    call UrbanSetSoilLiquidWater_C(urban%ptr, values, size, status)
-  end subroutine UrbanSetSoilLiquidWater
+    call UrbanSetSoilLiquidWaterForPerviousRoad_C(urban%ptr, values, size, status)
+  end subroutine UrbanSetSoilLiquidWaterForPerviousRoad
 
-  subroutine UrbanSetSoilIceContent(urban, values, size, status)
+  subroutine UrbanSetSoilIceContentForPerviousRoad(urban, values, size, status)
     type(UrbanType), intent(in) :: urban
     type(c_ptr), value :: values
     integer(c_int), dimension(2), intent(in) :: size
     integer(c_int), intent(out) :: status
-    call UrbanSetSoilIceContent_C(urban%ptr, values, size, status)
-  end subroutine UrbanSetSoilIceContent
+    call UrbanSetSoilIceContentForPerviousRoad_C(urban%ptr, values, size, status)
+  end subroutine UrbanSetSoilIceContentForPerviousRoad
 
-  subroutine UrbanSetSoilVolumetricWater(urban, values, size, status)
+  subroutine UrbanSetSoilVolumetricWaterForPerviousRoad(urban, values, size, status)
     type(UrbanType), intent(in) :: urban
     type(c_ptr), value :: values
     integer(c_int), dimension(2), intent(in) :: size
     integer(c_int), intent(out) :: status
-    call UrbanSetSoilVolumetricWater_C(urban%ptr, values, size, status)
-  end subroutine UrbanSetSoilVolumetricWater
+    call UrbanSetSoilVolumetricWaterForPerviousRoad_C(urban%ptr, values, size, status)
+  end subroutine UrbanSetSoilVolumetricWaterForPerviousRoad
 
   ! Shortwave radiation getter functions - Absorbed
   subroutine UrbanGetAbsorbedShortwaveRoof(urban, values, size, status)
@@ -2510,5 +2552,38 @@ module urban_mod
     end if
     stop 1
   end subroutine UrbanError
+
+  ! Infiltration input setter subroutines
+  subroutine UrbanSetSurfaceRunoffForPerviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), value :: length
+    integer(c_int), intent(out) :: status
+    call UrbanSetSurfaceRunoffForPerviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanSetSurfaceRunoffForPerviousRoad
+
+  subroutine UrbanSetGroundEvapFluxForPerviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), value :: length
+    integer(c_int), intent(out) :: status
+    call UrbanSetGroundEvapFluxForPerviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanSetGroundEvapFluxForPerviousRoad
+
+  ! Infiltration compute subroutine
+  subroutine UrbanComputeInfiltration(urban, status)
+    type(UrbanType), intent(in) :: urban
+    integer(c_int), intent(out) :: status
+    call UrbanComputeInfiltration_C(urban%ptr, status)
+  end subroutine UrbanComputeInfiltration
+
+  ! Infiltration getter subroutine
+  subroutine UrbanGetInfiltrationFluxPerviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetInfiltrationFluxPerviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetInfiltrationFluxPerviousRoad
 
 end module urban_mod

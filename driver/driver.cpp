@@ -860,7 +860,7 @@ void SetHydrologyBoundaryConditions(UrbanType urban, int numLandunits,
   for (int i = 0; i < numLandunits; ++i) {
     qflxInfl[i] = QFLX_INFL;
   }
-  UrbanCall(UrbanSetInfiltrationFlux(urban, qflxInfl, numLandunits, &ierr),
+  UrbanCall(UrbanSetInfiltrationFluxForPerviousRoad(urban, qflxInfl, numLandunits, &ierr),
             &ierr);
   free(qflxInfl);
 
@@ -888,7 +888,7 @@ void SetHydrologyBoundaryConditions(UrbanType urban, int numLandunits,
       }
     }
   }
-  UrbanCall(UrbanSetTranspirationFlux(urban, qflxTran, size2D, &ierr), &ierr);
+  UrbanCall(UrbanSetTranspirationFluxForPerviousRoad(urban, qflxTran, size2D, &ierr), &ierr);
   free(qflxTran);
 
   // Set fraction wet for impervious road and roof (1D: per landunit)
