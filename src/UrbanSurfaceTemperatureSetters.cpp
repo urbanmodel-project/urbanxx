@@ -23,6 +23,7 @@ void UrbanSetLayerTempRoof(UrbanType urban, const double *values,
   if (*status == URBAN_SUCCESS) {
     auto col0 = Kokkos::subview(urban->roof.Temperature, Kokkos::ALL(), 0);
     Kokkos::deep_copy(urban->roof.EffectiveSurfTemp, col0);
+    Kokkos::deep_copy(urban->roof.TGrnd0, col0);
   }
 }
 
@@ -37,6 +38,7 @@ void UrbanSetLayerTempImperviousRoad(UrbanType urban, const double *values,
     auto col0 =
         Kokkos::subview(urban->imperviousRoad.Temperature, Kokkos::ALL(), 0);
     Kokkos::deep_copy(urban->imperviousRoad.EffectiveSurfTemp, col0);
+    Kokkos::deep_copy(urban->imperviousRoad.TGrnd0, col0);
   }
 }
 
@@ -50,6 +52,7 @@ void UrbanSetLayerTempPerviousRoad(UrbanType urban, const double *values,
     auto col0 =
         Kokkos::subview(urban->perviousRoad.Temperature, Kokkos::ALL(), 0);
     Kokkos::deep_copy(urban->perviousRoad.EffectiveSurfTemp, col0);
+    Kokkos::deep_copy(urban->perviousRoad.TGrnd0, col0);
   }
 }
 
@@ -63,6 +66,7 @@ void UrbanSetLayerTempSunlitWall(UrbanType urban, const double *values,
     auto col0 =
         Kokkos::subview(urban->sunlitWall.Temperature, Kokkos::ALL(), 0);
     Kokkos::deep_copy(urban->sunlitWall.EffectiveSurfTemp, col0);
+    Kokkos::deep_copy(urban->sunlitWall.TGrnd0, col0);
   }
 }
 
@@ -76,6 +80,7 @@ void UrbanSetLayerTempShadedWall(UrbanType urban, const double *values,
     auto col0 =
         Kokkos::subview(urban->shadedWall.Temperature, Kokkos::ALL(), 0);
     Kokkos::deep_copy(urban->shadedWall.EffectiveSurfTemp, col0);
+    Kokkos::deep_copy(urban->shadedWall.TGrnd0, col0);
   }
 }
 

@@ -178,6 +178,8 @@ URBAN_EXTERN void UrbanComputeHeatDiffusion(UrbanType urban,
                                             UrbanErrorCode *status);
 URBAN_EXTERN void UrbanComputeNetShortwaveRadiation(UrbanType urban,
                                                     UrbanErrorCode *status);
+URBAN_EXTERN void UrbanComputeSoilFluxes(UrbanType urban,
+                                         UrbanErrorCode *status);
 
 // Hydrology boundary condition setter functions
 URBAN_EXTERN void UrbanSetInfiltrationFlux(UrbanType urban,
@@ -239,6 +241,22 @@ URBAN_EXTERN void UrbanSetFractionWetImperviousRoad(UrbanType urban,
                                                     UrbanErrorCode *status);
 URBAN_EXTERN void UrbanSetFractionWetRoof(UrbanType urban, const double *values,
                                           int length, UrbanErrorCode *status);
+
+// Top-layer soil water setter functions (for soil flux partitioning)
+URBAN_EXTERN void UrbanSetTopH2OSoiLiqRoof(UrbanType urban,
+                                           const double *values, int length,
+                                           UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetTopH2OSoiIceRoof(UrbanType urban,
+                                           const double *values, int length,
+                                           UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetTopH2OSoiLiqImperviousRoad(UrbanType urban,
+                                                     const double *values,
+                                                     int length,
+                                                     UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetTopH2OSoiIceImperviousRoad(UrbanType urban,
+                                                     const double *values,
+                                                     int length,
+                                                     UrbanErrorCode *status);
 
 // Kokkos utility functions
 URBAN_EXTERN bool UrbanKokkosIsLayoutRight(void);
@@ -452,6 +470,62 @@ URBAN_EXTERN void UrbanGetWaterDeficitFluxPerviousRoad(UrbanType urban,
                                                        double *values,
                                                        int length,
                                                        UrbanErrorCode *status);
+
+// Soil ground heat flux (EflxSoilGrnd) getter functions — all five surfaces
+URBAN_EXTERN void UrbanGetEflxSoilGrndRoof(UrbanType urban, double *values,
+                                           int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetEflxSoilGrndImperviousRoad(UrbanType urban,
+                                                     double *values, int length,
+                                                     UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetEflxSoilGrndPerviousRoad(UrbanType urban,
+                                                   double *values, int length,
+                                                   UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetEflxSoilGrndSunlitWall(UrbanType urban,
+                                                 double *values, int length,
+                                                 UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetEflxSoilGrndShadedWall(UrbanType urban,
+                                                 double *values, int length,
+                                                 UrbanErrorCode *status);
+
+// Liquid ground evaporation (QflxEvapGrnd) getter functions
+URBAN_EXTERN void UrbanGetQflxEvapGrndRoof(UrbanType urban, double *values,
+                                           int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetQflxEvapGrndImperviousRoad(UrbanType urban,
+                                                     double *values, int length,
+                                                     UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetQflxEvapGrndPerviousRoad(UrbanType urban,
+                                                   double *values, int length,
+                                                   UrbanErrorCode *status);
+
+// Ice sublimation (QflxSubSnow) getter functions
+URBAN_EXTERN void UrbanGetQflxSubSnowRoof(UrbanType urban, double *values,
+                                          int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetQflxSubSnowImperviousRoad(UrbanType urban,
+                                                    double *values, int length,
+                                                    UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetQflxSubSnowPerviousRoad(UrbanType urban,
+                                                  double *values, int length,
+                                                  UrbanErrorCode *status);
+
+// Dew to snow (QflxDewSnow) getter functions
+URBAN_EXTERN void UrbanGetQflxDewSnowRoof(UrbanType urban, double *values,
+                                          int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetQflxDewSnowImperviousRoad(UrbanType urban,
+                                                    double *values, int length,
+                                                    UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetQflxDewSnowPerviousRoad(UrbanType urban,
+                                                  double *values, int length,
+                                                  UrbanErrorCode *status);
+
+// Dew to bare ground (QflxDewGrnd) getter functions
+URBAN_EXTERN void UrbanGetQflxDewGrndRoof(UrbanType urban, double *values,
+                                          int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetQflxDewGrndImperviousRoad(UrbanType urban,
+                                                    double *values, int length,
+                                                    UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetQflxDewGrndPerviousRoad(UrbanType urban,
+                                                  double *values, int length,
+                                                  UrbanErrorCode *status);
 
 #ifdef __cplusplus
 } // extern "C"

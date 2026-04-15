@@ -363,6 +363,7 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
   auto &perv_Cgrndl = urban.perviousRoad.Cgrndl;
   auto &perv_Cgrnds = urban.perviousRoad.Cgrnds;
   auto &perv_Temp = urban.perviousRoad.EffectiveSurfTemp;
+  auto &perv_TGrnd0 = urban.perviousRoad.TGrnd0;
   auto &perv_emiss = urban.urbanParams.emissivity.PerviousRoad;
 
   // Access roof property views
@@ -374,6 +375,7 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
   auto &roof_Cgrnds = urban.roof.Cgrnds;
   auto &roof_Cgrndl = urban.roof.Cgrndl;
   auto &roof_Temp = urban.roof.EffectiveSurfTemp;
+  auto &roof_TGrnd0 = urban.roof.TGrnd0;
   auto &roof_emiss = urban.urbanParams.emissivity.Roof;
   auto &roof_temp = urban.roof.Temperature;
   auto &roof_tkInterface = urban.roof.TkInterface;
@@ -399,6 +401,7 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
   auto &imperv_Cgrnds = urban.imperviousRoad.Cgrnds;
   auto &imperv_Cgrndl = urban.imperviousRoad.Cgrndl;
   auto &imperv_Temp = urban.imperviousRoad.EffectiveSurfTemp;
+  auto &imperv_TGrnd0 = urban.imperviousRoad.TGrnd0;
   auto &imperv_emiss = urban.urbanParams.emissivity.ImperviousRoad;
 
   // Access sunlit wall property views
@@ -408,6 +411,7 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
   auto &sunwall_Cgrnds = urban.sunlitWall.Cgrnds;
   auto &sunwall_Cgrndl = urban.sunlitWall.Cgrndl;
   auto &sunwall_Temp = urban.sunlitWall.EffectiveSurfTemp;
+  auto &sunwall_TGrnd0 = urban.sunlitWall.TGrnd0;
   auto &sunwall_temp = urban.sunlitWall.Temperature;
   auto &sunwall_tkInterface = urban.sunlitWall.TkInterface;
   auto &sunwall_tkLayer = urban.sunlitWall.TkLayer;
@@ -424,6 +428,7 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
   auto &shadewall_Cgrnds = urban.shadedWall.Cgrnds;
   auto &shadewall_Cgrndl = urban.shadedWall.Cgrndl;
   auto &shadewall_Temp = urban.shadedWall.EffectiveSurfTemp;
+  auto &shadewall_TGrnd0 = urban.shadedWall.TGrnd0;
   auto &shadewall_temp = urban.shadedWall.Temperature;
   auto &shadewall_tkInterface = urban.shadedWall.TkInterface;
   auto &shadewall_tkLayer = urban.shadedWall.TkLayer;
@@ -510,6 +515,14 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
         const bool hasBottomBC_road = false;
         const bool hasBottomBC_building = true;
         const Real noBottomTemp = 0.0; // Not used for road surfaces
+
+        // Save pre-solve surface temperature for use in UrbanComputeSoilFluxes
+        // (tinc calculation).
+        roof_TGrnd0(l) = roof_temp(l, 0);
+        sunwall_TGrnd0(l) = sunwall_temp(l, 0);
+        shadewall_TGrnd0(l) = shadewall_temp(l, 0);
+        imperv_TGrnd0(l) = imperv_temp(l, 0);
+        perv_TGrnd0(l) = perv_temp(l, 0);
 
         // Solve heat diffusion for roof
         SurfaceProperties roof_surf(l, numUrbanLayers, roof_temp, roof_zc,

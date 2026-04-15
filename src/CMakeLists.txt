@@ -15,6 +15,9 @@ set(URBAN_SOURCES
     UrbanHydrology.cpp
     UrbanHydrologySetters.cpp
     UrbanSurfaceTemperatureSetters.cpp
+    UrbanSoilFluxes.cpp
+    UrbanSoilFluxesGetters.cpp
+    UrbanSoilFluxesSetters.cpp
     KokkosWrappers.cpp
 )
 

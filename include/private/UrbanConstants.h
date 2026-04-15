@@ -33,6 +33,8 @@ constexpr double SHR_CONST_CPFW =
     4.188e3; // specific heat of fresh h2o ~ J/kg/K
 constexpr double SHR_CONST_LATVAP =
     2.501e6; // latent heat of evaporation [J/kg]
+constexpr double SHR_CONST_LATICE =
+    3.337e5; // latent heat of fusion (ice melting) [J/kg]
 
 constexpr double CSOL_BEDROCK = 2.0e6; // heat capacity of bedrock [J/m^3/K]
 

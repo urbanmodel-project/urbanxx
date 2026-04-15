@@ -123,6 +123,11 @@ struct SurfaceDataBase {
                       Cgrndl) // d(latent heat flux)/dT for implicit solver
   DECLARE_DEVICE_VIEW(1DR8, EflxShGrnd) // sensible heat flux from ground
                                         // (W/m**2) [+ to atm]
+  DECLARE_DEVICE_VIEW(1DR8,
+                      TGrnd0) // surface temperature before heat diffusion (K)
+  DECLARE_DEVICE_VIEW(
+      1DR8,
+      EflxSoilGrnd) // ground heat flux (W/m²) [+ = into surface]
 
   // Saturation humidity variables
   DECLARE_DEVICE_VIEW(1DR8, Es)   // saturation vapor pressure (Pa)
@@ -159,6 +164,8 @@ struct SurfaceDataBase {
     ALLOCATE_DEVICE_VIEW(Cgrnds, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(Cgrndl, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(EflxShGrnd, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(TGrnd0, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(EflxSoilGrnd, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(Es, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(EsdT, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(Qs, Array1DR8, numLandunits)
@@ -184,6 +191,14 @@ struct SnowCoveredSurfaceData : SurfaceDataBase {
                       QflxEvapSoil) // soil evaporation (mm H2O/s) (+ = to atm)
   DECLARE_DEVICE_VIEW(1DR8, QflxTranEvap) // vegetation evaporation (mm H2O/s)
                                           // (+ = to atm)
+  DECLARE_DEVICE_VIEW(
+      1DR8,
+      QflxEvapGrnd) // liquid ground evaporation (mm H2O/s) [+ = to atm]
+  DECLARE_DEVICE_VIEW(
+      1DR8, QflxSubSnow) // sublimation from ice (mm H2O/s)      [+ = to atm]
+  DECLARE_DEVICE_VIEW(1DR8,
+                      QflxDewSnow) // dew deposited to snow pack (mm H2O/s)
+  DECLARE_DEVICE_VIEW(1DR8, QflxDewGrnd) // dew on bare ground (mm H2O/s)
 
   SnowCoveredSurfaceData(int numLandunits, int numRadBands, int numRadTypes,
                          int numLayers)
@@ -194,6 +209,10 @@ struct SnowCoveredSurfaceData : SurfaceDataBase {
                          numRadBands, numRadTypes)
     ALLOCATE_DEVICE_VIEW(QflxEvapSoil, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(QflxTranEvap, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(QflxEvapGrnd, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(QflxSubSnow, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(QflxDewSnow, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(QflxDewGrnd, Array1DR8, numLandunits)
   }
 };
 

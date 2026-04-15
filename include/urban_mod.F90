@@ -403,6 +403,43 @@ module urban_mod
       integer(c_int) :: status
     end subroutine UrbanSetFractionWetRoof
 
+    ! Top-layer soil water setter functions (for soil flux partitioning)
+    subroutine UrbanSetTopH2OSoiLiqRoof(urban, values, length, &
+      status) bind(C, name="UrbanSetTopH2OSoiLiqRoof")
+      import :: c_ptr, c_int, UrbanType
+      type(UrbanType), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetTopH2OSoiLiqRoof
+
+    subroutine UrbanSetTopH2OSoiIceRoof(urban, values, length, &
+      status) bind(C, name="UrbanSetTopH2OSoiIceRoof")
+      import :: c_ptr, c_int, UrbanType
+      type(UrbanType), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetTopH2OSoiIceRoof
+
+    subroutine UrbanSetTopH2OSoiLiqImperviousRoad(urban, values, length, &
+      status) bind(C, name="UrbanSetTopH2OSoiLiqImperviousRoad")
+      import :: c_ptr, c_int, UrbanType
+      type(UrbanType), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetTopH2OSoiLiqImperviousRoad
+
+    subroutine UrbanSetTopH2OSoiIceImperviousRoad(urban, values, length, &
+      status) bind(C, name="UrbanSetTopH2OSoiIceImperviousRoad")
+      import :: c_ptr, c_int, UrbanType
+      type(UrbanType), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetTopH2OSoiIceImperviousRoad
+
     ! Setup and initialization functions
     subroutine UrbanSetup(urban, status) bind(C, name="UrbanSetup")
       import :: c_ptr, c_int, UrbanType
@@ -454,6 +491,170 @@ module urban_mod
       type(c_ptr), value :: urban
       integer(c_int) :: status
     end subroutine UrbanComputeNetShortwaveRadiation_C
+
+    subroutine UrbanComputeSoilFluxes_C(urban, status) bind(C, name="UrbanComputeSoilFluxes")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      integer(c_int) :: status
+    end subroutine UrbanComputeSoilFluxes_C
+
+    ! Soil ground heat flux (EflxSoilGrnd) getter C interfaces
+    subroutine UrbanGetEflxSoilGrndRoof_C(urban, values, length, status) &
+      bind(C, name="UrbanGetEflxSoilGrndRoof")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetEflxSoilGrndRoof_C
+
+    subroutine UrbanGetEflxSoilGrndImperviousRoad_C(urban, values, length, status) &
+      bind(C, name="UrbanGetEflxSoilGrndImperviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetEflxSoilGrndImperviousRoad_C
+
+    subroutine UrbanGetEflxSoilGrndPerviousRoad_C(urban, values, length, status) &
+      bind(C, name="UrbanGetEflxSoilGrndPerviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetEflxSoilGrndPerviousRoad_C
+
+    subroutine UrbanGetEflxSoilGrndSunlitWall_C(urban, values, length, status) &
+      bind(C, name="UrbanGetEflxSoilGrndSunlitWall")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetEflxSoilGrndSunlitWall_C
+
+    subroutine UrbanGetEflxSoilGrndShadedWall_C(urban, values, length, status) &
+      bind(C, name="UrbanGetEflxSoilGrndShadedWall")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetEflxSoilGrndShadedWall_C
+
+    ! QflxEvapGrnd getter C interfaces
+    subroutine UrbanGetQflxEvapGrndRoof_C(urban, values, length, status) &
+      bind(C, name="UrbanGetQflxEvapGrndRoof")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetQflxEvapGrndRoof_C
+
+    subroutine UrbanGetQflxEvapGrndImperviousRoad_C(urban, values, length, status) &
+      bind(C, name="UrbanGetQflxEvapGrndImperviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetQflxEvapGrndImperviousRoad_C
+
+    subroutine UrbanGetQflxEvapGrndPerviousRoad_C(urban, values, length, status) &
+      bind(C, name="UrbanGetQflxEvapGrndPerviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetQflxEvapGrndPerviousRoad_C
+
+    ! QflxSubSnow getter C interfaces
+    subroutine UrbanGetQflxSubSnowRoof_C(urban, values, length, status) &
+      bind(C, name="UrbanGetQflxSubSnowRoof")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetQflxSubSnowRoof_C
+
+    subroutine UrbanGetQflxSubSnowImperviousRoad_C(urban, values, length, status) &
+      bind(C, name="UrbanGetQflxSubSnowImperviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetQflxSubSnowImperviousRoad_C
+
+    subroutine UrbanGetQflxSubSnowPerviousRoad_C(urban, values, length, status) &
+      bind(C, name="UrbanGetQflxSubSnowPerviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetQflxSubSnowPerviousRoad_C
+
+    ! QflxDewSnow getter C interfaces
+    subroutine UrbanGetQflxDewSnowRoof_C(urban, values, length, status) &
+      bind(C, name="UrbanGetQflxDewSnowRoof")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetQflxDewSnowRoof_C
+
+    subroutine UrbanGetQflxDewSnowImperviousRoad_C(urban, values, length, status) &
+      bind(C, name="UrbanGetQflxDewSnowImperviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetQflxDewSnowImperviousRoad_C
+
+    subroutine UrbanGetQflxDewSnowPerviousRoad_C(urban, values, length, status) &
+      bind(C, name="UrbanGetQflxDewSnowPerviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetQflxDewSnowPerviousRoad_C
+
+    ! QflxDewGrnd getter C interfaces
+    subroutine UrbanGetQflxDewGrndRoof_C(urban, values, length, status) &
+      bind(C, name="UrbanGetQflxDewGrndRoof")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetQflxDewGrndRoof_C
+
+    subroutine UrbanGetQflxDewGrndImperviousRoad_C(urban, values, length, status) &
+      bind(C, name="UrbanGetQflxDewGrndImperviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetQflxDewGrndImperviousRoad_C
+
+    subroutine UrbanGetQflxDewGrndPerviousRoad_C(urban, values, length, status) &
+      bind(C, name="UrbanGetQflxDewGrndPerviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetQflxDewGrndPerviousRoad_C
 
     ! Atmospheric forcing setter functions
     subroutine UrbanSetAtmTemp_C(urban, values, length, status) bind(C, name="UrbanSetAtmTemp")
@@ -1941,6 +2142,154 @@ module urban_mod
     integer(c_int), intent(out) :: status
     call UrbanGetWaterDeficitFluxPerviousRoad_C(urban%ptr, values, length, status)
   end subroutine UrbanGetWaterDeficitFluxPerviousRoad
+
+  ! Soil fluxes compute subroutine
+  subroutine UrbanComputeSoilFluxes(urban, status)
+    type(UrbanType), intent(in) :: urban
+    integer(c_int), intent(out) :: status
+    call UrbanComputeSoilFluxes_C(urban%ptr, status)
+  end subroutine UrbanComputeSoilFluxes
+
+  ! EflxSoilGrnd getter subroutines
+  subroutine UrbanGetEflxSoilGrndRoof(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetEflxSoilGrndRoof_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetEflxSoilGrndRoof
+
+  subroutine UrbanGetEflxSoilGrndImperviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetEflxSoilGrndImperviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetEflxSoilGrndImperviousRoad
+
+  subroutine UrbanGetEflxSoilGrndPerviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetEflxSoilGrndPerviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetEflxSoilGrndPerviousRoad
+
+  subroutine UrbanGetEflxSoilGrndSunlitWall(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetEflxSoilGrndSunlitWall_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetEflxSoilGrndSunlitWall
+
+  subroutine UrbanGetEflxSoilGrndShadedWall(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetEflxSoilGrndShadedWall_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetEflxSoilGrndShadedWall
+
+  ! QflxEvapGrnd getter subroutines
+  subroutine UrbanGetQflxEvapGrndRoof(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetQflxEvapGrndRoof_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetQflxEvapGrndRoof
+
+  subroutine UrbanGetQflxEvapGrndImperviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetQflxEvapGrndImperviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetQflxEvapGrndImperviousRoad
+
+  subroutine UrbanGetQflxEvapGrndPerviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetQflxEvapGrndPerviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetQflxEvapGrndPerviousRoad
+
+  ! QflxSubSnow getter subroutines
+  subroutine UrbanGetQflxSubSnowRoof(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetQflxSubSnowRoof_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetQflxSubSnowRoof
+
+  subroutine UrbanGetQflxSubSnowImperviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetQflxSubSnowImperviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetQflxSubSnowImperviousRoad
+
+  subroutine UrbanGetQflxSubSnowPerviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetQflxSubSnowPerviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetQflxSubSnowPerviousRoad
+
+  ! QflxDewSnow getter subroutines
+  subroutine UrbanGetQflxDewSnowRoof(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetQflxDewSnowRoof_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetQflxDewSnowRoof
+
+  subroutine UrbanGetQflxDewSnowImperviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetQflxDewSnowImperviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetQflxDewSnowImperviousRoad
+
+  subroutine UrbanGetQflxDewSnowPerviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetQflxDewSnowPerviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetQflxDewSnowPerviousRoad
+
+  ! QflxDewGrnd getter subroutines
+  subroutine UrbanGetQflxDewGrndRoof(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetQflxDewGrndRoof_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetQflxDewGrndRoof
+
+  subroutine UrbanGetQflxDewGrndImperviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetQflxDewGrndImperviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetQflxDewGrndImperviousRoad
+
+  subroutine UrbanGetQflxDewGrndPerviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetQflxDewGrndPerviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetQflxDewGrndPerviousRoad
 
   ! Error handling subroutine
   subroutine UrbanError(rank, line, status)
