@@ -45,11 +45,16 @@ void ComputeHydraulicProperties(UrbanType urban) {
         // Convert water table depth from m to mm
         const Real zwtmm = zwt(l) * 1000.0;
 
-        // Find jwt: layer index right above water table
-        jwt(l) = nlevbed - 1; // Initialize to bottom layer
-        for (int j = 0; j < nlevbed; ++j) {
-          if (zwtmm <= zi(l, j) * 1000.0) {
-            jwt(l) = (j == 0) ? 0 : j - 1;
+        // Find jwt: index of the layer containing the water table.
+        // Convention: jwt == NUM_LAYERS_ABV_BEDROCK → water table below all
+        // hydrologically active layers. Matches the convention used in
+        // ComputeWaterTable (UrbanWaterTable.cpp) and expected by
+        // SetupHydrologyTridiagonal and UpdateSoilWater.
+        jwt(l) = NUM_LAYERS_ABV_BEDROCK; // sentinel: water table below soil
+        for (int j = 0; j < NUM_LAYERS_ABV_BEDROCK; ++j) {
+          // zi(l, j+1) = bottom interface of layer j
+          if (zwtmm <= zi(l, j + 1) * 1000.0) {
+            jwt(l) = j;
             break;
           }
         }
