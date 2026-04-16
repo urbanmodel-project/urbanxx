@@ -255,14 +255,6 @@ URBAN_EXTERN void UrbanSetCanyonSpecificHumidity(UrbanType urban,
                                                  int length,
                                                  UrbanErrorCode *status);
 
-// Surface wetness setter functions
-URBAN_EXTERN void UrbanSetFractionWetImperviousRoad(UrbanType urban,
-                                                    const double *values,
-                                                    int length,
-                                                    UrbanErrorCode *status);
-URBAN_EXTERN void UrbanSetFractionWetRoof(UrbanType urban, const double *values,
-                                          int length, UrbanErrorCode *status);
-
 // Top-layer soil water setter functions (for soil flux partitioning)
 URBAN_EXTERN void UrbanSetTopH2OSoiLiqRoof(UrbanType urban,
                                            const double *values, int length,

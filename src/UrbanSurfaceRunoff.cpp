@@ -12,9 +12,6 @@ struct _p_UrbanType : public URBANXX::_p_UrbanType {
 
 using namespace URBANXX;
 
-// pondmx_urban: maximum ponding depth for roof and impervious road (mm)
-static constexpr double PONDMX_URBAN = 1.0;
-
 extern "C" {
 
 void UrbanComputeSurfaceRunoff(UrbanType urban, Real dtime,

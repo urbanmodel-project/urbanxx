@@ -47,6 +47,10 @@ constexpr double TKWATER = 0.57;   // thermal conductivity of water [W/m-K]
 constexpr double TKICE = 2.29;     // thermal conductivity of ice [W/m-K]
 constexpr double TK_BEDROCK = 3.0; // thermal conductivity of bedrock [W/m-K]
 
+// Hydrology constants
+constexpr double PONDMX_URBAN =
+    1.0; // max ponding depth for roof and impervious road [mm]
+
 } // namespace URBANXX
 
 #endif // URBAN_CONSTANTS_H

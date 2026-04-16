@@ -214,10 +214,4 @@ static void SetFullModelParameters(UrbanType urban, int N) {
   std::vector<double> qtran(N * numSoilLayers, 0.0);
   UrbanSetTranspirationFluxForPerviousRoad(urban, qtran.data(), size2D_road, &ierr);
   ASSERT_EQ(ierr, URBAN_SUCCESS);
-
-  std::vector<double> fwet(N, 0.0);
-  UrbanSetFractionWetImperviousRoad(urban, fwet.data(), N, &ierr);
-  ASSERT_EQ(ierr, URBAN_SUCCESS);
-  UrbanSetFractionWetRoof(urban, fwet.data(), N, &ierr);
-  ASSERT_EQ(ierr, URBAN_SUCCESS);
 }

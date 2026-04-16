@@ -218,7 +218,6 @@ struct SnowCoveredSurfaceData : SurfaceDataBase {
 
 struct ImperviousRoadDataType : SnowCoveredSurfaceData {
   DECLARE_DEVICE_VIEW(1DI4, NumberOfActiveLayers) // number of active layers
-  DECLARE_DEVICE_VIEW(1DR8, FractionWet) // fraction of surface that is wet [-]
   DECLARE_DEVICE_VIEW(
       1DR8, TopH2OSoiLiq) // liquid water content in top soil layer [kg/m^2]
   DECLARE_DEVICE_VIEW(
@@ -232,7 +231,6 @@ struct ImperviousRoadDataType : SnowCoveredSurfaceData {
     // Don't initialize to 0 - must be set via
     // UrbanSetNumberOfActiveLayersImperviousRoad
     ALLOCATE_VIEW_NO_INIT(NumberOfActiveLayers, Array1DI4, numLandunits)
-    ALLOCATE_DEVICE_VIEW(FractionWet, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(TopH2OSoiLiq, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(TopH2OSoiIce, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(QflxSurf, Array1DR8, numLandunits)
@@ -336,7 +334,6 @@ struct WallDataType : SurfaceDataBase {
 };
 
 struct RoofDataType : SnowCoveredSurfaceData {
-  DECLARE_DEVICE_VIEW(1DR8, FractionWet) // fraction of surface that is wet [-]
   DECLARE_DEVICE_VIEW(
       1DR8, TopH2OSoiLiq) // liquid water content in top soil layer [kg/m^2]
   DECLARE_DEVICE_VIEW(
@@ -348,7 +345,6 @@ struct RoofDataType : SnowCoveredSurfaceData {
                int numLayers)
       : SnowCoveredSurfaceData(numLandunits, numRadBands, numRadTypes,
                                numLayers) {
-    ALLOCATE_DEVICE_VIEW(FractionWet, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(TopH2OSoiLiq, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(TopH2OSoiIce, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(QflxSurf, Array1DR8, numLandunits)
