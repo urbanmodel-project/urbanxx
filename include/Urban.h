@@ -590,6 +590,65 @@ URBAN_EXTERN void UrbanGetTopH2OSoiLiqImperviousRoad(UrbanType urban,
                                                      double *values, int length,
                                                      UrbanErrorCode *status);
 
+// ============================================================================
+// WaterTable setter functions (pervious road inputs)
+// ============================================================================
+URBAN_EXTERN void UrbanSetAquiferWaterForPerviousRoad(UrbanType urban,
+                                                      const double *values,
+                                                      int length,
+                                                      UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetFracH2osfcForPerviousRoad(UrbanType urban,
+                                                    const double *values,
+                                                    int length,
+                                                    UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetDewGrndFluxForPerviousRoad(UrbanType urban,
+                                                     const double *values,
+                                                     int length,
+                                                     UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetDewSnowFluxForPerviousRoad(UrbanType urban,
+                                                     const double *values,
+                                                     int length,
+                                                     UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetSubSnowFluxForPerviousRoad(UrbanType urban,
+                                                     const double *values,
+                                                     int length,
+                                                     UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetQchargeForPerviousRoad(UrbanType urban,
+                                                 const double *values,
+                                                 int length,
+                                                 UrbanErrorCode *status);
+
+// WaterTable compute function
+URBAN_EXTERN void UrbanComputeWaterTable(UrbanType urban, double dtime,
+                                         UrbanErrorCode *status);
+
+// WaterTable getter functions (1D)
+URBAN_EXTERN void UrbanGetWaterTableDepthPerviousRoad(UrbanType urban,
+                                                      double *values,
+                                                      int length,
+                                                      UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetAquiferWaterPerviousRoad(UrbanType urban,
+                                                   double *values, int length,
+                                                   UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetZwtPerchedPerviousRoad(UrbanType urban,
+                                                 double *values, int length,
+                                                 UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetSubSnowFluxPerviousRoad(UrbanType urban,
+                                                  double *values, int length,
+                                                  UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetDrainFluxPerviousRoad(UrbanType urban, double *values,
+                                                int length,
+                                                UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetRsubSatPerviousRoad(UrbanType urban, double *values,
+                                              int length,
+                                              UrbanErrorCode *status);
+
+// WaterTable getter functions (2D)
+URBAN_EXTERN void UrbanGetSoilIceContentPerviousRoad(UrbanType urban,
+                                                     double *values,
+                                                     const int size[2],
+                                                     UrbanErrorCode *status);
+
 #ifdef __cplusplus
 } // extern "C"
 #endif

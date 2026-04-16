@@ -21,6 +21,7 @@ set(URBAN_SOURCES
     UrbanSurfaceRunoff.cpp
     UrbanSurfaceRunoffGetters.cpp
     UrbanSurfaceRunoffSetters.cpp
+    UrbanWaterTable.cpp
     KokkosWrappers.cpp
 )
 

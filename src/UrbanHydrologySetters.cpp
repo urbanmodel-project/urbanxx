@@ -98,10 +98,10 @@ void UrbanComputeInfiltration(UrbanType urban, UrbanErrorCode *status) {
   }
 
   const int nlandunits = urban->numLandunits;
-  auto qflx_top_soil  = urban->atmosphereData.ForcRain;
-  auto qflx_surf      = urban->perviousRoad.QflxSurf;
+  auto qflx_top_soil = urban->atmosphereData.ForcRain;
+  auto qflx_surf = urban->perviousRoad.QflxSurf;
   auto qflx_evap_grnd = urban->perviousRoad.QflxEvapGrnd;
-  auto qflx_infl      = urban->perviousRoad.QflxInfl;
+  auto qflx_infl = urban->perviousRoad.QflxInfl;
 
   Kokkos::parallel_for(
       "UrbanComputeInfiltration", nlandunits, KOKKOS_LAMBDA(const int l) {
@@ -118,6 +118,58 @@ void UrbanGetInfiltrationFluxPerviousRoad(UrbanType urban, double *values,
     return;
 
   GetView1D(urban->perviousRoad.QflxInfl, values, length, status);
+}
+
+// ============================================================================
+// WaterTable setter functions
+// ============================================================================
+
+void UrbanSetAquiferWaterForPerviousRoad(UrbanType urban, const double *values,
+                                         int length, UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  SetView1D(urban->perviousRoad.Wa, values, length, status);
+}
+
+void UrbanSetFracH2osfcForPerviousRoad(UrbanType urban, const double *values,
+                                       int length, UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  SetView1D(urban->perviousRoad.FracH2osfc, values, length, status);
+}
+
+void UrbanSetDewGrndFluxForPerviousRoad(UrbanType urban, const double *values,
+                                        int length, UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  SetView1D(urban->perviousRoad.QflxDewGrnd, values, length, status);
+}
+
+void UrbanSetDewSnowFluxForPerviousRoad(UrbanType urban, const double *values,
+                                        int length, UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  SetView1D(urban->perviousRoad.QflxDewSnow, values, length, status);
+}
+
+void UrbanSetSubSnowFluxForPerviousRoad(UrbanType urban, const double *values,
+                                        int length, UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  SetView1D(urban->perviousRoad.QflxSubSnow, values, length, status);
+}
+
+void UrbanSetQchargeForPerviousRoad(UrbanType urban, const double *values,
+                                    int length, UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  SetView1D(urban->perviousRoad.Qcharge, values, length, status);
 }
 
 } // extern "C"

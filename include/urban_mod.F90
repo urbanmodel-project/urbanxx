@@ -1443,6 +1443,136 @@ module urban_mod
       integer(c_int), value :: length
       integer(c_int) :: status
     end subroutine UrbanGetInfiltrationFluxPerviousRoad_C
+
+    ! WaterTable setter C interfaces
+    subroutine UrbanSetAquiferWaterForPerviousRoad_C(urban, values, length, status) &
+      bind(C, name="UrbanSetAquiferWaterForPerviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetAquiferWaterForPerviousRoad_C
+
+    subroutine UrbanSetFracH2osfcForPerviousRoad_C(urban, values, length, status) &
+      bind(C, name="UrbanSetFracH2osfcForPerviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetFracH2osfcForPerviousRoad_C
+
+    subroutine UrbanSetDewGrndFluxForPerviousRoad_C(urban, values, length, status) &
+      bind(C, name="UrbanSetDewGrndFluxForPerviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetDewGrndFluxForPerviousRoad_C
+
+    subroutine UrbanSetDewSnowFluxForPerviousRoad_C(urban, values, length, status) &
+      bind(C, name="UrbanSetDewSnowFluxForPerviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetDewSnowFluxForPerviousRoad_C
+
+    subroutine UrbanSetSubSnowFluxForPerviousRoad_C(urban, values, length, status) &
+      bind(C, name="UrbanSetSubSnowFluxForPerviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetSubSnowFluxForPerviousRoad_C
+
+    subroutine UrbanSetQchargeForPerviousRoad_C(urban, values, length, status) &
+      bind(C, name="UrbanSetQchargeForPerviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetQchargeForPerviousRoad_C
+
+    ! WaterTable compute C interface
+    subroutine UrbanComputeWaterTable_C(urban, dtime, status) &
+      bind(C, name="UrbanComputeWaterTable")
+      import :: c_ptr, c_int, c_double
+      type(c_ptr), value :: urban
+      real(c_double), value :: dtime
+      integer(c_int) :: status
+    end subroutine UrbanComputeWaterTable_C
+
+    ! WaterTable getter C interfaces (1D)
+    subroutine UrbanGetWaterTableDepthPerviousRoad_C(urban, values, length, status) &
+      bind(C, name="UrbanGetWaterTableDepthPerviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetWaterTableDepthPerviousRoad_C
+
+    subroutine UrbanGetAquiferWaterPerviousRoad_C(urban, values, length, status) &
+      bind(C, name="UrbanGetAquiferWaterPerviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetAquiferWaterPerviousRoad_C
+
+    subroutine UrbanGetZwtPerchedPerviousRoad_C(urban, values, length, status) &
+      bind(C, name="UrbanGetZwtPerchedPerviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetZwtPerchedPerviousRoad_C
+
+    subroutine UrbanGetSubSnowFluxPerviousRoad_C(urban, values, length, status) &
+      bind(C, name="UrbanGetSubSnowFluxPerviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetSubSnowFluxPerviousRoad_C
+
+    subroutine UrbanGetDrainFluxPerviousRoad_C(urban, values, length, status) &
+      bind(C, name="UrbanGetDrainFluxPerviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetDrainFluxPerviousRoad_C
+
+    subroutine UrbanGetRsubSatPerviousRoad_C(urban, values, length, status) &
+      bind(C, name="UrbanGetRsubSatPerviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetRsubSatPerviousRoad_C
+
+    ! WaterTable getter C interfaces (2D)
+    subroutine UrbanGetSoilIceContentPerviousRoad_C(urban, values, size, status) &
+      bind(C, name="UrbanGetSoilIceContentPerviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), dimension(2) :: size
+      integer(c_int) :: status
+    end subroutine UrbanGetSoilIceContentPerviousRoad_C
+
   end interface
 
   contains
@@ -2585,5 +2715,120 @@ module urban_mod
     integer(c_int), intent(out) :: status
     call UrbanGetInfiltrationFluxPerviousRoad_C(urban%ptr, values, length, status)
   end subroutine UrbanGetInfiltrationFluxPerviousRoad
+
+  ! WaterTable setter subroutines
+  subroutine UrbanSetAquiferWaterForPerviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), value :: length
+    integer(c_int), intent(out) :: status
+    call UrbanSetAquiferWaterForPerviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanSetAquiferWaterForPerviousRoad
+
+  subroutine UrbanSetFracH2osfcForPerviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), value :: length
+    integer(c_int), intent(out) :: status
+    call UrbanSetFracH2osfcForPerviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanSetFracH2osfcForPerviousRoad
+
+  subroutine UrbanSetDewGrndFluxForPerviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), value :: length
+    integer(c_int), intent(out) :: status
+    call UrbanSetDewGrndFluxForPerviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanSetDewGrndFluxForPerviousRoad
+
+  subroutine UrbanSetDewSnowFluxForPerviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), value :: length
+    integer(c_int), intent(out) :: status
+    call UrbanSetDewSnowFluxForPerviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanSetDewSnowFluxForPerviousRoad
+
+  subroutine UrbanSetSubSnowFluxForPerviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), value :: length
+    integer(c_int), intent(out) :: status
+    call UrbanSetSubSnowFluxForPerviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanSetSubSnowFluxForPerviousRoad
+
+  subroutine UrbanSetQchargeForPerviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), value :: length
+    integer(c_int), intent(out) :: status
+    call UrbanSetQchargeForPerviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanSetQchargeForPerviousRoad
+
+  ! WaterTable compute subroutine
+  subroutine UrbanComputeWaterTable(urban, dtime, status)
+    type(UrbanType), intent(in) :: urban
+    real(c_double), value :: dtime
+    integer(c_int), intent(out) :: status
+    call UrbanComputeWaterTable_C(urban%ptr, dtime, status)
+  end subroutine UrbanComputeWaterTable
+
+  ! WaterTable getter subroutines (1D)
+  subroutine UrbanGetWaterTableDepthPerviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetWaterTableDepthPerviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetWaterTableDepthPerviousRoad
+
+  subroutine UrbanGetAquiferWaterPerviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetAquiferWaterPerviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetAquiferWaterPerviousRoad
+
+  subroutine UrbanGetZwtPerchedPerviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetZwtPerchedPerviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetZwtPerchedPerviousRoad
+
+  subroutine UrbanGetSubSnowFluxPerviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetSubSnowFluxPerviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetSubSnowFluxPerviousRoad
+
+  subroutine UrbanGetDrainFluxPerviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetDrainFluxPerviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetDrainFluxPerviousRoad
+
+  subroutine UrbanGetRsubSatPerviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetRsubSatPerviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetRsubSatPerviousRoad
+
+  ! WaterTable getter subroutine (2D)
+  subroutine UrbanGetSoilIceContentPerviousRoad(urban, values, size, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), dimension(2), intent(in) :: size
+    integer(c_int), intent(out) :: status
+    call UrbanGetSoilIceContentPerviousRoad_C(urban%ptr, values, size, status)
+  end subroutine UrbanGetSoilIceContentPerviousRoad
 
 end module urban_mod

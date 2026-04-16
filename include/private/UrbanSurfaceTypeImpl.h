@@ -270,6 +270,13 @@ struct PerviousRoadDataType : SnowCoveredSurfaceData {
   // Surface runoff output
   DECLARE_DEVICE_VIEW(1DR8, QflxSurf) // surface runoff (mm/s)
 
+  // WaterTable state variables
+  DECLARE_DEVICE_VIEW(1DR8, Wa) // aquifer water storage [mm]
+  DECLARE_DEVICE_VIEW(
+      1DR8, FracH2osfc) // fraction of surface covered by ponded water [-]
+  DECLARE_DEVICE_VIEW(1DR8, QflxDrain)   // sub-surface drainage [mm/s]
+  DECLARE_DEVICE_VIEW(1DR8, QflxRsubSat) // saturation excess runoff [mm/s]
+
   // Inherits all fields from SnowCoveredSurfaceData and SurfaceDataBase
   // Also includes soil data for pervious road
   PerviousRoadDataType(int numLandunits, int numRadBands, int numRadTypes,
@@ -295,6 +302,12 @@ struct PerviousRoadDataType : SnowCoveredSurfaceData {
     ALLOCATE_DEVICE_VIEW(FrostTable, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(ZwtPerched, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(QflxSurf, Array1DR8, numLandunits)
+    // WaterTable state variables
+    ALLOCATE_VIEW_NO_INIT(Wa, Array1DR8, numLandunits)
+    Kokkos::deep_copy(Wa, 5000.0); // initial aquifer storage [mm]
+    ALLOCATE_DEVICE_VIEW(FracH2osfc, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(QflxDrain, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(QflxRsubSat, Array1DR8, numLandunits)
   }
 };
 
