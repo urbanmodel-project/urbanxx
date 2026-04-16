@@ -622,6 +622,39 @@ URBAN_EXTERN void UrbanSetQchargeForPerviousRoad(UrbanType urban,
 URBAN_EXTERN void UrbanComputeWaterTable(UrbanType urban, double dtime,
                                          UrbanErrorCode *status);
 
+// DewCondensation setter functions (roof and impervious road inputs)
+URBAN_EXTERN void UrbanSetQflxDewGrndRoof(UrbanType urban, const double *values,
+                                          int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetQflxDewSnowRoof(UrbanType urban, const double *values,
+                                          int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetQflxSubSnowRoof(UrbanType urban, const double *values,
+                                          int length, UrbanErrorCode *status);
+
+URBAN_EXTERN void UrbanSetQflxDewGrndImperviousRoad(UrbanType urban,
+                                                    const double *values,
+                                                    int length,
+                                                    UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetQflxDewSnowImperviousRoad(UrbanType urban,
+                                                    const double *values,
+                                                    int length,
+                                                    UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetQflxSubSnowImperviousRoad(UrbanType urban,
+                                                    const double *values,
+                                                    int length,
+                                                    UrbanErrorCode *status);
+
+// DewCondensation compute function
+URBAN_EXTERN void
+UrbanComputeDewCondensationRoofImperviousRoad(UrbanType urban, double dtime,
+                                              UrbanErrorCode *status);
+
+// DewCondensation getter functions (TopH2OSoiIce for roof and impervious road)
+URBAN_EXTERN void UrbanGetTopH2OSoiIceRoof(UrbanType urban, double *values,
+                                           int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetTopH2OSoiIceImperviousRoad(UrbanType urban,
+                                                     double *values, int length,
+                                                     UrbanErrorCode *status);
+
 // WaterTable getter functions (1D)
 URBAN_EXTERN void UrbanGetWaterTableDepthPerviousRoad(UrbanType urban,
                                                       double *values,

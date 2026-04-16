@@ -263,4 +263,83 @@ void UrbanComputeWaterTable(UrbanType urban, double dtime,
   *status = URBAN_SUCCESS;
 }
 
+// ============================================================================
+// UrbanComputeDewCondensationRoofImperviousRoad
+//
+// Ports ELM's dew condensation block inside WaterTable
+// (SoilHydrologyMod.F90:1062-1078) for the roof and impervious road columns.
+//
+// Assumption: snl(c) == 0 for both surfaces (no snow layers), so the
+// condition snl+1 >= 1 is always satisfied.  Unlike the pervious road path
+// there is no (1 - frac_h2osfc) factor.
+//
+// Inputs (set via setters before calling this function):
+//   roof.TopH2OSoiLiq, roof.TopH2OSoiIce
+//   roof.QflxDewGrnd, roof.QflxDewSnow, roof.QflxSubSnow
+//   imperviousRoad.TopH2OSoiLiq, imperviousRoad.TopH2OSoiIce
+//   imperviousRoad.QflxDewGrnd, imperviousRoad.QflxDewSnow,
+//   imperviousRoad.QflxSubSnow
+//
+// Outputs (written into views):
+//   roof.TopH2OSoiLiq, roof.TopH2OSoiIce, roof.QflxSubSnow
+//   imperviousRoad.TopH2OSoiLiq, imperviousRoad.TopH2OSoiIce,
+//   imperviousRoad.QflxSubSnow
+// ============================================================================
+
+void UrbanComputeDewCondensationRoofImperviousRoad(UrbanType urban,
+                                                   double dtime,
+                                                   UrbanErrorCode *status) {
+  if (urban == nullptr || status == nullptr) {
+    if (status)
+      *status = URBAN_ERR_INVALID_ARGUMENT;
+    return;
+  }
+
+  const int nlandunits = urban->numLandunits;
+
+  // --- Roof ---
+  auto roof_liq = urban->roof.TopH2OSoiLiq;
+  auto roof_ice = urban->roof.TopH2OSoiIce;
+  auto roof_dew_grnd = urban->roof.QflxDewGrnd;
+  auto roof_dew_snow = urban->roof.QflxDewSnow;
+  auto roof_sub_snow = urban->roof.QflxSubSnow;
+
+  Kokkos::parallel_for(
+      "UrbanComputeDewCondensationRoof", nlandunits,
+      KOKKOS_LAMBDA(const int l) {
+        roof_liq(l) += roof_dew_grnd(l) * dtime;
+        roof_ice(l) += roof_dew_snow(l) * dtime;
+        if (roof_sub_snow(l) * dtime > roof_ice(l)) {
+          roof_sub_snow(l) = roof_ice(l) / dtime;
+          roof_ice(l) = 0.0;
+        } else {
+          roof_ice(l) -= roof_sub_snow(l) * dtime;
+        }
+      });
+
+  // --- Impervious Road ---
+  auto imperv_liq = urban->imperviousRoad.TopH2OSoiLiq;
+  auto imperv_ice = urban->imperviousRoad.TopH2OSoiIce;
+  auto imperv_dew_grnd = urban->imperviousRoad.QflxDewGrnd;
+  auto imperv_dew_snow = urban->imperviousRoad.QflxDewSnow;
+  auto imperv_sub_snow = urban->imperviousRoad.QflxSubSnow;
+
+  Kokkos::parallel_for(
+      "UrbanComputeDewCondensationImperviousRoad", nlandunits,
+      KOKKOS_LAMBDA(const int l) {
+        imperv_liq(l) += imperv_dew_grnd(l) * dtime;
+        imperv_ice(l) += imperv_dew_snow(l) * dtime;
+        if (imperv_sub_snow(l) * dtime > imperv_ice(l)) {
+          imperv_sub_snow(l) = imperv_ice(l) / dtime;
+          imperv_ice(l) = 0.0;
+        } else {
+          imperv_ice(l) -= imperv_sub_snow(l) * dtime;
+        }
+      });
+
+  Kokkos::fence();
+
+  *status = URBAN_SUCCESS;
+}
+
 } // extern "C"

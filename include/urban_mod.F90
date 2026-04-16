@@ -1573,6 +1573,90 @@ module urban_mod
       integer(c_int) :: status
     end subroutine UrbanGetSoilIceContentPerviousRoad_C
 
+    ! DewCondensation setter C interfaces (roof)
+    subroutine UrbanSetQflxDewGrndRoof_C(urban, values, length, status) &
+      bind(C, name="UrbanSetQflxDewGrndRoof")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetQflxDewGrndRoof_C
+
+    subroutine UrbanSetQflxDewSnowRoof_C(urban, values, length, status) &
+      bind(C, name="UrbanSetQflxDewSnowRoof")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetQflxDewSnowRoof_C
+
+    subroutine UrbanSetQflxSubSnowRoof_C(urban, values, length, status) &
+      bind(C, name="UrbanSetQflxSubSnowRoof")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetQflxSubSnowRoof_C
+
+    ! DewCondensation setter C interfaces (impervious road)
+    subroutine UrbanSetQflxDewGrndImperviousRoad_C(urban, values, length, status) &
+      bind(C, name="UrbanSetQflxDewGrndImperviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetQflxDewGrndImperviousRoad_C
+
+    subroutine UrbanSetQflxDewSnowImperviousRoad_C(urban, values, length, status) &
+      bind(C, name="UrbanSetQflxDewSnowImperviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetQflxDewSnowImperviousRoad_C
+
+    subroutine UrbanSetQflxSubSnowImperviousRoad_C(urban, values, length, status) &
+      bind(C, name="UrbanSetQflxSubSnowImperviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetQflxSubSnowImperviousRoad_C
+
+    ! DewCondensation compute C interface
+    subroutine UrbanComputeDewCondensationRoofImperviousRoad_C(urban, dtime, status) &
+      bind(C, name="UrbanComputeDewCondensationRoofImperviousRoad")
+      import :: c_ptr, c_int, c_double
+      type(c_ptr), value :: urban
+      real(c_double), value :: dtime
+      integer(c_int) :: status
+    end subroutine UrbanComputeDewCondensationRoofImperviousRoad_C
+
+    ! DewCondensation getter C interfaces (TopH2OSoiIce for roof and impervious road)
+    subroutine UrbanGetTopH2OSoiIceRoof_C(urban, values, length, status) &
+      bind(C, name="UrbanGetTopH2OSoiIceRoof")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetTopH2OSoiIceRoof_C
+
+    subroutine UrbanGetTopH2OSoiIceImperviousRoad_C(urban, values, length, status) &
+      bind(C, name="UrbanGetTopH2OSoiIceImperviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetTopH2OSoiIceImperviousRoad_C
+
   end interface
 
   contains
@@ -2830,5 +2914,80 @@ module urban_mod
     integer(c_int), intent(out) :: status
     call UrbanGetSoilIceContentPerviousRoad_C(urban%ptr, values, size, status)
   end subroutine UrbanGetSoilIceContentPerviousRoad
+
+  ! DewCondensation setter subroutines (roof)
+  subroutine UrbanSetQflxDewGrndRoof(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), value :: length
+    integer(c_int), intent(out) :: status
+    call UrbanSetQflxDewGrndRoof_C(urban%ptr, values, length, status)
+  end subroutine UrbanSetQflxDewGrndRoof
+
+  subroutine UrbanSetQflxDewSnowRoof(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), value :: length
+    integer(c_int), intent(out) :: status
+    call UrbanSetQflxDewSnowRoof_C(urban%ptr, values, length, status)
+  end subroutine UrbanSetQflxDewSnowRoof
+
+  subroutine UrbanSetQflxSubSnowRoof(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), value :: length
+    integer(c_int), intent(out) :: status
+    call UrbanSetQflxSubSnowRoof_C(urban%ptr, values, length, status)
+  end subroutine UrbanSetQflxSubSnowRoof
+
+  ! DewCondensation setter subroutines (impervious road)
+  subroutine UrbanSetQflxDewGrndImperviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), value :: length
+    integer(c_int), intent(out) :: status
+    call UrbanSetQflxDewGrndImperviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanSetQflxDewGrndImperviousRoad
+
+  subroutine UrbanSetQflxDewSnowImperviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), value :: length
+    integer(c_int), intent(out) :: status
+    call UrbanSetQflxDewSnowImperviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanSetQflxDewSnowImperviousRoad
+
+  subroutine UrbanSetQflxSubSnowImperviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), value :: length
+    integer(c_int), intent(out) :: status
+    call UrbanSetQflxSubSnowImperviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanSetQflxSubSnowImperviousRoad
+
+  ! DewCondensation compute subroutine
+  subroutine UrbanComputeDewCondensationRoofImperviousRoad(urban, dtime, status)
+    type(UrbanType), intent(in) :: urban
+    real(c_double), value :: dtime
+    integer(c_int), intent(out) :: status
+    call UrbanComputeDewCondensationRoofImperviousRoad_C(urban%ptr, dtime, status)
+  end subroutine UrbanComputeDewCondensationRoofImperviousRoad
+
+  ! DewCondensation getter subroutines (TopH2OSoiIce for roof and impervious road)
+  subroutine UrbanGetTopH2OSoiIceRoof(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetTopH2OSoiIceRoof_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetTopH2OSoiIceRoof
+
+  subroutine UrbanGetTopH2OSoiIceImperviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetTopH2OSoiIceImperviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetTopH2OSoiIceImperviousRoad
 
 end module urban_mod

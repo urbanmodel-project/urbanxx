@@ -51,4 +51,55 @@ void UrbanSetTopH2OSoiIceImperviousRoad(UrbanType urban, const double *values,
   SetView1D(urban->imperviousRoad.TopH2OSoiIce, values, length, status);
 }
 
+// Dew/sublimation flux setter functions for roof and impervious road.
+// These are inputs to UrbanComputeDewCondensationRoofImperviousRoad.
+
+void UrbanSetQflxDewGrndRoof(UrbanType urban, const double *values, int length,
+                             UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  SetView1D(urban->roof.QflxDewGrnd, values, length, status);
+}
+
+void UrbanSetQflxDewSnowRoof(UrbanType urban, const double *values, int length,
+                             UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  SetView1D(urban->roof.QflxDewSnow, values, length, status);
+}
+
+void UrbanSetQflxSubSnowRoof(UrbanType urban, const double *values, int length,
+                             UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  SetView1D(urban->roof.QflxSubSnow, values, length, status);
+}
+
+void UrbanSetQflxDewGrndImperviousRoad(UrbanType urban, const double *values,
+                                       int length, UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  SetView1D(urban->imperviousRoad.QflxDewGrnd, values, length, status);
+}
+
+void UrbanSetQflxDewSnowImperviousRoad(UrbanType urban, const double *values,
+                                       int length, UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  SetView1D(urban->imperviousRoad.QflxDewSnow, values, length, status);
+}
+
+void UrbanSetQflxSubSnowImperviousRoad(UrbanType urban, const double *values,
+                                       int length, UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  SetView1D(urban->imperviousRoad.QflxSubSnow, values, length, status);
+}
+
 } // extern "C"

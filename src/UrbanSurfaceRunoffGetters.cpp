@@ -73,4 +73,22 @@ void UrbanGetTopH2OSoiLiqImperviousRoad(UrbanType urban, double *values,
   GetView1D(urban->imperviousRoad.TopH2OSoiLiq, values, length, status);
 }
 
+// TopH2OSoiIce getter functions (updated by dew condensation)
+
+void UrbanGetTopH2OSoiIceRoof(UrbanType urban, double *values, int length,
+                              UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  GetView1D(urban->roof.TopH2OSoiIce, values, length, status);
+}
+
+void UrbanGetTopH2OSoiIceImperviousRoad(UrbanType urban, double *values,
+                                        int length, UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  GetView1D(urban->imperviousRoad.TopH2OSoiIce, values, length, status);
+}
+
 } // extern "C"
