@@ -682,6 +682,32 @@ URBAN_EXTERN void UrbanGetSoilIceContentPerviousRoad(UrbanType urban,
                                                      const int size[2],
                                                      UrbanErrorCode *status);
 
+// ============================================================================
+// Drainage init-time constant setters
+// ============================================================================
+URBAN_EXTERN void UrbanSetRsubTopGlobalMax(UrbanType urban, double value,
+                                           UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetPondmax(UrbanType urban, double value,
+                                  UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetWatmin(UrbanType urban, double value,
+                                 UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetEice(UrbanType urban, double value,
+                               UrbanErrorCode *status);
+
+// Drainage timestep setter functions (pervious road inputs)
+URBAN_EXTERN void UrbanSetHkDepthForPerviousRoad(UrbanType urban,
+                                                 const double *values,
+                                                 int length,
+                                                 UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetTopoSlopeForPerviousRoad(UrbanType urban,
+                                                   const double *values,
+                                                   int length,
+                                                   UrbanErrorCode *status);
+
+// Drainage compute function
+URBAN_EXTERN void UrbanComputeDrainage(UrbanType urban, double dtime,
+                                       UrbanErrorCode *status);
+
 #ifdef __cplusplus
 } // extern "C"
 #endif

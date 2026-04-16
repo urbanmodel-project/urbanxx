@@ -125,6 +125,12 @@ struct UrbanParamsType {
   DECLARE_DEVICE_VIEW(1DR8,
                       WtRoof) // weight of roof w.r.t. total urban area (-)
 
+  // Drainage constants (set once at initialization from ELM)
+  double RsubTopGlobalMax = 10.0; // max topographic baseflow [mm/s]
+  double Pondmx = 10.0;           // max ponding depth [mm]
+  double Watmin = 0.01;           // minimum soil liquid water [mm]
+  double EIce = 6.0;              // ice impedance exponent [-]
+
   ViewFactor viewFactor;
   CommonSurfaceProperties tk; // thermal conductivity (W/m/K)
   CommonSurfaceProperties cv; // heat capacity (J/m^3/K)

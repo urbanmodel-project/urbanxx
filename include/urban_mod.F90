@@ -1657,6 +1657,67 @@ module urban_mod
       integer(c_int) :: status
     end subroutine UrbanGetTopH2OSoiIceImperviousRoad_C
 
+    ! Drainage init-time constant setter C interfaces
+    subroutine UrbanSetRsubTopGlobalMax_C(urban, value, status) &
+      bind(C, name="UrbanSetRsubTopGlobalMax")
+      import :: c_ptr, c_int, c_double
+      type(c_ptr), value :: urban
+      real(c_double), value :: value
+      integer(c_int) :: status
+    end subroutine UrbanSetRsubTopGlobalMax_C
+
+    subroutine UrbanSetPondmax_C(urban, value, status) &
+      bind(C, name="UrbanSetPondmax")
+      import :: c_ptr, c_int, c_double
+      type(c_ptr), value :: urban
+      real(c_double), value :: value
+      integer(c_int) :: status
+    end subroutine UrbanSetPondmax_C
+
+    subroutine UrbanSetWatmin_C(urban, value, status) &
+      bind(C, name="UrbanSetWatmin")
+      import :: c_ptr, c_int, c_double
+      type(c_ptr), value :: urban
+      real(c_double), value :: value
+      integer(c_int) :: status
+    end subroutine UrbanSetWatmin_C
+
+    subroutine UrbanSetEice_C(urban, value, status) &
+      bind(C, name="UrbanSetEice")
+      import :: c_ptr, c_int, c_double
+      type(c_ptr), value :: urban
+      real(c_double), value :: value
+      integer(c_int) :: status
+    end subroutine UrbanSetEice_C
+
+    ! Drainage timestep setter C interfaces
+    subroutine UrbanSetHkDepthForPerviousRoad_C(urban, values, length, status) &
+      bind(C, name="UrbanSetHkDepthForPerviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetHkDepthForPerviousRoad_C
+
+    subroutine UrbanSetTopoSlopeForPerviousRoad_C(urban, values, length, status) &
+      bind(C, name="UrbanSetTopoSlopeForPerviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetTopoSlopeForPerviousRoad_C
+
+    ! Drainage compute C interface
+    subroutine UrbanComputeDrainage_C(urban, dtime, status) &
+      bind(C, name="UrbanComputeDrainage")
+      import :: c_ptr, c_int, c_double
+      type(c_ptr), value :: urban
+      real(c_double), value :: dtime
+      integer(c_int) :: status
+    end subroutine UrbanComputeDrainage_C
+
   end interface
 
   contains
@@ -2989,5 +3050,59 @@ module urban_mod
     integer(c_int), intent(out) :: status
     call UrbanGetTopH2OSoiIceImperviousRoad_C(urban%ptr, values, length, status)
   end subroutine UrbanGetTopH2OSoiIceImperviousRoad
+
+  ! Drainage init-time constant setter subroutines
+  subroutine UrbanSetRsubTopGlobalMax(urban, value, status)
+    type(UrbanType), intent(in) :: urban
+    real(c_double), value :: value
+    integer(c_int), intent(out) :: status
+    call UrbanSetRsubTopGlobalMax_C(urban%ptr, value, status)
+  end subroutine UrbanSetRsubTopGlobalMax
+
+  subroutine UrbanSetPondmax(urban, value, status)
+    type(UrbanType), intent(in) :: urban
+    real(c_double), value :: value
+    integer(c_int), intent(out) :: status
+    call UrbanSetPondmax_C(urban%ptr, value, status)
+  end subroutine UrbanSetPondmax
+
+  subroutine UrbanSetWatmin(urban, value, status)
+    type(UrbanType), intent(in) :: urban
+    real(c_double), value :: value
+    integer(c_int), intent(out) :: status
+    call UrbanSetWatmin_C(urban%ptr, value, status)
+  end subroutine UrbanSetWatmin
+
+  subroutine UrbanSetEice(urban, value, status)
+    type(UrbanType), intent(in) :: urban
+    real(c_double), value :: value
+    integer(c_int), intent(out) :: status
+    call UrbanSetEice_C(urban%ptr, value, status)
+  end subroutine UrbanSetEice
+
+  ! Drainage timestep setter subroutines
+  subroutine UrbanSetHkDepthForPerviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), value :: length
+    integer(c_int), intent(out) :: status
+    call UrbanSetHkDepthForPerviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanSetHkDepthForPerviousRoad
+
+  subroutine UrbanSetTopoSlopeForPerviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), value :: length
+    integer(c_int), intent(out) :: status
+    call UrbanSetTopoSlopeForPerviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanSetTopoSlopeForPerviousRoad
+
+  ! Drainage compute subroutine
+  subroutine UrbanComputeDrainage(urban, dtime, status)
+    type(UrbanType), intent(in) :: urban
+    real(c_double), value :: dtime
+    integer(c_int), intent(out) :: status
+    call UrbanComputeDrainage_C(urban%ptr, dtime, status)
+  end subroutine UrbanComputeDrainage
 
 end module urban_mod
