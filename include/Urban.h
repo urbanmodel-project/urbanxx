@@ -221,9 +221,6 @@ URBAN_EXTERN void UrbanSetSoilIceContentForPerviousRoad(UrbanType urban,
                                                         const double *values,
                                                         const int size[2],
                                                         UrbanErrorCode *status);
-URBAN_EXTERN void UrbanSetSoilVolumetricWaterForPerviousRoad(
-    UrbanType urban, const double *values, const int size[2],
-    UrbanErrorCode *status);
 
 // Layer temperature setter functions
 URBAN_EXTERN void UrbanSetLayerTempRoof(UrbanType urban, const double *values,

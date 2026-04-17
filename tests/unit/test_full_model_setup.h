@@ -142,9 +142,6 @@ static void SetFullModelParameters(UrbanType urban, int N) {
   std::vector<double> soilIce(N * numSoilLayers, 0.0);
   UrbanSetSoilIceContentForPerviousRoad(urban, soilIce.data(), size2D_road, &ierr);
   ASSERT_EQ(ierr, URBAN_SUCCESS);
-  std::vector<double> soilVol(N * numSoilLayers, 0.3);
-  UrbanSetSoilVolumetricWaterForPerviousRoad(urban, soilVol.data(), size2D_road, &ierr);
-  ASSERT_EQ(ierr, URBAN_SUCCESS);
 
   // --- Number of active layers ---
   std::vector<double> nActLayers(N, 2.0);
