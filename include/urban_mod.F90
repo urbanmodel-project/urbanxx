@@ -1084,6 +1084,15 @@ module urban_mod
       integer(c_int) :: status
     end subroutine UrbanGetCanyonAirHumidity_C
 
+    subroutine UrbanGetBuildingTemperature_C(urban, values, length, status) &
+      bind(C, name="UrbanGetBuildingTemperature")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanGetBuildingTemperature_C
+
     ! Net shortwave radiation getter functions
     subroutine UrbanGetNetShortwaveRoof_C(urban, values, length, status) &
       bind(C, name="UrbanGetNetShortwaveRoof")
@@ -2270,6 +2279,14 @@ module urban_mod
     integer(c_int), intent(out) :: status
     call UrbanGetCanyonAirHumidity_C(urban%ptr, values, length, status)
   end subroutine UrbanGetCanyonAirHumidity
+
+  subroutine UrbanGetBuildingTemperature(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), intent(in) :: length
+    integer(c_int), intent(out) :: status
+    call UrbanGetBuildingTemperature_C(urban%ptr, values, length, status)
+  end subroutine UrbanGetBuildingTemperature
 
   ! Net shortwave radiation getter subroutines
   subroutine UrbanGetNetShortwaveRoof(urban, values, length, status)

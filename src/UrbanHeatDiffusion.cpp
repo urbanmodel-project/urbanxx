@@ -440,9 +440,36 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
   // Access building property views
   auto &building_temp = urban.building.Temperature;
 
+  // Access geometry and building temperature bounds for internal compute
+  auto &ht_roof = urban.urbanParams.heights.HtRoof;
+  auto &canyon_hwr = urban.urbanParams.CanyonHwr;
+  auto &wt_roof = urban.urbanParams.WtRoof;
+  auto &bld_min_temp = urban.urbanParams.building.MinTemperature;
+  auto &bld_max_temp = urban.urbanParams.building.MaxTemperature;
+
   // Single parallel kernel over all landunits
   Kokkos::parallel_for(
       "ComputeHeatDiffusion", numLandunits, KOKKOS_LAMBDA(int l) {
+        // --- Compute internal building temperature (same formula as ELM
+        // UrbanFluxesMod) ---
+        {
+          const Real T_roof_inner = roof_temp(l, numUrbanLayers - 1);
+          const Real T_sunwall_inner = sunwall_temp(l, numUrbanLayers - 1);
+          const Real T_shadwall_inner = shadewall_temp(l, numUrbanLayers - 1);
+          const Real lngth_roof =
+              (ht_roof(l) / canyon_hwr(l)) * wt_roof(l) / (1.0 - wt_roof(l));
+          Real t_bld = (ht_roof(l) * (T_shadwall_inner + T_sunwall_inner) +
+                        lngth_roof * T_roof_inner) /
+                       (2.0 * ht_roof(l) + lngth_roof);
+          // Clamp to [min, max] (same as ELM SoilTemperatureMod L306-321)
+          if (t_bld > bld_max_temp(l))
+            t_bld = bld_max_temp(l);
+          if (t_bld < bld_min_temp(l))
+            t_bld = bld_min_temp(l);
+          building_temp(l) = t_bld;
+        }
+        // --- end building temperature computation ---
+
         // Step 1: Compute thermal conductivity for pervious road soil layers
         ComputeSoilThermalConductivity(
             l, numSoilLayers, perv_tk_minerals, perv_tk_dry, perv_tkLayer,

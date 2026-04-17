@@ -55,4 +55,12 @@ void UrbanGetLayerTempShadedWall(UrbanType urban, double *values,
   GetView2D(urban->shadedWall.Temperature, values, size, status);
 }
 
+void UrbanGetBuildingTemperature(UrbanType urban, double *values, int length,
+                                 UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  GetView1D(urban->building.Temperature, values, length, status);
+}
+
 } // extern "C"

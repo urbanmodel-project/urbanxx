@@ -375,6 +375,9 @@ URBAN_EXTERN void UrbanGetCanyonAirTemperature(UrbanType urban, double *values,
                                                UrbanErrorCode *status);
 URBAN_EXTERN void UrbanGetCanyonAirHumidity(UrbanType urban, double *values,
                                             int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetBuildingTemperature(UrbanType urban, double *values,
+                                              int length,
+                                              UrbanErrorCode *status);
 
 // Net shortwave radiation getter functions
 URBAN_EXTERN void UrbanGetNetShortwaveRoof(UrbanType urban, double *values,
