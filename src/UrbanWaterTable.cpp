@@ -135,10 +135,11 @@ void UrbanComputeWaterTable(UrbanType urban, double dtime,
                 break;
             }
           } else {
-            // Deepening water table: loop from jwt_l+1 to nlevbed-1
-            // ELM: do j = jwt+1, nlevbed  → C++: k = jwt_l+1 to nlevbed-1
+            // Deepening water table: loop from jwt_l to nlevbed-1
+            // ELM: do j = jwt+1, nlevbed (1-based j=jwt+1 → 0-based k=jwt_l)
+            // → C++: k = jwt_l to nlevbed-1
             bool done = false;
-            for (int k = jwt_l + 1; k < nlevbed; ++k) {
+            for (int k = jwt_l; k < nlevbed; ++k) {
               Real s_y = watsat(l, k) *
                          (1.0 - Kokkos::pow(1.0 + 1.0e3 * zwt(l) / sucsat(l, k),
                                             -1.0 / bsw(l, k)));
