@@ -228,6 +228,71 @@ module urban_mod
       integer(c_int) :: status
     end subroutine UrbanSetOrganicPerviousRoad
 
+    ! Derived soil hydraulic/thermal properties for pervious road
+    subroutine UrbanSetWatSatForPerviousRoad(urban, values, size, status) bind(C, name="UrbanSetWatSatForPerviousRoad")
+      import :: c_ptr, c_int, UrbanType
+      type(UrbanType), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), dimension(2) :: size
+      integer(c_int) :: status
+    end subroutine UrbanSetWatSatForPerviousRoad
+
+    subroutine UrbanSetBswForPerviousRoad(urban, values, size, status) bind(C, name="UrbanSetBswForPerviousRoad")
+      import :: c_ptr, c_int, UrbanType
+      type(UrbanType), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), dimension(2) :: size
+      integer(c_int) :: status
+    end subroutine UrbanSetBswForPerviousRoad
+
+    subroutine UrbanSetSucSatForPerviousRoad(urban, values, size, status) bind(C, name="UrbanSetSucSatForPerviousRoad")
+      import :: c_ptr, c_int, UrbanType
+      type(UrbanType), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), dimension(2) :: size
+      integer(c_int) :: status
+    end subroutine UrbanSetSucSatForPerviousRoad
+
+    subroutine UrbanSetHkSatForPerviousRoad(urban, values, size, status) bind(C, name="UrbanSetHkSatForPerviousRoad")
+      import :: c_ptr, c_int, UrbanType
+      type(UrbanType), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), dimension(2) :: size
+      integer(c_int) :: status
+    end subroutine UrbanSetHkSatForPerviousRoad
+
+    subroutine UrbanSetTkDryForPerviousRoad(urban, values, size, status) bind(C, name="UrbanSetTkDryForPerviousRoad")
+      import :: c_ptr, c_int, UrbanType
+      type(UrbanType), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), dimension(2) :: size
+      integer(c_int) :: status
+    end subroutine UrbanSetTkDryForPerviousRoad
+
+    subroutine UrbanSetTkSatForPerviousRoad(urban, values, size, status) bind(C, name="UrbanSetTkSatForPerviousRoad")
+      import :: c_ptr, c_int, UrbanType
+      type(UrbanType), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), dimension(2) :: size
+      integer(c_int) :: status
+    end subroutine UrbanSetTkSatForPerviousRoad
+
+    subroutine UrbanSetTkMineralsForPerviousRoad(urban, values, size, status) bind(C, name="UrbanSetTkMineralsForPerviousRoad")
+      import :: c_ptr, c_int, UrbanType
+      type(UrbanType), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), dimension(2) :: size
+      integer(c_int) :: status
+    end subroutine UrbanSetTkMineralsForPerviousRoad
+
+    subroutine UrbanSetCvSolidsForPerviousRoad(urban, values, size, status) bind(C, name="UrbanSetCvSolidsForPerviousRoad")
+      import :: c_ptr, c_int, UrbanType
+      type(UrbanType), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), dimension(2) :: size
+      integer(c_int) :: status
+    end subroutine UrbanSetCvSolidsForPerviousRoad
+
     ! Height parameter setter functions
     subroutine UrbanSetForcHgtT_C(urban, values, length, status) bind(C, name="UrbanSetForcHgtT")
       import :: c_ptr, c_int

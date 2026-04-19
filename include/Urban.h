@@ -124,6 +124,42 @@ URBAN_EXTERN void UrbanSetOrganicPerviousRoad(UrbanType urban,
                                               const int size[2],
                                               UrbanErrorCode *status);
 
+// Derived soil hydraulic/thermal properties for pervious road.
+// Call after UrbanSetup() to override the internally-computed values with ELM
+// values.
+URBAN_EXTERN void UrbanSetWatSatForPerviousRoad(UrbanType urban,
+                                                const double *values,
+                                                const int size[2],
+                                                UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetBswForPerviousRoad(UrbanType urban,
+                                             const double *values,
+                                             const int size[2],
+                                             UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetSucSatForPerviousRoad(UrbanType urban,
+                                                const double *values,
+                                                const int size[2],
+                                                UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetHkSatForPerviousRoad(UrbanType urban,
+                                               const double *values,
+                                               const int size[2],
+                                               UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetTkDryForPerviousRoad(UrbanType urban,
+                                               const double *values,
+                                               const int size[2],
+                                               UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetTkSatForPerviousRoad(UrbanType urban,
+                                               const double *values,
+                                               const int size[2],
+                                               UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetTkMineralsForPerviousRoad(UrbanType urban,
+                                                    const double *values,
+                                                    const int size[2],
+                                                    UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetCvSolidsForPerviousRoad(UrbanType urban,
+                                                  const double *values,
+                                                  const int size[2],
+                                                  UrbanErrorCode *status);
+
 // Height parameter setter functions
 URBAN_EXTERN void UrbanSetForcHgtT(UrbanType urban, const double *values,
                                    int length, UrbanErrorCode *status);

@@ -290,6 +290,65 @@ void UrbanSetOrganicPerviousRoad(UrbanType urban, const double *values,
   SetView2D(urban->perviousRoad.soil.Organic, values, size, status);
 }
 
+// Derived soil hydraulic/thermal properties for pervious road
+void UrbanSetWatSatForPerviousRoad(UrbanType urban, const double *values,
+                                   const int size[2], UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
+    return;
+  SetView2D(urban->perviousRoad.soil.WatSat, values, size, status);
+}
+
+void UrbanSetBswForPerviousRoad(UrbanType urban, const double *values,
+                                const int size[2], UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
+    return;
+  SetView2D(urban->perviousRoad.soil.Bsw, values, size, status);
+}
+
+void UrbanSetSucSatForPerviousRoad(UrbanType urban, const double *values,
+                                   const int size[2], UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
+    return;
+  SetView2D(urban->perviousRoad.soil.SucSat, values, size, status);
+}
+
+void UrbanSetHkSatForPerviousRoad(UrbanType urban, const double *values,
+                                  const int size[2], UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
+    return;
+  SetView2D(urban->perviousRoad.soil.HkSat, values, size, status);
+}
+
+void UrbanSetTkDryForPerviousRoad(UrbanType urban, const double *values,
+                                  const int size[2], UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
+    return;
+  SetView2D(urban->perviousRoad.soil.TkDry, values, size, status);
+}
+
+void UrbanSetTkSatForPerviousRoad(UrbanType urban, const double *values,
+                                  const int size[2], UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
+    return;
+  SetView2D(urban->perviousRoad.soil.TkSaturated, values, size, status);
+}
+
+void UrbanSetTkMineralsForPerviousRoad(UrbanType urban, const double *values,
+                                       const int size[2],
+                                       UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
+    return;
+  SetView2D(urban->perviousRoad.soil.TkMinerals, values, size, status);
+}
+
+void UrbanSetCvSolidsForPerviousRoad(UrbanType urban, const double *values,
+                                     const int size[2],
+                                     UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
+    return;
+  SetView2D(urban->perviousRoad.soil.CvSolids, values, size, status);
+}
+
 // Height parameter setter functions
 void UrbanSetForcHgtT(UrbanType urban, const double *values, int length,
                       UrbanErrorCode *status) {
