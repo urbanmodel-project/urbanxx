@@ -64,7 +64,7 @@ ComputeMatricPotential(const Real s,        // relative saturation [-]
                        const Real bsw,      // Clapp-Hornberger b parameter [-]
                        const Real smpmin) { // minimum matric potential [mm]
 
-  const Real s_clamped = Kokkos::fmax(s, 0.00);
+  const Real s_clamped = Kokkos::fmin(1.0, Kokkos::fmax(s, 0.00));
   const Real smp = -sucsat * Kokkos::pow(s_clamped, -bsw);
   return Kokkos::fmax(smpmin, smp);
 }

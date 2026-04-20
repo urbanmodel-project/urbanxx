@@ -77,8 +77,13 @@ void ComputeHydraulicProperties(UrbanType urban) {
           // Compute relative saturation for next layer interface
           // (average of current and next layer for interface properties)
           const int j_next = Kokkos::fmin(j + 1, NUM_LAYERS_ABV_BEDROCK - 1);
-          const Real s_interface = (h2osoi_vol(l, j) + h2osoi_vol(l, j_next)) /
-                                   (watsat(l, j) + watsat(l, j_next));
+          // Use liquid-only VWC for both layers, matching ELM origflag==0:
+          //   vwc_liq(c,j) = max(h2osoi_liq(c,j),1.0e-6_r8)/(dz(c,j)*denh2o)
+          const Real vol_liq_next =
+              Kokkos::fmax(h2osoi_liq(l, j_next), 1.0e-6) /
+              (dz(l, j_next) * SHR_CONST_RHOWATER);
+          const Real s_interface = 0.5 * (vol_liq + vol_liq_next) /
+                                   (0.5 * (watsat(l, j) + watsat(l, j_next)));
 
           // Compute ice impedance for interface
           const Real icefrac_next = Kokkos::fmin(
@@ -121,6 +126,7 @@ void SetupHydrologyTridiagonal(UrbanType urban, Real dtime) {
   auto smp = urban->perviousRoad.Smp;
   auto qflx_infl = urban->perviousRoad.QflxInfl;
   auto qflx_tran = urban->perviousRoad.QflxTran;
+  auto qflx_tran_evap = urban->perviousRoad.QflxTranEvap;
   auto zwt = urban->perviousRoad.Zwt;
   auto jwt = urban->perviousRoad.Jwt;
 
@@ -219,6 +225,9 @@ void SetupHydrologyTridiagonal(UrbanType urban, Real dtime) {
 
           dsmpdw[j] =
               ComputeMatricPotentialDerivative(smp(l, j), vol_liq, bsw(l, j));
+
+          if (j < 10)
+            qflx_tran(l, j) = qflx_tran_evap(l) / 10.0;
         }
 
         // Initialize tridiagonal matrix coefficients for layers below soil
