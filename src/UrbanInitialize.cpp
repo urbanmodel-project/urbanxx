@@ -69,33 +69,33 @@ static void UrbanInitializeVerticalDiscretization(UrbanType urban) {
   const int numSoilLayers = urban->numSoilLayers;
 
   // Access vertical discretization views
-  auto &thick_wall = urban->urbanParams.building.WallThickness;
-  auto &thick_roof = urban->urbanParams.building.RoofThickness;
+  auto thick_wall = urban->urbanParams.building.WallThickness;
+  auto thick_roof = urban->urbanParams.building.RoofThickness;
 
-  auto &zc_sunlit_wall = urban->sunlitWall.Zc;
-  auto &dz_sunlit_wall = urban->sunlitWall.Dz;
-  auto &zi_sunlit_wall = urban->sunlitWall.Zi;
-  auto &depth_sunlit_wall = urban->sunlitWall.TotalDepth;
+  auto zc_sunlit_wall = urban->sunlitWall.Zc;
+  auto dz_sunlit_wall = urban->sunlitWall.Dz;
+  auto zi_sunlit_wall = urban->sunlitWall.Zi;
+  auto depth_sunlit_wall = urban->sunlitWall.TotalDepth;
 
-  auto &zc_shaded_wall = urban->shadedWall.Zc;
-  auto &dz_shaded_wall = urban->shadedWall.Dz;
-  auto &zi_shaded_wall = urban->shadedWall.Zi;
-  auto &depth_shaded_wall = urban->shadedWall.TotalDepth;
+  auto zc_shaded_wall = urban->shadedWall.Zc;
+  auto dz_shaded_wall = urban->shadedWall.Dz;
+  auto zi_shaded_wall = urban->shadedWall.Zi;
+  auto depth_shaded_wall = urban->shadedWall.TotalDepth;
 
-  auto &zc_pervious_road = urban->perviousRoad.Zc;
-  auto &dz_pervious_road = urban->perviousRoad.Dz;
-  auto &zi_pervious_road = urban->perviousRoad.Zi;
-  auto &depth_pervious_road = urban->perviousRoad.TotalDepth;
+  auto zc_pervious_road = urban->perviousRoad.Zc;
+  auto dz_pervious_road = urban->perviousRoad.Dz;
+  auto zi_pervious_road = urban->perviousRoad.Zi;
+  auto depth_pervious_road = urban->perviousRoad.TotalDepth;
 
-  auto &zc_impervious_road = urban->imperviousRoad.Zc;
-  auto &dz_impervious_road = urban->imperviousRoad.Dz;
-  auto &zi_impervious_road = urban->imperviousRoad.Zi;
-  auto &depth_impervious_road = urban->imperviousRoad.TotalDepth;
+  auto zc_impervious_road = urban->imperviousRoad.Zc;
+  auto dz_impervious_road = urban->imperviousRoad.Dz;
+  auto zi_impervious_road = urban->imperviousRoad.Zi;
+  auto depth_impervious_road = urban->imperviousRoad.TotalDepth;
 
-  auto &zc_roof = urban->roof.Zc;
-  auto &dz_roof = urban->roof.Dz;
-  auto &zi_roof = urban->roof.Zi;
-  auto &depth_roof = urban->roof.TotalDepth;
+  auto zc_roof = urban->roof.Zc;
+  auto dz_roof = urban->roof.Dz;
+  auto zi_roof = urban->roof.Zi;
+  auto depth_roof = urban->roof.TotalDepth;
 
   // Initialize vertical discretization
   Kokkos::parallel_for(
@@ -156,18 +156,18 @@ static void UrbanInitializeThermalPropertiesWall(UrbanType urban) {
   const int numUrbanLayers = urban->numUrbanLayers;
 
   // Access parameter thermal properties
-  auto &tk_wall_params = urban->urbanParams.tk.Wall;
-  auto &cv_wall_params = urban->urbanParams.cv.Wall;
+  auto tk_wall_params = urban->urbanParams.tk.Wall;
+  auto cv_wall_params = urban->urbanParams.cv.Wall;
 
   // Access surface thermal properties
-  auto &tk_sunlit_wall = urban->sunlitWall.TkLayer;
-  auto &cv_sunlit_wall = urban->sunlitWall.Cv;
-  auto &cv_times_dz_sunlit_wall = urban->sunlitWall.CvTimesDz;
-  auto &dz_sunlit_wall = urban->sunlitWall.Dz;
-  auto &tk_shaded_wall = urban->shadedWall.TkLayer;
-  auto &cv_shaded_wall = urban->shadedWall.Cv;
-  auto &cv_times_dz_shaded_wall = urban->shadedWall.CvTimesDz;
-  auto &dz_shaded_wall = urban->shadedWall.Dz;
+  auto tk_sunlit_wall = urban->sunlitWall.TkLayer;
+  auto cv_sunlit_wall = urban->sunlitWall.Cv;
+  auto cv_times_dz_sunlit_wall = urban->sunlitWall.CvTimesDz;
+  auto dz_sunlit_wall = urban->sunlitWall.Dz;
+  auto tk_shaded_wall = urban->shadedWall.TkLayer;
+  auto cv_shaded_wall = urban->shadedWall.Cv;
+  auto cv_times_dz_shaded_wall = urban->shadedWall.CvTimesDz;
+  auto dz_shaded_wall = urban->shadedWall.Dz;
 
   // Copy thermal properties
   Kokkos::parallel_for(
@@ -189,14 +189,14 @@ static void UrbanInitializeThermalPropertiesRoof(UrbanType urban) {
   const int numUrbanLayers = urban->numUrbanLayers;
 
   // Access parameter thermal properties
-  auto &tk_roof_params = urban->urbanParams.tk.Roof;
-  auto &cv_roof_params = urban->urbanParams.cv.Roof;
+  auto tk_roof_params = urban->urbanParams.tk.Roof;
+  auto cv_roof_params = urban->urbanParams.cv.Roof;
 
   // Access surface thermal properties
-  auto &tk_roof = urban->roof.TkLayer;
-  auto &cv_roof = urban->roof.Cv;
-  auto &cv_times_dz_roof = urban->roof.CvTimesDz;
-  auto &dz_roof = urban->roof.Dz;
+  auto tk_roof = urban->roof.TkLayer;
+  auto cv_roof = urban->roof.Cv;
+  auto cv_times_dz_roof = urban->roof.CvTimesDz;
+  auto dz_roof = urban->roof.Dz;
 
   // Copy thermal properties
   Kokkos::parallel_for(
@@ -214,19 +214,19 @@ static void UrbanInitializeThermalPropertiesImperviousRoad(UrbanType urban) {
   const int numSoilLayers = urban->numSoilLayers;
 
   // Access parameter thermal properties
-  auto &tk_road_params = urban->urbanParams.tk.Road;
-  auto &cv_road_params = urban->urbanParams.cv.Road;
+  auto tk_road_params = urban->urbanParams.tk.Road;
+  auto cv_road_params = urban->urbanParams.cv.Road;
 
   // Access surface thermal properties
-  auto &tk_impervious_road = urban->imperviousRoad.TkLayer;
-  auto &cv_impervious_road = urban->imperviousRoad.Cv;
-  auto &cv_times_dz_impervious_road = urban->imperviousRoad.CvTimesDz;
-  auto &dz_impervious_road = urban->imperviousRoad.Dz;
-  auto &numberOfActiveLayers = urban->imperviousRoad.NumberOfActiveLayers;
+  auto tk_impervious_road = urban->imperviousRoad.TkLayer;
+  auto cv_impervious_road = urban->imperviousRoad.Cv;
+  auto cv_times_dz_impervious_road = urban->imperviousRoad.CvTimesDz;
+  auto dz_impervious_road = urban->imperviousRoad.Dz;
+  auto numberOfActiveLayers = urban->imperviousRoad.NumberOfActiveLayers;
 
-  auto &perv_road_tk_dry = urban->perviousRoad.soil.TkDry;
-  auto &perv_road_cv_solids = urban->perviousRoad.soil.CvSolids;
-  auto &perv_road_watsat = urban->perviousRoad.soil.WatSat;
+  auto perv_road_tk_dry = urban->perviousRoad.soil.TkDry;
+  auto perv_road_cv_solids = urban->perviousRoad.soil.CvSolids;
+  auto perv_road_watsat = urban->perviousRoad.soil.WatSat;
 
   // Copy thermal properties
   Kokkos::parallel_for(
@@ -316,30 +316,30 @@ static void UrbanInitializePerviousRoadSoils(UrbanType urban) {
   const int numUrbanLayers = urban->numUrbanLayers;
 
   // Access parameter thermal properties
-  auto &tk_road_params = urban->urbanParams.tk.Road;
-  auto &cv_road_params = urban->urbanParams.cv.Road;
+  auto tk_road_params = urban->urbanParams.tk.Road;
+  auto cv_road_params = urban->urbanParams.cv.Road;
 
   // Access soil property views for pervious road
-  auto &cv_pervious_road = urban->perviousRoad.Cv;
-  auto &cv_times_dz_pervious_road = urban->perviousRoad.CvTimesDz;
-  auto &dz_pervious_road = urban->perviousRoad.Dz;
-  auto &sand = urban->perviousRoad.soil.Sand;
-  auto &clay = urban->perviousRoad.soil.Clay;
-  auto &organic = urban->perviousRoad.soil.Organic;
-  auto &watsat = urban->perviousRoad.soil.WatSat;
-  auto &hksat_view = urban->perviousRoad.soil.HkSat;
-  auto &bsw_view = urban->perviousRoad.soil.Bsw;
-  auto &sucsat_view = urban->perviousRoad.soil.SucSat;
-  auto &tk_minerals = urban->perviousRoad.soil.TkMinerals;
-  auto &tk_dry = urban->perviousRoad.soil.TkDry;
-  auto &tk_saturated = urban->perviousRoad.soil.TkSaturated;
-  auto &tkLayer = urban->perviousRoad.TkLayer;
-  auto &cv_solids = urban->perviousRoad.soil.CvSolids;
-  auto &water_liquid = urban->perviousRoad.soil.WaterLiquid;
-  auto &water_ice = urban->perviousRoad.soil.WaterIce;
-  auto &water_vol = urban->perviousRoad.soil.WaterVolumetric;
-  auto &dz = urban->perviousRoad.Dz;
-  auto &temp = urban->perviousRoad.Temperature;
+  auto cv_pervious_road = urban->perviousRoad.Cv;
+  auto cv_times_dz_pervious_road = urban->perviousRoad.CvTimesDz;
+  auto dz_pervious_road = urban->perviousRoad.Dz;
+  auto sand = urban->perviousRoad.soil.Sand;
+  auto clay = urban->perviousRoad.soil.Clay;
+  auto organic = urban->perviousRoad.soil.Organic;
+  auto watsat = urban->perviousRoad.soil.WatSat;
+  auto hksat_view = urban->perviousRoad.soil.HkSat;
+  auto bsw_view = urban->perviousRoad.soil.Bsw;
+  auto sucsat_view = urban->perviousRoad.soil.SucSat;
+  auto tk_minerals = urban->perviousRoad.soil.TkMinerals;
+  auto tk_dry = urban->perviousRoad.soil.TkDry;
+  auto tk_saturated = urban->perviousRoad.soil.TkSaturated;
+  auto tkLayer = urban->perviousRoad.TkLayer;
+  auto cv_solids = urban->perviousRoad.soil.CvSolids;
+  auto water_liquid = urban->perviousRoad.soil.WaterLiquid;
+  auto water_ice = urban->perviousRoad.soil.WaterIce;
+  auto water_vol = urban->perviousRoad.soil.WaterVolumetric;
+  auto dz = urban->perviousRoad.Dz;
+  auto temp = urban->perviousRoad.Temperature;
 
   // Soil property constants from ELM (SoilStateType.F90)
   constexpr Real om_tkm = 0.25; // Thermal conductivity of organic soil [W/m-K]
@@ -494,14 +494,14 @@ static void UrbanInitializePerviousRoadSoils(UrbanType urban) {
   Kokkos::fence();
 
   // Initialize hydrology boundary conditions and state variables
-  auto &qflx_infl = urban->perviousRoad.QflxInfl;
-  auto &qflx_tran = urban->perviousRoad.QflxTran;
-  auto &zwt = urban->perviousRoad.Zwt;
-  auto &h2osoi_liq = urban->perviousRoad.H2OSoiLiq;
-  auto &h2osoi_ice = urban->perviousRoad.H2OSoiIce;
-  auto &h2osoi_vol = urban->perviousRoad.H2OSoiVol;
-  auto &qcharge = urban->perviousRoad.Qcharge;
-  auto &qflx_deficit = urban->perviousRoad.QflxDeficit;
+  auto qflx_infl = urban->perviousRoad.QflxInfl;
+  auto qflx_tran = urban->perviousRoad.QflxTran;
+  auto zwt = urban->perviousRoad.Zwt;
+  auto h2osoi_liq = urban->perviousRoad.H2OSoiLiq;
+  auto h2osoi_ice = urban->perviousRoad.H2OSoiIce;
+  auto h2osoi_vol = urban->perviousRoad.H2OSoiVol;
+  auto qcharge = urban->perviousRoad.Qcharge;
+  auto qflx_deficit = urban->perviousRoad.QflxDeficit;
 
   Kokkos::parallel_for(
       "UrbanInitializeHydrologyBCs", numLandunits, KOKKOS_LAMBDA(int l) {
@@ -532,28 +532,28 @@ static void UrbanInitializeInterfaceThermalProperties(UrbanType urban) {
   const int numSoilLayers = urban->numSoilLayers;
 
   // Access impervious road views
-  auto &imperv_tkLayer = urban->imperviousRoad.TkLayer;
-  auto &imperv_tkInterface = urban->imperviousRoad.TkInterface;
-  auto &imperv_zc = urban->imperviousRoad.Zc;
-  auto &imperv_zi = urban->imperviousRoad.Zi;
+  auto imperv_tkLayer = urban->imperviousRoad.TkLayer;
+  auto imperv_tkInterface = urban->imperviousRoad.TkInterface;
+  auto imperv_zc = urban->imperviousRoad.Zc;
+  auto imperv_zi = urban->imperviousRoad.Zi;
 
   // Access sunlit wall views
-  auto &sunlit_tkLayer = urban->sunlitWall.TkLayer;
-  auto &sunlit_tkInterface = urban->sunlitWall.TkInterface;
-  auto &sunlit_zc = urban->sunlitWall.Zc;
-  auto &sunlit_zi = urban->sunlitWall.Zi;
+  auto sunlit_tkLayer = urban->sunlitWall.TkLayer;
+  auto sunlit_tkInterface = urban->sunlitWall.TkInterface;
+  auto sunlit_zc = urban->sunlitWall.Zc;
+  auto sunlit_zi = urban->sunlitWall.Zi;
 
   // Access shaded wall views
-  auto &shaded_tkLayer = urban->shadedWall.TkLayer;
-  auto &shaded_tkInterface = urban->shadedWall.TkInterface;
-  auto &shaded_zc = urban->shadedWall.Zc;
-  auto &shaded_zi = urban->shadedWall.Zi;
+  auto shaded_tkLayer = urban->shadedWall.TkLayer;
+  auto shaded_tkInterface = urban->shadedWall.TkInterface;
+  auto shaded_zc = urban->shadedWall.Zc;
+  auto shaded_zi = urban->shadedWall.Zi;
 
   // Access roof views
-  auto &roof_tkLayer = urban->roof.TkLayer;
-  auto &roof_tkInterface = urban->roof.TkInterface;
-  auto &roof_zc = urban->roof.Zc;
-  auto &roof_zi = urban->roof.Zi;
+  auto roof_tkLayer = urban->roof.TkLayer;
+  auto roof_tkInterface = urban->roof.TkInterface;
+  auto roof_zc = urban->roof.Zc;
+  auto roof_zi = urban->roof.Zi;
 
   // Compute interface thermal conductivity for all surfaces
   Kokkos::parallel_for(
