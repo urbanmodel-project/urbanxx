@@ -137,31 +137,15 @@ static void SetFullModelParameters(UrbanType urban, int N) {
   // Needed by ComputeSoilThermalConductivity and ComputeSoilHeatCapacityTimesDz
   // inside UrbanComputeHeatDiffusion.
   std::vector<double> soilLiq(N * numSoilLayers, 0.1);
-  UrbanSetSoilLiquidWater(urban, soilLiq.data(), size2D_road, &ierr);
+  UrbanSetSoilLiquidWaterForPerviousRoad(urban, soilLiq.data(), size2D_road, &ierr);
   ASSERT_EQ(ierr, URBAN_SUCCESS);
   std::vector<double> soilIce(N * numSoilLayers, 0.0);
-  UrbanSetSoilIceContent(urban, soilIce.data(), size2D_road, &ierr);
-  ASSERT_EQ(ierr, URBAN_SUCCESS);
-  std::vector<double> soilVol(N * numSoilLayers, 0.3);
-  UrbanSetSoilVolumetricWater(urban, soilVol.data(), size2D_road, &ierr);
+  UrbanSetSoilIceContentForPerviousRoad(urban, soilIce.data(), size2D_road, &ierr);
   ASSERT_EQ(ierr, URBAN_SUCCESS);
 
   // --- Number of active layers ---
   std::vector<double> nActLayers(N, 2.0);
   UrbanSetNumberOfActiveLayersImperviousRoad(urban, nActLayers.data(), N, &ierr);
-  ASSERT_EQ(ierr, URBAN_SUCCESS);
-
-  // --- Surface temperatures ---
-  std::vector<double> tsurf(N, 292.0), tsurfRoad(N, 274.0);
-  UrbanSetEffectiveSurfTempRoof(urban, tsurf.data(), N, &ierr);
-  ASSERT_EQ(ierr, URBAN_SUCCESS);
-  UrbanSetEffectiveSurfTempImperviousRoad(urban, tsurf.data(), N, &ierr);
-  ASSERT_EQ(ierr, URBAN_SUCCESS);
-  UrbanSetEffectiveSurfTempPerviousRoad(urban, tsurfRoad.data(), N, &ierr);
-  ASSERT_EQ(ierr, URBAN_SUCCESS);
-  UrbanSetEffectiveSurfTempSunlitWall(urban, tsurf.data(), N, &ierr);
-  ASSERT_EQ(ierr, URBAN_SUCCESS);
-  UrbanSetEffectiveSurfTempShadedWall(urban, tsurf.data(), N, &ierr);
   ASSERT_EQ(ierr, URBAN_SUCCESS);
 
   // --- Layer temperatures (2D) ---
@@ -221,16 +205,10 @@ static void SetFullModelParameters(UrbanType urban, int N) {
   ASSERT_EQ(ierr, URBAN_SUCCESS);
 
   std::vector<double> qinfl(N, 0.0);
-  UrbanSetInfiltrationFlux(urban, qinfl.data(), N, &ierr);
+  UrbanSetInfiltrationFluxForPerviousRoad(urban, qinfl.data(), N, &ierr);
   ASSERT_EQ(ierr, URBAN_SUCCESS);
 
   std::vector<double> qtran(N * numSoilLayers, 0.0);
-  UrbanSetTranspirationFlux(urban, qtran.data(), size2D_road, &ierr);
-  ASSERT_EQ(ierr, URBAN_SUCCESS);
-
-  std::vector<double> fwet(N, 0.0);
-  UrbanSetFractionWetImperviousRoad(urban, fwet.data(), N, &ierr);
-  ASSERT_EQ(ierr, URBAN_SUCCESS);
-  UrbanSetFractionWetRoof(urban, fwet.data(), N, &ierr);
+  UrbanSetTranspirationFluxForPerviousRoad(urban, qtran.data(), size2D_road, &ierr);
   ASSERT_EQ(ierr, URBAN_SUCCESS);
 }

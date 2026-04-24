@@ -33,6 +33,8 @@ constexpr double SHR_CONST_CPFW =
     4.188e3; // specific heat of fresh h2o ~ J/kg/K
 constexpr double SHR_CONST_LATVAP =
     2.501e6; // latent heat of evaporation [J/kg]
+constexpr double SHR_CONST_LATICE =
+    3.337e5; // latent heat of fusion (ice melting) [J/kg]
 
 constexpr double CSOL_BEDROCK = 2.0e6; // heat capacity of bedrock [J/m^3/K]
 
@@ -44,6 +46,10 @@ constexpr double SHR_CONST_RHOWATER = 1.0e3; // density of water [kg/m^3]
 constexpr double TKWATER = 0.57;   // thermal conductivity of water [W/m-K]
 constexpr double TKICE = 2.29;     // thermal conductivity of ice [W/m-K]
 constexpr double TK_BEDROCK = 3.0; // thermal conductivity of bedrock [W/m-K]
+
+// Hydrology constants
+constexpr double PONDMX_URBAN =
+    1.0; // max ponding depth for roof and impervious road [mm]
 
 } // namespace URBANXX
 

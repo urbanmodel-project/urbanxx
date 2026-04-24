@@ -479,7 +479,7 @@ void ComputeNewTafAndQaf(Real canyonWind, Real thm, Real rahu, Real rawu,
 
   Real canyonResistance = CPAIR * canyon.forcRho / (11.8 + 4.2 * canyonWind);
 
-  // fwetRoof is now passed as parameter from FractionWet view
+  // fwetRoof is computed internally from TopH2OSoiLiq + TopH2OSoiIce
   Real fwetRoofLocal = fwetRoof;
   if (qaf > surfaces.qRoof) {
     fwetRoofLocal = 1.0;
@@ -495,7 +495,7 @@ void ComputeNewTafAndQaf(Real canyonWind, Real thm, Real rahu, Real rawu,
       canyon.wtRoadPerv * (1.0 - canyon.wtRoof) / canyonResistance;
   const Real wtuqRoadPervUnscl = 1.0 / canyonResistance;
 
-  // fwetRoadImperv is now passed as parameter from FractionWet view
+  // fwetRoadImperv is computed internally from TopH2OSoiLiq + TopH2OSoiIce
   Real fwetRoadImpervLocal = fwetRoadImperv;
   if (qaf > surfaces.qRoadImperv) {
     fwetRoadImpervLocal = 1.0;
@@ -691,28 +691,28 @@ void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
   const int numLandunits = urban.numLandunits;
 
   // Get references to atmospheric data
-  auto &forcTemp = urban.atmosphereData.ForcTemp;
-  auto &forcPotTemp = urban.atmosphereData.ForcPotTemp;
-  auto &forcSpcHumd = urban.atmosphereData.ForcSpcHumd;
-  auto &forcPress = urban.atmosphereData.ForcPress;
-  auto &forcRho = urban.atmosphereData.ForcRho;
-  auto &forcU = urban.atmosphereData.ForcWindU;
-  auto &forcV = urban.atmosphereData.ForcWindV;
+  auto forcTemp = urban.atmosphereData.ForcTemp;
+  auto forcPotTemp = urban.atmosphereData.ForcPotTemp;
+  auto forcSpcHumd = urban.atmosphereData.ForcSpcHumd;
+  auto forcPress = urban.atmosphereData.ForcPress;
+  auto forcRho = urban.atmosphereData.ForcRho;
+  auto forcU = urban.atmosphereData.ForcWindU;
+  auto forcV = urban.atmosphereData.ForcWindV;
 
   // Get references to geometric parameters
-  auto &hwr = urban.urbanParams.CanyonHwr;
+  auto hwr = urban.urbanParams.CanyonHwr;
 
   // Get references to urban canyon air properties
-  auto &Taf = urban.urbanCanyon.Taf;
-  auto &Qaf = urban.urbanCanyon.Qaf;
+  auto Taf = urban.urbanCanyon.Taf;
+  auto Qaf = urban.urbanCanyon.Qaf;
 
   // Get references to height parameters
-  auto &forcHgtT = urban.urbanParams.heights.ForcHgtT;
-  auto &forcHgtU = urban.urbanParams.heights.ForcHgtU;
-  auto &zDTown = urban.urbanParams.heights.ZDTown;
-  auto &z0Town = urban.urbanParams.heights.Z0Town;
-  auto &htRoof = urban.urbanParams.heights.HtRoof;
-  auto &windHgtCanyon = urban.urbanParams.heights.WindHgtCanyon;
+  auto forcHgtT = urban.urbanParams.heights.ForcHgtT;
+  auto forcHgtU = urban.urbanParams.heights.ForcHgtU;
+  auto zDTown = urban.urbanParams.heights.ZDTown;
+  auto z0Town = urban.urbanParams.heights.Z0Town;
+  auto htRoof = urban.urbanParams.heights.HtRoof;
+  auto windHgtCanyon = urban.urbanParams.heights.WindHgtCanyon;
 
   // Constants
   const Real lapseRate = 0.0098; // dry adiabatic lapse rate (K/m)
@@ -827,8 +827,21 @@ void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
               urban.shadedWall.EffectiveSurfTemp(l)};
 
           Real tafNew, qafNew;
-          const Real fwetRoof = urban.roof.FractionWet(l);
-          const Real fwetRoadImperv = urban.imperviousRoad.FractionWet(l);
+          // Use 0.666666666666 (not 2.0/3.0) to match ELM's literal constant in
+          // UrbanFluxesMod.F90 exactly, maximising the chance of BFB results.
+          const Real fwetRoof = Kokkos::min(
+              Kokkos::pow(Kokkos::max(0.0, urban.roof.TopH2OSoiLiq(l) +
+                                               urban.roof.TopH2OSoiIce(l)) /
+                              PONDMX_URBAN,
+                          0.666666666666),
+              1.0);
+          const Real fwetRoadImperv = Kokkos::min(
+              Kokkos::pow(
+                  Kokkos::max(0.0, urban.imperviousRoad.TopH2OSoiLiq(l) +
+                                       urban.imperviousRoad.TopH2OSoiIce(l)) /
+                      PONDMX_URBAN,
+                  0.666666666666),
+              1.0);
           ComputeNewTafAndQaf(canyonWind, thm, rahu, rawu, canyonData,
                               surfaceData, qaf, fwetRoof, fwetRoadImperv,
                               tafNew, qafNew, condcs);

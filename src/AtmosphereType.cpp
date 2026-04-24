@@ -12,6 +12,22 @@ struct _p_UrbanType : public URBANXX::_p_UrbanType {
 
 extern "C" {
 
+void UrbanSetAtmRain(UrbanType urban, const double *values, int length,
+                     UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  SetView1D(urban->atmosphereData.ForcRain, values, length, status);
+}
+
+void UrbanSetAtmSnow(UrbanType urban, const double *values, int length,
+                     UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  SetView1D(urban->atmosphereData.ForcSnow, values, length, status);
+}
+
 using namespace URBANXX;
 
 void UrbanSetAtmTemp(UrbanType urban, const double *values, int length,

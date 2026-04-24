@@ -21,12 +21,12 @@ static void ComputeViewFactors(UrbanType urban, UrbanErrorCode *status) {
   }
 
   try {
-    auto &CanyonHwr = urban->urbanParams.CanyonHwr;
-    auto &sr = urban->urbanParams.viewFactor.SkyFrmRoad;
-    auto &sw = urban->urbanParams.viewFactor.SkyFrmWall;
-    auto &rw = urban->urbanParams.viewFactor.RoadFrmWall;
-    auto &wr = urban->urbanParams.viewFactor.WallFrmRoad;
-    auto &ww = urban->urbanParams.viewFactor.OtherWallFrmWall;
+    auto CanyonHwr = urban->urbanParams.CanyonHwr;
+    auto sr = urban->urbanParams.viewFactor.SkyFrmRoad;
+    auto sw = urban->urbanParams.viewFactor.SkyFrmWall;
+    auto rw = urban->urbanParams.viewFactor.RoadFrmWall;
+    auto wr = urban->urbanParams.viewFactor.WallFrmRoad;
+    auto ww = urban->urbanParams.viewFactor.OtherWallFrmWall;
 
     Kokkos::parallel_for(
         "ComputingViewFactor", urban->numLandunits, KOKKOS_LAMBDA(int l) {
@@ -179,7 +179,7 @@ void UrbanSetNumberOfActiveLayersImperviousRoad(UrbanType urban,
     return;
 
   try {
-    auto &view = urban->imperviousRoad.NumberOfActiveLayers;
+    auto view = urban->imperviousRoad.NumberOfActiveLayers;
 
     // Check if the length matches the view extent
     if (length != static_cast<int>(view.extent(0))) {
@@ -288,6 +288,65 @@ void UrbanSetOrganicPerviousRoad(UrbanType urban, const double *values,
     return;
 
   SetView2D(urban->perviousRoad.soil.Organic, values, size, status);
+}
+
+// Derived soil hydraulic/thermal properties for pervious road
+void UrbanSetWatSatForPerviousRoad(UrbanType urban, const double *values,
+                                   const int size[2], UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
+    return;
+  SetView2D(urban->perviousRoad.soil.WatSat, values, size, status);
+}
+
+void UrbanSetBswForPerviousRoad(UrbanType urban, const double *values,
+                                const int size[2], UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
+    return;
+  SetView2D(urban->perviousRoad.soil.Bsw, values, size, status);
+}
+
+void UrbanSetSucSatForPerviousRoad(UrbanType urban, const double *values,
+                                   const int size[2], UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
+    return;
+  SetView2D(urban->perviousRoad.soil.SucSat, values, size, status);
+}
+
+void UrbanSetHkSatForPerviousRoad(UrbanType urban, const double *values,
+                                  const int size[2], UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
+    return;
+  SetView2D(urban->perviousRoad.soil.HkSat, values, size, status);
+}
+
+void UrbanSetTkDryForPerviousRoad(UrbanType urban, const double *values,
+                                  const int size[2], UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
+    return;
+  SetView2D(urban->perviousRoad.soil.TkDry, values, size, status);
+}
+
+void UrbanSetTkSatForPerviousRoad(UrbanType urban, const double *values,
+                                  const int size[2], UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
+    return;
+  SetView2D(urban->perviousRoad.soil.TkSaturated, values, size, status);
+}
+
+void UrbanSetTkMineralsForPerviousRoad(UrbanType urban, const double *values,
+                                       const int size[2],
+                                       UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
+    return;
+  SetView2D(urban->perviousRoad.soil.TkMinerals, values, size, status);
+}
+
+void UrbanSetCvSolidsForPerviousRoad(UrbanType urban, const double *values,
+                                     const int size[2],
+                                     UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
+    return;
+  SetView2D(urban->perviousRoad.soil.CvSolids, values, size, status);
 }
 
 // Height parameter setter functions

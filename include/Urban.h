@@ -124,6 +124,42 @@ URBAN_EXTERN void UrbanSetOrganicPerviousRoad(UrbanType urban,
                                               const int size[2],
                                               UrbanErrorCode *status);
 
+// Derived soil hydraulic/thermal properties for pervious road.
+// Call after UrbanSetup() to override the internally-computed values with ELM
+// values.
+URBAN_EXTERN void UrbanSetWatSatForPerviousRoad(UrbanType urban,
+                                                const double *values,
+                                                const int size[2],
+                                                UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetBswForPerviousRoad(UrbanType urban,
+                                             const double *values,
+                                             const int size[2],
+                                             UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetSucSatForPerviousRoad(UrbanType urban,
+                                                const double *values,
+                                                const int size[2],
+                                                UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetHkSatForPerviousRoad(UrbanType urban,
+                                               const double *values,
+                                               const int size[2],
+                                               UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetTkDryForPerviousRoad(UrbanType urban,
+                                               const double *values,
+                                               const int size[2],
+                                               UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetTkSatForPerviousRoad(UrbanType urban,
+                                               const double *values,
+                                               const int size[2],
+                                               UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetTkMineralsForPerviousRoad(UrbanType urban,
+                                                    const double *values,
+                                                    const int size[2],
+                                                    UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetCvSolidsForPerviousRoad(UrbanType urban,
+                                                  const double *values,
+                                                  const int size[2],
+                                                  UrbanErrorCode *status);
+
 // Height parameter setter functions
 URBAN_EXTERN void UrbanSetForcHgtT(UrbanType urban, const double *values,
                                    int length, UrbanErrorCode *status);
@@ -178,50 +214,49 @@ URBAN_EXTERN void UrbanComputeHeatDiffusion(UrbanType urban,
                                             UrbanErrorCode *status);
 URBAN_EXTERN void UrbanComputeNetShortwaveRadiation(UrbanType urban,
                                                     UrbanErrorCode *status);
+URBAN_EXTERN void UrbanComputeSoilFluxes(UrbanType urban,
+                                         UrbanErrorCode *status);
 
 // Hydrology boundary condition setter functions
-URBAN_EXTERN void UrbanSetInfiltrationFlux(UrbanType urban,
-                                           const double *values, int length,
-                                           UrbanErrorCode *status);
-URBAN_EXTERN void UrbanSetTranspirationFlux(UrbanType urban,
-                                            const double *values,
-                                            const int size[2],
-                                            UrbanErrorCode *status);
+URBAN_EXTERN void
+UrbanSetInfiltrationFluxForPerviousRoad(UrbanType urban, const double *values,
+                                        int length, UrbanErrorCode *status);
+URBAN_EXTERN void
+UrbanSetTranspirationFluxForPerviousRoad(UrbanType urban, const double *values,
+                                         const int size[2],
+                                         UrbanErrorCode *status);
 URBAN_EXTERN void UrbanSetWaterTableDepth(UrbanType urban, const double *values,
                                           int length, UrbanErrorCode *status);
 
-// Soil water content setter functions
-URBAN_EXTERN void UrbanSetSoilLiquidWater(UrbanType urban, const double *values,
-                                          const int size[2],
-                                          UrbanErrorCode *status);
-URBAN_EXTERN void UrbanSetSoilIceContent(UrbanType urban, const double *values,
-                                         const int size[2],
-                                         UrbanErrorCode *status);
-URBAN_EXTERN void UrbanSetSoilVolumetricWater(UrbanType urban,
-                                              const double *values,
-                                              const int size[2],
-                                              UrbanErrorCode *status);
-
-// Surface temperature setter functions
-URBAN_EXTERN void UrbanSetEffectiveSurfTempRoof(UrbanType urban,
-                                                const double *values,
-                                                int length,
-                                                UrbanErrorCode *status);
-URBAN_EXTERN void
-UrbanSetEffectiveSurfTempImperviousRoad(UrbanType urban, const double *values,
-                                        int length, UrbanErrorCode *status);
-URBAN_EXTERN void UrbanSetEffectiveSurfTempPerviousRoad(UrbanType urban,
+// Infiltration input setter functions (pervious road)
+URBAN_EXTERN void UrbanSetSurfaceRunoffForPerviousRoad(UrbanType urban,
+                                                       const double *values,
+                                                       int length,
+                                                       UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetGroundEvapFluxForPerviousRoad(UrbanType urban,
                                                         const double *values,
                                                         int length,
                                                         UrbanErrorCode *status);
-URBAN_EXTERN void UrbanSetEffectiveSurfTempSunlitWall(UrbanType urban,
-                                                      const double *values,
-                                                      int length,
-                                                      UrbanErrorCode *status);
-URBAN_EXTERN void UrbanSetEffectiveSurfTempShadedWall(UrbanType urban,
-                                                      const double *values,
-                                                      int length,
-                                                      UrbanErrorCode *status);
+
+// Infiltration compute function (no dtime needed — pure arithmetic)
+URBAN_EXTERN void UrbanComputeInfiltration(UrbanType urban,
+                                           UrbanErrorCode *status);
+
+// Infiltration getter function
+URBAN_EXTERN void UrbanGetInfiltrationFluxPerviousRoad(UrbanType urban,
+                                                       double *values,
+                                                       int length,
+                                                       UrbanErrorCode *status);
+
+// Soil water content setter functions
+URBAN_EXTERN void
+UrbanSetSoilLiquidWaterForPerviousRoad(UrbanType urban, const double *values,
+                                       const int size[2],
+                                       UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetSoilIceContentForPerviousRoad(UrbanType urban,
+                                                        const double *values,
+                                                        const int size[2],
+                                                        UrbanErrorCode *status);
 
 // Layer temperature setter functions
 URBAN_EXTERN void UrbanSetLayerTempRoof(UrbanType urban, const double *values,
@@ -253,13 +288,21 @@ URBAN_EXTERN void UrbanSetCanyonSpecificHumidity(UrbanType urban,
                                                  int length,
                                                  UrbanErrorCode *status);
 
-// Surface wetness setter functions
-URBAN_EXTERN void UrbanSetFractionWetImperviousRoad(UrbanType urban,
-                                                    const double *values,
-                                                    int length,
-                                                    UrbanErrorCode *status);
-URBAN_EXTERN void UrbanSetFractionWetRoof(UrbanType urban, const double *values,
-                                          int length, UrbanErrorCode *status);
+// Top-layer soil water setter functions (for soil flux partitioning)
+URBAN_EXTERN void UrbanSetTopH2OSoiLiqRoof(UrbanType urban,
+                                           const double *values, int length,
+                                           UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetTopH2OSoiIceRoof(UrbanType urban,
+                                           const double *values, int length,
+                                           UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetTopH2OSoiLiqImperviousRoad(UrbanType urban,
+                                                     const double *values,
+                                                     int length,
+                                                     UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetTopH2OSoiIceImperviousRoad(UrbanType urban,
+                                                     const double *values,
+                                                     int length,
+                                                     UrbanErrorCode *status);
 
 // Kokkos utility functions
 URBAN_EXTERN bool UrbanKokkosIsLayoutRight(void);
@@ -290,6 +333,10 @@ URBAN_EXTERN void UrbanSetAtmShortwaveDown(UrbanType urban,
                                            const double *values,
                                            const int size[3],
                                            UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetAtmRain(UrbanType urban, const double *values,
+                                  int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetAtmSnow(UrbanType urban, const double *values,
+                                  int length, UrbanErrorCode *status);
 
 // Shortwave radiation getter functions - Absorbed
 URBAN_EXTERN void UrbanGetAbsorbedShortwaveRoof(UrbanType urban, double *values,
@@ -368,6 +415,9 @@ URBAN_EXTERN void UrbanGetCanyonAirTemperature(UrbanType urban, double *values,
                                                UrbanErrorCode *status);
 URBAN_EXTERN void UrbanGetCanyonAirHumidity(UrbanType urban, double *values,
                                             int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetBuildingTemperature(UrbanType urban, double *values,
+                                              int length,
+                                              UrbanErrorCode *status);
 
 // Net shortwave radiation getter functions
 URBAN_EXTERN void UrbanGetNetShortwaveRoof(UrbanType urban, double *values,
@@ -473,6 +523,222 @@ URBAN_EXTERN void UrbanGetWaterDeficitFluxPerviousRoad(UrbanType urban,
                                                        double *values,
                                                        int length,
                                                        UrbanErrorCode *status);
+
+// Soil ground heat flux (EflxSoilGrnd) getter functions — all five surfaces
+URBAN_EXTERN void UrbanGetEflxSoilGrndRoof(UrbanType urban, double *values,
+                                           int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetEflxSoilGrndImperviousRoad(UrbanType urban,
+                                                     double *values, int length,
+                                                     UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetEflxSoilGrndPerviousRoad(UrbanType urban,
+                                                   double *values, int length,
+                                                   UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetEflxSoilGrndSunlitWall(UrbanType urban,
+                                                 double *values, int length,
+                                                 UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetEflxSoilGrndShadedWall(UrbanType urban,
+                                                 double *values, int length,
+                                                 UrbanErrorCode *status);
+
+// Liquid ground evaporation (QflxEvapGrnd) getter functions
+URBAN_EXTERN void UrbanGetQflxEvapGrndRoof(UrbanType urban, double *values,
+                                           int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetQflxEvapGrndImperviousRoad(UrbanType urban,
+                                                     double *values, int length,
+                                                     UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetQflxEvapGrndPerviousRoad(UrbanType urban,
+                                                   double *values, int length,
+                                                   UrbanErrorCode *status);
+
+// Ice sublimation (QflxSubSnow) getter functions
+URBAN_EXTERN void UrbanGetQflxSubSnowRoof(UrbanType urban, double *values,
+                                          int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetQflxSubSnowImperviousRoad(UrbanType urban,
+                                                    double *values, int length,
+                                                    UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetQflxSubSnowPerviousRoad(UrbanType urban,
+                                                  double *values, int length,
+                                                  UrbanErrorCode *status);
+
+// Dew to snow (QflxDewSnow) getter functions
+URBAN_EXTERN void UrbanGetQflxDewSnowRoof(UrbanType urban, double *values,
+                                          int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetQflxDewSnowImperviousRoad(UrbanType urban,
+                                                    double *values, int length,
+                                                    UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetQflxDewSnowPerviousRoad(UrbanType urban,
+                                                  double *values, int length,
+                                                  UrbanErrorCode *status);
+
+// Dew to bare ground (QflxDewGrnd) getter functions
+URBAN_EXTERN void UrbanGetQflxDewGrndRoof(UrbanType urban, double *values,
+                                          int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetQflxDewGrndImperviousRoad(UrbanType urban,
+                                                    double *values, int length,
+                                                    UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetQflxDewGrndPerviousRoad(UrbanType urban,
+                                                  double *values, int length,
+                                                  UrbanErrorCode *status);
+
+// Surface runoff setter functions (pervious road inputs)
+URBAN_EXTERN void UrbanSetWtfactPerviousRoad(UrbanType urban,
+                                             const double *values, int length,
+                                             UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetFoverPerviousRoad(UrbanType urban,
+                                            const double *values, int length,
+                                            UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetFrostTablePerviousRoad(UrbanType urban,
+                                                 const double *values,
+                                                 int length,
+                                                 UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetZwtPerchedPerviousRoad(UrbanType urban,
+                                                 const double *values,
+                                                 int length,
+                                                 UrbanErrorCode *status);
+
+// Surface runoff compute function
+URBAN_EXTERN void UrbanComputeSurfaceRunoff(UrbanType urban, double dtime,
+                                            UrbanErrorCode *status);
+
+// Surface runoff getter functions (QflxSurf — all five surfaces)
+URBAN_EXTERN void UrbanGetQflxSurfRoof(UrbanType urban, double *values,
+                                       int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetQflxSurfImperviousRoad(UrbanType urban,
+                                                 double *values, int length,
+                                                 UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetQflxSurfPerviousRoad(UrbanType urban, double *values,
+                                               int length,
+                                               UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetQflxSurfSunlitWall(UrbanType urban, double *values,
+                                             int length,
+                                             UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetQflxSurfShadedWall(UrbanType urban, double *values,
+                                             int length,
+                                             UrbanErrorCode *status);
+// Updated TopH2OSoiLiq after ponding (roof and impervious road)
+URBAN_EXTERN void UrbanGetTopH2OSoiLiqRoof(UrbanType urban, double *values,
+                                           int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetTopH2OSoiLiqImperviousRoad(UrbanType urban,
+                                                     double *values, int length,
+                                                     UrbanErrorCode *status);
+
+// ============================================================================
+// WaterTable setter functions (pervious road inputs)
+// ============================================================================
+URBAN_EXTERN void UrbanSetAquiferWaterForPerviousRoad(UrbanType urban,
+                                                      const double *values,
+                                                      int length,
+                                                      UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetFracH2osfcForPerviousRoad(UrbanType urban,
+                                                    const double *values,
+                                                    int length,
+                                                    UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetDewGrndFluxForPerviousRoad(UrbanType urban,
+                                                     const double *values,
+                                                     int length,
+                                                     UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetDewSnowFluxForPerviousRoad(UrbanType urban,
+                                                     const double *values,
+                                                     int length,
+                                                     UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetSubSnowFluxForPerviousRoad(UrbanType urban,
+                                                     const double *values,
+                                                     int length,
+                                                     UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetQchargeForPerviousRoad(UrbanType urban,
+                                                 const double *values,
+                                                 int length,
+                                                 UrbanErrorCode *status);
+
+// WaterTable compute function
+URBAN_EXTERN void UrbanComputeWaterTable(UrbanType urban, double dtime,
+                                         UrbanErrorCode *status);
+
+// DewCondensation setter functions (roof and impervious road inputs)
+URBAN_EXTERN void UrbanSetQflxDewGrndRoof(UrbanType urban, const double *values,
+                                          int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetQflxDewSnowRoof(UrbanType urban, const double *values,
+                                          int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetQflxSubSnowRoof(UrbanType urban, const double *values,
+                                          int length, UrbanErrorCode *status);
+
+URBAN_EXTERN void UrbanSetQflxDewGrndImperviousRoad(UrbanType urban,
+                                                    const double *values,
+                                                    int length,
+                                                    UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetQflxDewSnowImperviousRoad(UrbanType urban,
+                                                    const double *values,
+                                                    int length,
+                                                    UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetQflxSubSnowImperviousRoad(UrbanType urban,
+                                                    const double *values,
+                                                    int length,
+                                                    UrbanErrorCode *status);
+
+// DewCondensation compute function
+URBAN_EXTERN void
+UrbanComputeDewCondensationRoofImperviousRoad(UrbanType urban, double dtime,
+                                              UrbanErrorCode *status);
+
+// DewCondensation getter functions (TopH2OSoiIce for roof and impervious road)
+URBAN_EXTERN void UrbanGetTopH2OSoiIceRoof(UrbanType urban, double *values,
+                                           int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetTopH2OSoiIceImperviousRoad(UrbanType urban,
+                                                     double *values, int length,
+                                                     UrbanErrorCode *status);
+
+// WaterTable getter functions (1D)
+URBAN_EXTERN void UrbanGetWaterTableDepthPerviousRoad(UrbanType urban,
+                                                      double *values,
+                                                      int length,
+                                                      UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetAquiferWaterPerviousRoad(UrbanType urban,
+                                                   double *values, int length,
+                                                   UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetZwtPerchedPerviousRoad(UrbanType urban,
+                                                 double *values, int length,
+                                                 UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetSubSnowFluxPerviousRoad(UrbanType urban,
+                                                  double *values, int length,
+                                                  UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetDrainFluxPerviousRoad(UrbanType urban, double *values,
+                                                int length,
+                                                UrbanErrorCode *status);
+URBAN_EXTERN void UrbanGetRsubSatPerviousRoad(UrbanType urban, double *values,
+                                              int length,
+                                              UrbanErrorCode *status);
+
+// WaterTable getter functions (2D)
+URBAN_EXTERN void UrbanGetSoilIceContentPerviousRoad(UrbanType urban,
+                                                     double *values,
+                                                     const int size[2],
+                                                     UrbanErrorCode *status);
+
+// ============================================================================
+// Drainage init-time constant setters
+// ============================================================================
+URBAN_EXTERN void UrbanSetRsubTopGlobalMax(UrbanType urban, double value,
+                                           UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetPondmax(UrbanType urban, double value,
+                                  UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetWatmin(UrbanType urban, double value,
+                                 UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetEice(UrbanType urban, double value,
+                               UrbanErrorCode *status);
+
+// Drainage timestep setter functions (pervious road inputs)
+URBAN_EXTERN void UrbanSetHkDepthForPerviousRoad(UrbanType urban,
+                                                 const double *values,
+                                                 int length,
+                                                 UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetTopoSlopeForPerviousRoad(UrbanType urban,
+                                                   const double *values,
+                                                   int length,
+                                                   UrbanErrorCode *status);
+
+// Drainage compute function
+URBAN_EXTERN void UrbanComputeDrainage(UrbanType urban, double dtime,
+                                       UrbanErrorCode *status);
 
 #ifdef __cplusplus
 } // extern "C"

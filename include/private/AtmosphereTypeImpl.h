@@ -21,6 +21,8 @@ struct AtmosphereType {
   DECLARE_DEVICE_VIEW(1DR8, ForcPress)   // atmospheric pressure (Pa)
   DECLARE_DEVICE_VIEW(1DR8, ForcWindU)   // wind speed in east direction (m/s)
   DECLARE_DEVICE_VIEW(1DR8, ForcWindV)   // wind speed in north direction (m/s)
+  DECLARE_DEVICE_VIEW(1DR8, ForcRain)    // precipitation rate (mm/s)
+  DECLARE_DEVICE_VIEW(1DR8, ForcSnow)    // snowfall rate (mm/s)
 
   AtmosphereType(int numLandunits, int numRadBands, int numRadTypes) {
     ALLOCATE_DEVICE_VIEW(Coszen, Array1DR8, numLandunits)
@@ -35,6 +37,8 @@ struct AtmosphereType {
     ALLOCATE_DEVICE_VIEW(ForcPress, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(ForcWindU, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(ForcWindV, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(ForcRain, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(ForcSnow, Array1DR8, numLandunits)
   }
 };
 
