@@ -333,6 +333,10 @@ URBAN_EXTERN void UrbanSetAtmShortwaveDown(UrbanType urban,
                                            const double *values,
                                            const int size[3],
                                            UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetAtmRain(UrbanType urban, const double *values,
+                                  int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetAtmSnow(UrbanType urban, const double *values,
+                                  int length, UrbanErrorCode *status);
 
 // Shortwave radiation getter functions - Absorbed
 URBAN_EXTERN void UrbanGetAbsorbedShortwaveRoof(UrbanType urban, double *values,
