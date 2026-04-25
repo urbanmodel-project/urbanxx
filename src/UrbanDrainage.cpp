@@ -444,7 +444,12 @@ void UrbanComputeDrainage(UrbanType urban, double dtime,
           Real xs = 0.0;
           if (h2osoi_liq(l, j) < watmin) {
             xs = watmin - h2osoi_liq(l, j);
-            if (j == jwt_l) {
+            // Deepen water table when pulling water from below the layer right
+            // above the WT.  In ELM: if(j == jwt(c)) where j and jwt(c) are
+            // both 1-based, and jwt(c) is the 1-based index of the layer right
+            // above the WT.  In URBANxx: jwt_l (0-based) is the layer
+            // CONTAINING the WT, so the layer right above is jwt_l-1 (0-based).
+            if (j == jwt_l - 1) {
               zwt(l) += xs / eff_porosity(l, j) / 1000.0;
             }
           }
