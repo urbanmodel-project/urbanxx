@@ -22,7 +22,7 @@ namespace URBANXX {
 //
 // Assumptions / simplifications (see ELM_URBANxx_SoilFluxes_Plan.md):
 //   - frac_h2osfc   = 0 for all surfaces
-//   - egirat        = 1.0 (no egsmax check yet)
+//   - egirat applied: topsoil evap clamped to (topLiq+topIce)/dtime
 //   - dlrad         = 0 for all urban surfaces
 //   - do_capsnow    = false  =>  qflx_snwcp update skipped
 //   - eflx_wasteheat / heat_from_ac / traffic = 0 for now
@@ -184,6 +184,15 @@ void ComputeSoilFluxes(URBANXX::_p_UrbanType &urban) {
               qflxEvapGrnd = 0.0;
             }
             qflxSubSnow = qflx_ev_snow - qflxEvapGrnd;
+            // Clamp total evaporation to available topsoil water (egirat from
+            // ELM SoilFluxesMod)
+            const Real dtime = 30.0 * 60.0; // seconds
+            const Real egsmax = total / dtime;
+            if (qflx_ev_snow > egsmax) {
+              const Real egirat = egsmax / qflx_ev_snow;
+              qflxEvapGrnd *= egirat;
+              qflxSubSnow *= egirat;
+            }
           } else {
             if (effectiveT < SHR_CONST_TKFRZ) {
               qflxDewSnow = Kokkos::abs(qflx_ev_snow);
