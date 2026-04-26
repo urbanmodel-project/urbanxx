@@ -128,6 +128,105 @@ KOKKOS_INLINE_FUNCTION void ComputeSoilHeatCapacityTimesDz(
   }
 }
 
+// Update heat capacity times layer thickness for impervious road deep soil
+// layers (layers beyond the active road construction layers).  Those layers
+// are natural soil whose water content is maintained as persistent URBANxx
+// state (WaterLiquid/WaterIce), initialized once from ELM at startup and
+// updated each timestep via internal phase change.
+// Matches ELM's cv formula: cv = csol*(1-watsat)*dz + ice*cpice + liq*cpliq
+//
+// Active road construction layers (k < numActiveLayers) keep their fixed
+// cv_road_params*dz value and are NOT touched here.
+// Bedrock layers (k >= NUM_LAYERS_ABV_BEDROCK) also keep their fixed value.
+template <typename ViewType, typename IntView>
+KOKKOS_INLINE_FUNCTION void UpdateImperviousRoadHeatCapacityTimesDz(
+    const int l, const int numLayers, const IntView &numActiveLayers,
+    const ViewType &cv_solids, const ViewType &watsat,
+    const ViewType &water_liquid, const ViewType &water_ice, const ViewType &dz,
+    const ViewType &cvTimesDz) {
+
+  constexpr Real cpice = SHR_CONST_CPICE;
+  constexpr Real cpliq = SHR_CONST_CPFW;
+
+  const int nActive = numActiveLayers(l);
+  for (int k = nActive; k < NUM_LAYERS_ABV_BEDROCK; ++k) {
+    const Real cv_solid_component =
+        cv_solids(l, k) * (1.0 - watsat(l, k)) * dz(l, k);
+    const Real cv_water_component =
+        water_ice(l, k) * cpice + water_liquid(l, k) * cpliq;
+    cvTimesDz(l, k) = cv_solid_component + cv_water_component;
+  }
+}
+
+// Update thermal conductivity (layer-center and interface) for impervious road
+// deep soil layers (k = nActive..NUM_LAYERS_ABV_BEDROCK-1).
+//
+// ELM uses moisture-dependent Johansen conductivity for these layers every
+// timestep.  URBANxx was only setting dry conductivity at initialization.
+// This function applies the same Johansen formula as ComputeSoilThermalConductivity
+// and then recomputes the affected interface conductivities.
+template <typename ViewType, typename IntView>
+KOKKOS_INLINE_FUNCTION void UpdateImperviousRoadThermalProperties(
+    const int l, const int numLayers, const IntView &numActiveLayers,
+    const ViewType &tk_minerals, const ViewType &tk_dry,
+    const ViewType &water_liquid, const ViewType &water_ice,
+    const ViewType &watsat, const ViewType &dz, const ViewType &temp,
+    const ViewType &zc, const ViewType &zi, const ViewType &tkLayer,
+    const ViewType &tkInterface) {
+
+  constexpr Real tfrz  = SHR_CONST_TKFRZ;
+  constexpr Real denh2o = SHR_CONST_RHOWATER;
+  constexpr Real denice = SHR_CONST_RHOICE;
+  constexpr Real tkwat  = TKWATER;
+  constexpr Real tkice  = TKICE;
+
+  const int nActive = numActiveLayers(l);
+
+  // --- Step A: Update TkLayer for deep natural-soil layers ---
+  for (int k = nActive; k < NUM_LAYERS_ABV_BEDROCK; ++k) {
+    const Real satw_raw =
+        (water_liquid(l, k) / denh2o + water_ice(l, k) / denice) /
+        (dz(l, k) * watsat(l, k));
+    const Real satw = Kokkos::fmin(1.0, satw_raw);
+
+    if (satw > 1.0e-6) {
+      Real dke;
+      if (temp(l, k) >= tfrz) {
+        dke = Kokkos::fmax(0.0, Kokkos::log10(satw) + 1.0);
+      } else {
+        dke = satw;
+      }
+      const Real liq_vol = water_liquid(l, k) / (denh2o * dz(l, k));
+      const Real ice_vol = water_ice(l, k) / (denice * dz(l, k));
+      const Real fl = liq_vol / (liq_vol + ice_vol);
+      const Real dksat =
+          tk_minerals(l, k) * Kokkos::pow(tkwat, fl * watsat(l, k)) *
+          Kokkos::pow(tkice, (1.0 - fl) * watsat(l, k));
+      tkLayer(l, k) = dke * dksat + (1.0 - dke) * tk_dry(l, k);
+    } else {
+      tkLayer(l, k) = tk_dry(l, k);
+    }
+  }
+
+  // --- Step B: Recompute TkInterface for affected interfaces ---
+  // Interface at k connects layer k and k+1.
+  // Layers k=nActive..NUM_LAYERS_ABV_BEDROCK-1 changed, so interfaces
+  // k=(nActive-1)..NUM_LAYERS_ABV_BEDROCK-1 must be recomputed.
+  // tkLayer for k >= NUM_LAYERS_ABV_BEDROCK is TK_BEDROCK (set at init,
+  // unchanged), so the bedrock side of the boundary is already correct.
+  const int k_start = (nActive > 0) ? nActive - 1 : 0;
+  for (int k = k_start; k < NUM_LAYERS_ABV_BEDROCK; ++k) {
+    if (k < numLayers - 1) {
+      tkInterface(l, k) = tkLayer(l, k) * tkLayer(l, k + 1) *
+                          (zc(l, k + 1) - zc(l, k)) /
+                          (tkLayer(l, k) * (zc(l, k + 1) - zi(l, k + 1)) +
+                           tkLayer(l, k + 1) * (zi(l, k + 1) - zc(l, k)));
+    } else {
+      tkInterface(l, k) = tkLayer(l, k);
+    }
+  }
+}
+
 // Struct to hold geometry and thermal properties for heat diffusion
 template <typename TempView, typename GeomView, typename TkView,
           typename CvView>
@@ -403,6 +502,15 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
   auto imperv_Temp = urban.imperviousRoad.EffectiveSurfTemp;
   auto imperv_TGrnd0 = urban.imperviousRoad.TGrnd0;
   auto imperv_emiss = urban.urbanParams.emissivity.ImperviousRoad;
+  // Per-layer water for dynamic CvTimesDz recomputation
+  auto imperv_water_liquid = urban.imperviousRoad.WaterLiquid;
+  auto imperv_water_ice = urban.imperviousRoad.WaterIce;
+  auto imperv_numActiveLayers = urban.imperviousRoad.NumberOfActiveLayers;
+  // Reuse pervious road soil properties for deep impervious road layers
+  auto imperv_cv_solids = urban.perviousRoad.soil.CvSolids;
+  auto imperv_watsat = urban.perviousRoad.soil.WatSat;
+  auto imperv_tk_minerals = urban.perviousRoad.soil.TkMinerals;
+  auto imperv_tk_dry = urban.perviousRoad.soil.TkDry;
 
   // Access sunlit wall property views
   auto sunwall_netLw = urban.sunlitWall.NetLongRad;
@@ -447,11 +555,20 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
   auto bld_min_temp = urban.urbanParams.building.MinTemperature;
   auto bld_max_temp = urban.urbanParams.building.MaxTemperature;
 
+  // Persistent AC heat flux storage (per road area, W/m²), computed from the
+  // previous timestep's building heat fluxes and applied to road surfaces
+  // in the current timestep.  Mirrors ELM's eflx_heat_from_ac_patch timing.
+  auto bldg_eflux_ac      = urban.building.EFluxForAC;
+  auto bldg_eflux_ac_prev = urban.building.EFluxForAC_Prev;
+
   // Single parallel kernel over all landunits
   Kokkos::parallel_for(
       "ComputeHeatDiffusion", numLandunits, KOKKOS_LAMBDA(int l) {
         // --- Compute internal building temperature (same formula as ELM
         // UrbanFluxesMod) ---
+        // Also detect whether AC or heating is on (building temp out of range).
+        bool cool_on = false;
+        bool heat_on = false;
         {
           const Real T_roof_inner = roof_temp(l, numUrbanLayers - 1);
           const Real T_sunwall_inner = sunwall_temp(l, numUrbanLayers - 1);
@@ -461,6 +578,9 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
           Real t_bld = (ht_roof(l) * (T_shadwall_inner + T_sunwall_inner) +
                         lngth_roof * T_roof_inner) /
                        (2.0 * ht_roof(l) + lngth_roof);
+          // Detect AC/heating BEFORE clamping (mirrors ELM SoilTemperatureMod)
+          cool_on = (t_bld > bld_max_temp(l));
+          heat_on = (t_bld < bld_min_temp(l));
           // Clamp to [min, max] (same as ELM SoilTemperatureMod L306-321)
           if (t_bld > bld_max_temp(l))
             t_bld = bld_max_temp(l);
@@ -470,15 +590,36 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
         }
         // --- end building temperature computation ---
 
+        // Read AC heat from PREVIOUS timestep to add to road boundary flux.
+        // This mirrors ELM's eflx_heat_from_ac_patch timing: UrbanFluxes uses
+        // eflx_urban_ac from the previous SolveTemperature, then
+        // ComputeGroundHeatFluxAndDeriv adds it to the road eflx_gnet.
+        const Real ac_heat_prev = bldg_eflux_ac(l);
+        // Save previous value for use in ComputeSoilFluxes (EflxSoilGrnd needs
+        // the same AC heat value that ELM's SoilFluxes uses — from UrbanFluxes,
+        // which reads the previous timestep's eflx_urban_ac).
+        bldg_eflux_ac_prev(l) = ac_heat_prev;
+
         // Step 1: Compute thermal conductivity for pervious road soil layers
         ComputeSoilThermalConductivity(
             l, numSoilLayers, perv_tk_minerals, perv_tk_dry, perv_tkLayer,
             perv_watsat, perv_water_liquid, perv_water_ice, perv_dz, perv_temp);
 
+        // Step 1b: Update thermal conductivity for impervious road deep soil
+        // layers.  ELM uses moisture-dependent (Johansen) conductivity every
+        // timestep for layers j > nlev_improad.  URBANxx was using dry
+        // conductivity set at init.  This also recomputes the affected
+        // interface conductivities.
+        UpdateImperviousRoadThermalProperties(
+            l, numSoilLayers, imperv_numActiveLayers, imperv_tk_minerals,
+            imperv_tk_dry, imperv_water_liquid, imperv_water_ice, imperv_watsat,
+            imperv_dz, imperv_temp, imperv_zc, imperv_zi, imperv_tkLayer,
+            imperv_tkInterface);
+
         // Step 2: Compute thermal conductivity at layer interfaces
-        // (Note: Interface thermal conductivity for impervious road, walls, and
-        // roof
-        //  are computed during initialization and don't need to be recomputed)
+        // (Note: Interface thermal conductivity for impervious road deep layers
+        //  is now handled by UpdateImperviousRoadThermalProperties above.
+        //  Walls and roof are computed during initialization only.)
 
         // Pervious road: all soil layers are active
         ComputeInterfaceThermalConductivity(l, numSoilLayers, numSoilLayers,
@@ -490,13 +631,23 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
             l, numSoilLayers, perv_cv_solids, perv_watsat, perv_water_liquid,
             perv_water_ice, perv_dz, perv_cv_times_dz);
 
+        // Step 3b: Update heat capacity times layer thickness for impervious
+        // road deep soil layers (beyond the active construction material
+        // layers).  The active layers keep fixed cv_road_params*dz from init;
+        // only the underlying natural soil layers are moisture-dependent and
+        // must be refreshed each timestep to match ELM's cv computation.
+        UpdateImperviousRoadHeatCapacityTimesDz(
+            l, numSoilLayers, imperv_numActiveLayers, imperv_cv_solids,
+            imperv_watsat, imperv_water_liquid, imperv_water_ice, imperv_dz,
+            imperv_cv_times_dz);
+
         // Step 4: Compute ground net energy flux and its derivative for all
         // surfaces
 
-        // Pervious road (with evaporation)
+        // Pervious road (with evaporation + previous AC heat)
         const Real perv_EflxGnet = ComputeGroundNetEnergyFlux(
             perv_netSw(l), perv_netLw(l), perv_EflxShGrnd(l),
-            perv_QflxEvapSoil(l), perv_QflxTranEvap(l));
+            perv_QflxEvapSoil(l), perv_QflxTranEvap(l)) + ac_heat_prev;
         const Real perv_DEflxGnet_DTemp = ComputeGroundNetEnergyFluxDerivative(
             perv_Cgrnds(l), perv_Cgrndl(l), perv_emiss(l), perv_Temp(l));
 
@@ -507,10 +658,10 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
         const Real roof_DEflxGnet_DTemp = ComputeGroundNetEnergyFluxDerivative(
             roof_Cgrnds(l), roof_Cgrndl(l), roof_emiss(l), roof_Temp(l));
 
-        // Impervious road (with evaporation)
+        // Impervious road (with evaporation + previous AC heat)
         const Real imperv_EflxGnet = ComputeGroundNetEnergyFlux(
             imperv_netSw(l), imperv_netLw(l), imperv_EflxShGrnd(l),
-            imperv_QflxEvapSoil(l), imperv_QflxTranEvap(l));
+            imperv_QflxEvapSoil(l), imperv_QflxTranEvap(l)) + ac_heat_prev;
         const Real imperv_DEflxGnet_DTemp =
             ComputeGroundNetEnergyFluxDerivative(
                 imperv_Cgrnds(l), imperv_Cgrndl(l), imperv_emiss(l),
@@ -551,6 +702,13 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
         imperv_TGrnd0(l) = imperv_temp(l, 0);
         perv_TGrnd0(l) = perv_temp(l, 0);
 
+        // Save inner-surface OLD temperatures for building heat flux computation
+        // (needed for Crank-Nicolson eflx_building_heat after the solve).
+        const int inner_k = numUrbanLayers - 1;
+        const Real T_roof_inner_old = roof_temp(l, inner_k);
+        const Real T_sunwall_inner_old = sunwall_temp(l, inner_k);
+        const Real T_shadewall_inner_old = shadewall_temp(l, inner_k);
+
         // Solve heat diffusion for roof
         SurfaceProperties roof_surf(l, numUrbanLayers, roof_temp, roof_zc,
                                     roof_zi, roof_dz, roof_tkInterface,
@@ -580,6 +738,63 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
                                         hasBottomBC_building, building_temp(l));
         Solve1DHeatDiffusion(dtime, shadewall_surf, shadewall_bc);
 
+        // --- Compute building heat flux and update AC heat for next timestep ---
+        // This mirrors ELM: after SolveTemperature for walls/roof, compute
+        // eflx_building_heat = cnfac*fn_old + (1-cnfac)*fn1_new, then
+        // eflx_urban_ac = |eflx_building_heat| when cool_on.
+        // The result is stored and used in the road EflxGnet at the NEXT step.
+        {
+          const Real t_bld = building_temp(l);
+          const Real wtr = wt_roof(l);
+          const Real hwr = canyon_hwr(l);
+
+          // Helper: compute Crank-Nicolson building heat flux at inner surface
+          // fn_old = tk*(t_bld - T_old) / (zi_inner - zc_inner)
+          // fn_new = tk*(t_bld - T_new) / (zi_inner - zc_inner)
+          // eflx_bldg = CNFAC*fn_old + (1-CNFAC)*fn_new
+          auto bldg_heat_flux = [&](Real tk_inner, Real zi_inner,
+                                    Real zc_inner, Real T_inner_old,
+                                    Real T_inner_new) -> Real {
+            const Real inv_dz = 1.0 / (zi_inner - zc_inner);
+            const Real fn_old = tk_inner * (t_bld - T_inner_old) * inv_dz;
+            const Real fn_new = tk_inner * (t_bld - T_inner_new) * inv_dz;
+            return CNFAC * fn_old + (1.0 - CNFAC) * fn_new;
+          };
+
+          const Real eflx_bldg_roof = bldg_heat_flux(
+              roof_tkInterface(l, inner_k),
+              roof_zi(l, numUrbanLayers),
+              roof_zc(l, inner_k),
+              T_roof_inner_old, roof_temp(l, inner_k));
+
+          const Real eflx_bldg_sunwall = bldg_heat_flux(
+              sunwall_tkInterface(l, inner_k),
+              sunwall_zi(l, numUrbanLayers),
+              sunwall_zc(l, inner_k),
+              T_sunwall_inner_old, sunwall_temp(l, inner_k));
+
+          const Real eflx_bldg_shadewall = bldg_heat_flux(
+              shadewall_tkInterface(l, inner_k),
+              shadewall_zi(l, numUrbanLayers),
+              shadewall_zc(l, inner_k),
+              T_shadewall_inner_old, shadewall_temp(l, inner_k));
+
+          // Compute new AC heat per road area (mirrors ELM UrbanFluxesMod):
+          //   eflx_heat_from_ac(l) = wt_roof*ac_roof + (1-wt_roof)*hwr*(sun+shade)
+          //   eflx_heat_from_ac_patch = eflx_heat_from_ac(l) / (1 - wt_roof)
+          Real ac_heat_new = 0.0;
+          if (cool_on) {
+            const Real ac_roof = Kokkos::fabs(eflx_bldg_roof);
+            const Real ac_sunwall = Kokkos::fabs(eflx_bldg_sunwall);
+            const Real ac_shadewall = Kokkos::fabs(eflx_bldg_shadewall);
+            const Real eflx_heat_from_ac_l =
+                wtr * ac_roof +
+                (1.0 - wtr) * hwr * (ac_sunwall + ac_shadewall);
+            ac_heat_new = eflx_heat_from_ac_l / (1.0 - wtr);
+          }
+        }
+        // --- end AC heat update ---
+
         // Solve heat diffusion for impervious road
         SurfaceProperties imperv_surf(l, numSoilLayers, imperv_temp, imperv_zc,
                                       imperv_zi, imperv_dz, imperv_tkInterface,
@@ -588,6 +803,40 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
                                      useTopAdjustment_road, capr,
                                      hasBottomBC_road, noBottomTemp);
         Solve1DHeatDiffusion(dtime, imperv_surf, imperv_bc);
+
+        // Phase change for deep impervious road layers (beyond active road
+        // construction material).  These are treated as natural soil in ELM;
+        // water may freeze or thaw as temperature crosses Tfrz.
+        // WaterLiquid/WaterIce are persistent URBANxx state — initialized once
+        // from ELM and maintained here each timestep.
+        {
+          constexpr Real tfrz = SHR_CONST_TKFRZ;
+          constexpr Real hfus = SHR_CONST_LATICE;
+          const int nActive = imperv_numActiveLayers(l);
+          for (int k = nActive; k < NUM_LAYERS_ABV_BEDROCK; ++k) {
+            const Real T_new = imperv_temp(l, k);
+            const Real wice = imperv_water_ice(l, k);
+            const Real wliq = imperv_water_liquid(l, k);
+            const Real cv_dz = imperv_cv_times_dz(l, k);
+            if (T_new > tfrz && wice > 0.0) {
+              // Energy in excess of freezing point — use it to melt ice
+              const Real melt =
+                  Kokkos::fmin(wice, (T_new - tfrz) * cv_dz / hfus);
+              imperv_water_ice(l, k) -= melt;
+              imperv_water_liquid(l, k) += melt;
+              // Correct temperature: energy consumed by phase change
+              imperv_temp(l, k) = T_new - melt * hfus / cv_dz;
+            } else if (T_new < tfrz && wliq > 0.0) {
+              // Energy deficit below freezing point — freeze liquid water
+              const Real freeze =
+                  Kokkos::fmin(wliq, (tfrz - T_new) * cv_dz / hfus);
+              imperv_water_liquid(l, k) -= freeze;
+              imperv_water_ice(l, k) += freeze;
+              // Correct temperature: energy released by phase change
+              imperv_temp(l, k) = T_new + freeze * hfus / cv_dz;
+            }
+          }
+        }
 
         // Solve heat diffusion for pervious road
         SurfaceProperties perv_surf(l, numSoilLayers, perv_temp, perv_zc,
