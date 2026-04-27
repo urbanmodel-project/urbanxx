@@ -947,6 +947,24 @@ module urban_mod
       integer(c_int) :: status
     end subroutine UrbanSetSoilIceContentForPerviousRoad_C
 
+    subroutine UrbanSetSoilLiquidWaterForImperviousRoad_C(urban, values, size, status) &
+      bind(C, name="UrbanSetSoilLiquidWaterForImperviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), dimension(2) :: size
+      integer(c_int) :: status
+    end subroutine UrbanSetSoilLiquidWaterForImperviousRoad_C
+
+    subroutine UrbanSetSoilIceContentForImperviousRoad_C(urban, values, size, status) &
+      bind(C, name="UrbanSetSoilIceContentForImperviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), dimension(2) :: size
+      integer(c_int) :: status
+    end subroutine UrbanSetSoilIceContentForImperviousRoad_C
+
     ! Shortwave radiation getter functions - Absorbed
     subroutine UrbanGetAbsorbedShortwaveRoof_C(urban, values, size, status) bind(C, name="UrbanGetAbsorbedShortwaveRoof")
       import :: c_ptr, c_int
@@ -2163,6 +2181,22 @@ module urban_mod
     integer(c_int), intent(out) :: status
     call UrbanSetSoilIceContentForPerviousRoad_C(urban%ptr, values, size, status)
   end subroutine UrbanSetSoilIceContentForPerviousRoad
+
+  subroutine UrbanSetSoilLiquidWaterForImperviousRoad(urban, values, size, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), dimension(2), intent(in) :: size
+    integer(c_int), intent(out) :: status
+    call UrbanSetSoilLiquidWaterForImperviousRoad_C(urban%ptr, values, size, status)
+  end subroutine UrbanSetSoilLiquidWaterForImperviousRoad
+
+  subroutine UrbanSetSoilIceContentForImperviousRoad(urban, values, size, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), dimension(2), intent(in) :: size
+    integer(c_int), intent(out) :: status
+    call UrbanSetSoilIceContentForImperviousRoad_C(urban%ptr, values, size, status)
+  end subroutine UrbanSetSoilIceContentForImperviousRoad
 
   ! Shortwave radiation getter functions - Absorbed
   subroutine UrbanGetAbsorbedShortwaveRoof(urban, values, size, status)

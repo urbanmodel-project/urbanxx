@@ -108,6 +108,11 @@ void ComputeSoilFluxes(URBANXX::_p_UrbanType &urban) {
 
   auto wall_Emiss = urban.urbanParams.emissivity.Wall;
 
+  // AC heat from previous timestep — same value ELM's SoilFluxes uses for
+  // eflx_heat_from_ac_patch(p) (set by UrbanFluxes before SoilTemperature,
+  // saved by UrbanComputeHeatDiffusion into EFluxForAC_Prev).
+  auto bldg_eflux_ac_prev = urban.building.EFluxForAC_Prev;
+
   Kokkos::parallel_for(
       "ComputeSoilFluxes", numLandunits, KOKKOS_LAMBDA(int l) {
         // ------------------------------------------------------------------
@@ -217,6 +222,7 @@ void ComputeSoilFluxes(URBANXX::_p_UrbanType &urban) {
                             imperv_Cgrnds(l), imperv_Cgrndl(l),
                             imperv_EflxShGrnd(l), imperv_QflxEvapSoil(l),
                             imperv_QflxTranEvap(l), imperv_EflxSoilGrnd(l));
+        imperv_EflxSoilGrnd(l) += bldg_eflux_ac_prev(l);
         computeStep3(l, imperv_Temp(l), imperv_QflxEvapSoil(l),
                      imperv_TopLiq(l), imperv_TopIce(l), imperv_QflxEvapGrnd(l),
                      imperv_QflxSubSnow(l), imperv_QflxDewSnow(l),
@@ -227,6 +233,7 @@ void ComputeSoilFluxes(URBANXX::_p_UrbanType &urban) {
             l, perv_TGrnd0(l), perv_Temp(l), perv_NetSw(l), perv_NetLw(l),
             perv_Emiss(l), perv_Cgrnds(l), perv_Cgrndl(l), perv_EflxShGrnd(l),
             perv_QflxEvapSoil(l), perv_QflxTranEvap(l), perv_EflxSoilGrnd(l));
+        perv_EflxSoilGrnd(l) += bldg_eflux_ac_prev(l);
         computeStep3(l, perv_Temp(l), perv_QflxEvapSoil(l),
                      perv_H2OSoiLiq(l, 0), perv_H2OSoiIce(l, 0),
                      perv_QflxEvapGrnd(l), perv_QflxSubSnow(l),

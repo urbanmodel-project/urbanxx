@@ -61,6 +61,26 @@ void UrbanSetSoilIceContentForPerviousRoad(UrbanType urban,
   SetView2D(urban->perviousRoad.H2OSoiIce, values, size, status);
 }
 
+void UrbanSetSoilLiquidWaterForImperviousRoad(UrbanType urban,
+                                              const double *values,
+                                              const int size[2],
+                                              UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
+    return;
+
+  SetView2D(urban->imperviousRoad.WaterLiquid, values, size, status);
+}
+
+void UrbanSetSoilIceContentForImperviousRoad(UrbanType urban,
+                                             const double *values,
+                                             const int size[2],
+                                             UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
+    return;
+
+  SetView2D(urban->imperviousRoad.WaterIce, values, size, status);
+}
+
 // Infiltration input setters
 void UrbanSetSurfaceRunoffForPerviousRoad(UrbanType urban, const double *values,
                                           int length, UrbanErrorCode *status) {

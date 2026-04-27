@@ -24,14 +24,16 @@ struct CompositeRoadSurfaceData {
 };
 
 struct BuildingDataType {
-  DECLARE_DEVICE_VIEW(1DR8, Temperature;)    // building temperature (K)
-  DECLARE_DEVICE_VIEW(1DR8, EFlxForHeating;) // building heat flux (W/m^2)
-  DECLARE_DEVICE_VIEW(1DR8, EFluxForAC;)     // building cool flux (W/m^2)
+  DECLARE_DEVICE_VIEW(1DR8, Temperature;)      // building temperature (K)
+  DECLARE_DEVICE_VIEW(1DR8, EFlxForHeating;)   // building heat flux (W/m^2)
+  DECLARE_DEVICE_VIEW(1DR8, EFluxForAC;)       // building cool flux (W/m^2) — current timestep
+  DECLARE_DEVICE_VIEW(1DR8, EFluxForAC_Prev;)  // building cool flux (W/m^2) — previous timestep
 
   BuildingDataType(int numLandunits) {
     ALLOCATE_DEVICE_VIEW(Temperature, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(EFlxForHeating, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(EFluxForAC, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(EFluxForAC_Prev, Array1DR8, numLandunits)
   }
 };
 
@@ -223,6 +225,12 @@ struct ImperviousRoadDataType : SnowCoveredSurfaceData {
   DECLARE_DEVICE_VIEW(
       1DR8, TopH2OSoiIce) // ice water content in top soil layer [kg/m^2]
   DECLARE_DEVICE_VIEW(1DR8, QflxSurf) // surface runoff (mm/s)
+  // Per-layer soil water for dynamic CvTimesDz recomputation.
+  // Initialized once from ELM's h2osoi_liq/h2osoi_ice at startup, then
+  // updated internally each timestep via a phase change step inside
+  // ComputeHeatDiffusion — no per-timestep data transfer from ELM.
+  DECLARE_DEVICE_VIEW(2DR8, WaterLiquid) // liquid water [kg/m^2]
+  DECLARE_DEVICE_VIEW(2DR8, WaterIce)    // ice content  [kg/m^2]
   // Inherits all fields from SnowCoveredSurfaceData and SurfaceDataBase
   ImperviousRoadDataType(int numLandunits, int numRadBands, int numRadTypes,
                          int numLayers)
@@ -234,6 +242,8 @@ struct ImperviousRoadDataType : SnowCoveredSurfaceData {
     ALLOCATE_DEVICE_VIEW(TopH2OSoiLiq, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(TopH2OSoiIce, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(QflxSurf, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(WaterLiquid, Array2DR8, numLandunits, numLayers)
+    ALLOCATE_DEVICE_VIEW(WaterIce, Array2DR8, numLandunits, numLayers)
   }
 };
 
