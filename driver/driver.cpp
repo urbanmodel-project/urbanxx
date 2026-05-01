@@ -4,6 +4,12 @@
 #include <iostream>
 #include <mpi.h>
 #include <stdlib.h>
+#include <chrono>
+#include <cstdint>
+#include <cstdio>
+#include <cstring>
+#include <string>
+#include <vector>
 
 // Constants
 const int NUM_LEVELS = 5;
@@ -25,6 +31,286 @@ static void FreeArrays(double **arrays, int count) {
     free(arrays[i]);
     arrays[i] = NULL;
   }
+}
+
+// ============================================================================
+// Binary forcing file reader
+// ============================================================================
+
+static const uint32_t URBANXX_MAGIC   = 0x55524258u; // 'URBX'
+static const int32_t  URBANXX_VERSION = 1;
+
+struct ForcingHeader {
+  int32_t  num_urbanl;
+  double   dtime;
+  int32_t  num_timesteps;
+  int32_t  nlevgrnd;
+  int32_t  nlevurb;
+};
+
+// One per-timestep record. atmShortwave is stored in C-order
+// [itype=0..1][iband=0..1][l=0..num_urbanl-1] (l is innermost).
+struct TimestepRecord {
+  std::vector<double> atmTemp;
+  std::vector<double> atmPotTemp;
+  std::vector<double> atmRho;
+  std::vector<double> atmSpcHumd;
+  std::vector<double> atmPress;
+  std::vector<double> atmWindU;
+  std::vector<double> atmWindV;
+  std::vector<double> atmCoszen;
+  std::vector<double> atmFracSnow;
+  std::vector<double> atmLongwave;
+  std::vector<double> atmRain;
+  std::vector<double> atmSnow;
+  std::vector<double> atmShortwave; // length = 4 * num_urbanl (itype x iband x l)
+};
+
+// Read the entire forcing binary file. Returns false on error.
+// Records are stored in canonical C-order shortwave layout.
+static bool ReadForcingBinary(const std::string &path,
+                              ForcingHeader &header,
+                              std::vector<TimestepRecord> &records) {
+  FILE *fp = fopen(path.c_str(), "rb");
+  if (!fp) {
+    fprintf(stderr, "ReadForcingBinary: cannot open '%s'\n", path.c_str());
+    return false;
+  }
+
+  // Read magic
+  uint32_t magic = 0;
+  if (fread(&magic, 4, 1, fp) != 1 || magic != URBANXX_MAGIC) {
+    fprintf(stderr, "ReadForcingBinary: bad magic in '%s'\n", path.c_str());
+    fclose(fp);
+    return false;
+  }
+
+  // Read version
+  int32_t version = 0;
+  if (fread(&version, 4, 1, fp) != 1 || version != URBANXX_VERSION) {
+    fprintf(stderr, "ReadForcingBinary: unsupported version %d in '%s'\n",
+            version, path.c_str());
+    fclose(fp);
+    return false;
+  }
+
+  // Read header fields
+  if (fread(&header.num_urbanl,   4, 1, fp) != 1) goto read_error;
+  if (fread(&header.dtime,        8, 1, fp) != 1) goto read_error;
+  if (fread(&header.num_timesteps,4, 1, fp) != 1) goto read_error;
+  if (fread(&header.nlevgrnd,     4, 1, fp) != 1) goto read_error;
+  if (fread(&header.nlevurb,      4, 1, fp) != 1) goto read_error;
+
+  {
+    const int nl      = header.num_urbanl;
+    const int nsw     = 4 * nl; // numTypes(2) * numBands(2) * nl
+    const long header_bytes = 4 + 4 + 4 + 4 + 8 + 4 + 4;  // magic+ver+nl+nt+dt+ng+nu
+    const long bytes_per_record = (long)(12 + 4) * nl * 8;  // 16 scalars/l * 8 bytes
+
+    // If num_timesteps was not patched at ELM shutdown (placeholder still 0),
+    // compute the actual count from the file size.
+    if (header.num_timesteps == 0 && bytes_per_record > 0) {
+      long pos_before = ftell(fp);
+      fseek(fp, 0, SEEK_END);
+      long file_size = ftell(fp);
+      fseek(fp, pos_before, SEEK_SET);
+      long data_bytes = file_size - header_bytes;
+      if (data_bytes > 0 && (data_bytes % bytes_per_record) == 0) {
+        header.num_timesteps = (int32_t)(data_bytes / bytes_per_record);
+        fprintf(stdout,
+                "ReadForcingBinary: num_timesteps was 0 in header; "
+                "computed %d from file size\n",
+                header.num_timesteps);
+      } else if (data_bytes > 0) {
+        fprintf(stderr,
+                "ReadForcingBinary: num_timesteps=0 and file size does not align "
+                "(data_bytes=%ld, bytes_per_record=%ld)\n",
+                data_bytes, bytes_per_record);
+        fclose(fp);
+        return false;
+      }
+      // data_bytes==0: leave num_timesteps=0, caller will error-check
+    }
+
+    records.resize(header.num_timesteps);
+    for (int ts = 0; ts < header.num_timesteps; ++ts) {
+      TimestepRecord &r = records[ts];
+      r.atmTemp.resize(nl);
+      r.atmPotTemp.resize(nl);
+      r.atmRho.resize(nl);
+      r.atmSpcHumd.resize(nl);
+      r.atmPress.resize(nl);
+      r.atmWindU.resize(nl);
+      r.atmWindV.resize(nl);
+      r.atmCoszen.resize(nl);
+      r.atmFracSnow.resize(nl);
+      r.atmLongwave.resize(nl);
+      r.atmRain.resize(nl);
+      r.atmSnow.resize(nl);
+      r.atmShortwave.resize(nsw);
+
+#define READ_VEC(v) \
+  if (fread((v).data(), 8, (v).size(), fp) != (size_t)(v).size()) goto read_error
+
+      READ_VEC(r.atmTemp);
+      READ_VEC(r.atmPotTemp);
+      READ_VEC(r.atmRho);
+      READ_VEC(r.atmSpcHumd);
+      READ_VEC(r.atmPress);
+      READ_VEC(r.atmWindU);
+      READ_VEC(r.atmWindV);
+      READ_VEC(r.atmCoszen);
+      READ_VEC(r.atmFracSnow);
+      READ_VEC(r.atmLongwave);
+      READ_VEC(r.atmRain);
+      READ_VEC(r.atmSnow);
+      READ_VEC(r.atmShortwave);
+
+#undef READ_VEC
+    }
+  }
+
+  fclose(fp);
+  return true;
+
+read_error:
+  fprintf(stderr, "ReadForcingBinary: read error in '%s'\n", path.c_str());
+  fclose(fp);
+  return false;
+}
+
+// Set atmospheric forcing on 'urban' (which has n_local landunits) by
+// replicating the source record. For grid i on this rank, the source ELM
+// landunit index is (rank_offset + i) % num_urbanl_base.
+//
+// atmShortwave in the record is in C-order [itype][iband][l] with l
+// innermost; the Kokkos view expects the layout reported by
+// UrbanKokkosIsLayoutLeft().
+static void SetAtmosphericForcingFromBinary(UrbanType urban,
+                                            int n_local,
+                                            int rank_offset,
+                                            int num_urbanl_base,
+                                            const TimestepRecord &rec) {
+  UrbanErrorCode ierr;
+
+  // Scalar forcing arrays (1-D, one value per local landunit)
+  double *atmTemp     = AllocateArray(n_local, "atmTemp");
+  double *atmPotTemp  = AllocateArray(n_local, "atmPotTemp");
+  double *atmRho      = AllocateArray(n_local, "atmRho");
+  double *atmSpcHumd  = AllocateArray(n_local, "atmSpcHumd");
+  double *atmPress    = AllocateArray(n_local, "atmPress");
+  double *atmWindU    = AllocateArray(n_local, "atmWindU");
+  double *atmWindV    = AllocateArray(n_local, "atmWindV");
+  double *atmCoszen   = AllocateArray(n_local, "atmCoszen");
+  double *atmFracSnow = AllocateArray(n_local, "atmFracSnow");
+  double *atmLongwave = AllocateArray(n_local, "atmLongwave");
+  double *atmRain     = AllocateArray(n_local, "atmRain");
+  double *atmSnow     = AllocateArray(n_local, "atmSnow");
+
+  for (int i = 0; i < n_local; ++i) {
+    int src = (rank_offset + i) % num_urbanl_base;
+    atmTemp    [i] = rec.atmTemp    [src];
+    atmPotTemp [i] = rec.atmPotTemp [src];
+    atmRho     [i] = rec.atmRho     [src];
+    atmSpcHumd [i] = rec.atmSpcHumd [src];
+    atmPress   [i] = rec.atmPress   [src];
+    atmWindU   [i] = rec.atmWindU   [src];
+    atmWindV   [i] = rec.atmWindV   [src];
+    atmCoszen  [i] = rec.atmCoszen  [src];
+    atmFracSnow[i] = rec.atmFracSnow[src];
+    atmLongwave[i] = rec.atmLongwave[src];
+    atmRain    [i] = rec.atmRain    [src];
+    atmSnow    [i] = rec.atmSnow    [src];
+  }
+
+  // Shortwave: 3-D view (n_local, numBands=2, numTypes=2)
+  const int numBands = 2;
+  const int numTypes = 2;
+  const int totalSW  = n_local * numBands * numTypes;
+  int size3D[3] = {n_local, numBands, numTypes};
+  double *atmShortwave = AllocateArray(totalSW, "atmShortwave");
+
+  bool isLayoutLeft = UrbanKokkosIsLayoutLeft();
+  if (isLayoutLeft) {
+    // Kokkos LayoutLeft: l varies fastest -> same as C-order [itype][iband][l]
+    // Fill: for each (itype, iband, i): src_l = (rank_offset+i) % base
+    int idx = 0;
+    for (int itype = 0; itype < numTypes; ++itype) {
+      for (int iband = 0; iband < numBands; ++iband) {
+        for (int i = 0; i < n_local; ++i) {
+          int src = (rank_offset + i) % num_urbanl_base;
+          // C-order index in record: itype*numBands*base + iband*base + src
+          int rec_idx = itype * numBands * num_urbanl_base
+                      + iband * num_urbanl_base
+                      + src;
+          atmShortwave[idx++] = rec.atmShortwave[rec_idx];
+        }
+      }
+    }
+  } else {
+    // Kokkos LayoutRight: itype varies fastest -> C-order [l][iband][itype]
+    int idx = 0;
+    for (int i = 0; i < n_local; ++i) {
+      int src = (rank_offset + i) % num_urbanl_base;
+      for (int iband = 0; iband < numBands; ++iband) {
+        for (int itype = 0; itype < numTypes; ++itype) {
+          int rec_idx = itype * numBands * num_urbanl_base
+                      + iband * num_urbanl_base
+                      + src;
+          atmShortwave[idx++] = rec.atmShortwave[rec_idx];
+        }
+      }
+    }
+  }
+
+  UrbanCall(UrbanSetAtmTemp        (urban, atmTemp,      n_local,       &ierr), &ierr);
+  UrbanCall(UrbanSetAtmPotTemp     (urban, atmPotTemp,   n_local,       &ierr), &ierr);
+  UrbanCall(UrbanSetAtmRho         (urban, atmRho,        n_local,       &ierr), &ierr);
+  UrbanCall(UrbanSetAtmSpcHumd     (urban, atmSpcHumd,   n_local,       &ierr), &ierr);
+  UrbanCall(UrbanSetAtmPress       (urban, atmPress,      n_local,       &ierr), &ierr);
+  UrbanCall(UrbanSetAtmWindU       (urban, atmWindU,      n_local,       &ierr), &ierr);
+  UrbanCall(UrbanSetAtmWindV       (urban, atmWindV,      n_local,       &ierr), &ierr);
+  UrbanCall(UrbanSetAtmCoszen      (urban, atmCoszen,     n_local,       &ierr), &ierr);
+  UrbanCall(UrbanSetAtmFracSnow    (urban, atmFracSnow,   n_local,       &ierr), &ierr);
+  UrbanCall(UrbanSetAtmLongwaveDown(urban, atmLongwave,   n_local,       &ierr), &ierr);
+  UrbanCall(UrbanSetAtmRain        (urban, atmRain,       n_local,       &ierr), &ierr);
+  UrbanCall(UrbanSetAtmSnow        (urban, atmSnow,       n_local,       &ierr), &ierr);
+  UrbanCall(UrbanSetAtmShortwaveDown(urban, atmShortwave, size3D,        &ierr), &ierr);
+
+  double *allAtm[] = {atmTemp, atmPotTemp, atmRho, atmSpcHumd, atmPress,
+                      atmWindU, atmWindV, atmCoszen, atmFracSnow, atmLongwave,
+                      atmRain, atmSnow, atmShortwave};
+  FreeArrays(allAtm, 13);
+
+  // Must call UrbanComputeNetShortwaveRadiation after setting shortwave forcing,
+  // mirroring what urbanxx_SetAtmosphericForcing() does in the Fortran layer.
+  // This initializes internal shortwave state required by UrbanComputeNetLongwave.
+  UrbanCall(UrbanComputeNetShortwaveRadiation(urban, &ierr), &ierr);
+}
+
+// Print usage / help text.
+static void PrintHelp(const char *prog) {
+  fprintf(stdout,
+    "Usage: %s [options]\n"
+    "\n"
+    "Options:\n"
+    "  --binary-file <path>    Path to ELM-generated forcing binary file\n"
+    "                          (enables binary mode; required for multi-timestep run)\n"
+    "  --num-grids <N>         Total number of URBANxx landunits across all MPI ranks\n"
+    "                          Each rank processes N/num_ranks grids.\n"
+    "                          (required in binary mode)\n"
+    "  --num-timesteps <T>     Override number of timesteps to run\n"
+    "                          (default: use header value; wraps with modulo)\n"
+    "  --dtime <dt>            Override timestep length in seconds\n"
+    "                          (default: from binary header)\n"
+    "  --help                  Show this help\n"
+    "\n"
+    "Scaling conventions:\n"
+    "  Weak scaling : double --num-grids and double the MPI rank count\n"
+    "  Strong scaling: fix --num-grids, increase MPI rank count\n"
+    "\n"
+    "If --binary-file is absent, the driver runs one timestep with hardcoded values.\n",
+    prog);
 }
 
 void SetCanyonHwr(UrbanType urban, int numLandunits, int mpi_rank) {
@@ -946,11 +1232,41 @@ void SetUrbanParameters(UrbanType urban, int numLandunits, int mpi_rank) {
 
 int main(int argc, char *argv[]) {
 
+  // -------------------------------------------------------------------------
+  // Parse command-line arguments
+  // -------------------------------------------------------------------------
+  std::string binaryFile  = "";
+  int         numGridsArg = -1;
+  int         numTsArg    = -1;   // -1 means "use header value"
+  double      dtimeArg    = -1.0; // <0 means "use header value"
+
+  for (int a = 1; a < argc; ++a) {
+    if (std::string(argv[a]) == "--help") {
+      PrintHelp(argv[0]);
+      return 0;
+    } else if (std::string(argv[a]) == "--binary-file" && a + 1 < argc) {
+      binaryFile = argv[++a];
+    } else if (std::string(argv[a]) == "--num-grids" && a + 1 < argc) {
+      numGridsArg = std::atoi(argv[++a]);
+    } else if (std::string(argv[a]) == "--num-timesteps" && a + 1 < argc) {
+      numTsArg = std::atoi(argv[++a]);
+    } else if (std::string(argv[a]) == "--dtime" && a + 1 < argc) {
+      dtimeArg = std::atof(argv[++a]);
+    } else if (argv[a][0] == '-') {
+      // Pass unknown flags to Kokkos (e.g. --kokkos-*)
+    }
+  }
+
+  const bool binaryMode = !binaryFile.empty();
+
+  // -------------------------------------------------------------------------
   // Initialize MPI
+  // -------------------------------------------------------------------------
   MPI_Init(&argc, &argv);
 
-  int mpi_rank = -1;
+  int mpi_rank = -1, num_ranks = 1;
   MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &num_ranks);
 
   Kokkos::initialize(argc, argv);
   {
@@ -959,37 +1275,233 @@ int main(int argc, char *argv[]) {
       Kokkos::print_configuration(std::cout);
     }
 
-    // Create Urban object
-    int numLandunits = 10;
-    UrbanType urban = nullptr;
-    UrbanErrorCode ierr;
-    UrbanCall(UrbanCreate(numLandunits, &urban, &ierr), &ierr);
+    // -------------------------------------------------------------------------
+    // Binary mode: read forcing file and run full physics loop with timing
+    // -------------------------------------------------------------------------
+    if (binaryMode) {
+      if (numGridsArg <= 0) {
+        if (mpi_rank == 0) {
+          fprintf(stderr, "ERROR: --num-grids <N> is required in binary mode\n");
+          PrintHelp(argv[0]);
+        }
+        MPI_Finalize();
+        return 1;
+      }
 
-    if (mpi_rank == 0) {
-      std::cout << "Successfully created Urban object with " << numLandunits
-                << " landunits" << std::endl;
+      // Read binary on rank 0 and broadcast header
+      ForcingHeader header;
+      std::vector<TimestepRecord> records;
+
+      if (mpi_rank == 0) {
+        if (!ReadForcingBinary(binaryFile, header, records)) {
+          MPI_Abort(MPI_COMM_WORLD, 1);
+          exit(1); // in case MPI_Abort does not terminate immediately
+        }
+        std::cout << "Read binary file: " << binaryFile << "\n"
+                  << "  num_urbanl_base = " << header.num_urbanl   << "\n"
+                  << "  dtime (file)    = " << header.dtime         << " s\n"
+                  << "  num_timesteps   = " << header.num_timesteps << "\n"
+                  << "  nlevgrnd        = " << header.nlevgrnd      << "\n"
+                  << "  nlevurb         = " << header.nlevurb       << "\n";
+      }
+
+      // Broadcast header
+      MPI_Bcast(&header, sizeof(ForcingHeader), MPI_BYTE, 0, MPI_COMM_WORLD);
+
+      // Determine run parameters
+      const int    num_urbanl_base = header.num_urbanl;
+      const double dtime           = (dtimeArg > 0.0) ? dtimeArg : header.dtime;
+      const int    T_file          = header.num_timesteps;
+      const int    numTimesteps    = (numTsArg > 0) ? numTsArg : T_file;
+      const int    totalGrids      = numGridsArg;
+
+      if (T_file <= 0) {
+        if (mpi_rank == 0) {
+          fprintf(stderr,
+            "ERROR: binary file '%s' contains 0 timestep records.\n"
+            "  The ELM run may not have completed any timesteps before stopping.\n"
+            "  Run ELM for at least one timestep to populate the forcing file,\n"
+            "  then retry the driver.\n",
+            binaryFile.c_str());
+          fflush(stderr);
+        }
+        MPI_Abort(MPI_COMM_WORLD, 1);
+        exit(1); // in case MPI_Abort does not terminate immediately
+      }
+
+      // Distribute grids across ranks
+      const int n_local     = totalGrids / num_ranks
+                              + (mpi_rank < (totalGrids % num_ranks) ? 1 : 0);
+      const int rank_offset = mpi_rank * (totalGrids / num_ranks)
+                              + std::min(mpi_rank, totalGrids % num_ranks);
+
+      // Broadcast records from rank 0
+      // For simplicity, broadcast each timestep's raw data.
+      // Ranks that didn't read allocate empty records first.
+      if (mpi_rank != 0) {
+        records.resize(T_file);
+        for (int ts = 0; ts < T_file; ++ts) {
+          records[ts].atmTemp.resize(num_urbanl_base);
+          records[ts].atmPotTemp.resize(num_urbanl_base);
+          records[ts].atmRho.resize(num_urbanl_base);
+          records[ts].atmSpcHumd.resize(num_urbanl_base);
+          records[ts].atmPress.resize(num_urbanl_base);
+          records[ts].atmWindU.resize(num_urbanl_base);
+          records[ts].atmWindV.resize(num_urbanl_base);
+          records[ts].atmCoszen.resize(num_urbanl_base);
+          records[ts].atmFracSnow.resize(num_urbanl_base);
+          records[ts].atmLongwave.resize(num_urbanl_base);
+          records[ts].atmRain.resize(num_urbanl_base);
+          records[ts].atmSnow.resize(num_urbanl_base);
+          records[ts].atmShortwave.resize(4 * num_urbanl_base);
+        }
+      }
+      for (int ts = 0; ts < T_file; ++ts) {
+        TimestepRecord &r = records[ts];
+#define BCAST_VEC(v) \
+  MPI_Bcast((v).data(), (int)(v).size(), MPI_DOUBLE, 0, MPI_COMM_WORLD)
+        BCAST_VEC(r.atmTemp);
+        BCAST_VEC(r.atmPotTemp);
+        BCAST_VEC(r.atmRho);
+        BCAST_VEC(r.atmSpcHumd);
+        BCAST_VEC(r.atmPress);
+        BCAST_VEC(r.atmWindU);
+        BCAST_VEC(r.atmWindV);
+        BCAST_VEC(r.atmCoszen);
+        BCAST_VEC(r.atmFracSnow);
+        BCAST_VEC(r.atmLongwave);
+        BCAST_VEC(r.atmRain);
+        BCAST_VEC(r.atmSnow);
+        BCAST_VEC(r.atmShortwave);
+#undef BCAST_VEC
+      }
+
+      if (mpi_rank == 0) {
+        std::cout << "Binary mode: totalGrids=" << totalGrids
+                  << ", num_ranks=" << num_ranks
+                  << ", dtime=" << dtime << " s"
+                  << ", numTimesteps=" << numTimesteps
+                  << std::endl;
+      }
+      std::cout << "  Rank " << mpi_rank << ": n_local=" << n_local
+                << ", rank_offset=" << rank_offset << std::endl;
+
+      // Create Urban object with n_local landunits
+      UrbanType urban = nullptr;
+      UrbanErrorCode ierr;
+      UrbanCall(UrbanCreate(n_local, &urban, &ierr), &ierr);
+
+      // Set all static parameters (uses first record forcing for initialization)
+      SetUrbanParameters(urban, n_local, mpi_rank);
+
+      // Setup urban model
+      UrbanCall(UrbanSetup(urban, &ierr), &ierr);
+      if (mpi_rank == 0) {
+        std::cout << "Completed urban model setup" << std::endl;
+      }
+
+      // Set hydrology boundary conditions after setup
+      SetHydrologyBoundaryConditions(urban, n_local, mpi_rank);
+
+      // -----------------------------------------------------------------------
+      // Pre-load forcing for timestep 0 (outside timed region)
+      // -----------------------------------------------------------------------
+      SetAtmosphericForcingFromBinary(urban, n_local, rank_offset,
+                                      num_urbanl_base, records[0 % T_file]);
+
+      // Flush any prior async Kokkos work, then start timer
+      Kokkos::fence();
+      auto t_start = std::chrono::high_resolution_clock::now();
+
+      // -----------------------------------------------------------------------
+      // Timed physics loop
+      // -----------------------------------------------------------------------
+      for (int ts = 0; ts < numTimesteps; ++ts) {
+        // Set forcing for the *next* timestep outside the compute sequence
+        // (pre-fetch pattern: for ts>0 set forcing for this ts before compute)
+        if (ts > 0) {
+          SetAtmosphericForcingFromBinary(urban, n_local, rank_offset,
+                                         num_urbanl_base, records[ts % T_file]);
+        }
+
+        // --- TIMED REGION ---
+        UrbanCall(UrbanComputeNetLongwave (urban,        &ierr), &ierr);
+        UrbanCall(UrbanComputeSurfaceFluxes(urban,       &ierr), &ierr);
+        UrbanCall(UrbanComputeSoilFluxes  (urban,        &ierr), &ierr);
+        UrbanCall(UrbanComputeHeatDiffusion(urban,        &ierr), &ierr);
+        UrbanCall(UrbanComputeHydrology   (urban, dtime, &ierr), &ierr);
+        UrbanCall(UrbanComputeSurfaceRunoff(urban, dtime, &ierr), &ierr);
+        UrbanCall(UrbanComputeInfiltration(urban,        &ierr), &ierr);
+        UrbanCall(UrbanComputeWaterTable  (urban, dtime, &ierr), &ierr);
+        UrbanCall(UrbanComputeDewCondensationRoofImperviousRoad(urban, dtime, &ierr), &ierr);
+        UrbanCall(UrbanComputeDrainage    (urban, dtime, &ierr), &ierr);
+        UrbanCall(UrbanComputeNetShortwave(urban,        &ierr), &ierr);
+      }
+
+      // Ensure all GPU kernels have completed before stopping the clock
+      Kokkos::fence();
+      auto t_end = std::chrono::high_resolution_clock::now();
+
+      double elapsed_s = std::chrono::duration<double>(t_end - t_start).count();
+
+      // Gather max elapsed time across ranks (bottleneck rank)
+      double elapsed_max = elapsed_s;
+      MPI_Reduce(&elapsed_s, &elapsed_max, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+
+      if (mpi_rank == 0) {
+        double per_ts_ms = (numTimesteps > 0)
+                           ? (elapsed_max / numTimesteps) * 1000.0
+                           : 0.0;
+        double throughput = (elapsed_max > 0.0)
+                            ? (double)totalGrids * numTimesteps / elapsed_max
+                            : 0.0;
+        std::cout << "\nTiming: " << totalGrids << " grids total, "
+                  << n_local << " grids/rank, "
+                  << numTimesteps << " timesteps\n"
+                  << "  Total compute time : " << elapsed_max << " s\n"
+                  << "  Per timestep       : " << per_ts_ms   << " ms\n"
+                  << "  Throughput         : " << throughput  << " grid-steps/s\n";
+      }
+
+      UrbanCall(UrbanDestroy(&urban, &ierr), &ierr);
+
+    } else {
+      // -----------------------------------------------------------------------
+      // Legacy single-timestep mode (hardcoded values, unchanged behavior)
+      // -----------------------------------------------------------------------
+
+      // Create Urban object
+      int numLandunits = 10;
+      UrbanType urban = nullptr;
+      UrbanErrorCode ierr;
+      UrbanCall(UrbanCreate(numLandunits, &urban, &ierr), &ierr);
+
+      if (mpi_rank == 0) {
+        std::cout << "Successfully created Urban object with " << numLandunits
+                  << " landunits" << std::endl;
+      }
+
+      // Set all urban parameters
+      SetUrbanParameters(urban, numLandunits, mpi_rank);
+
+      // Setup urban model (initialize temperatures and other setup tasks)
+      UrbanCall(UrbanSetup(urban, &ierr), &ierr);
+      if (mpi_rank == 0) {
+        std::cout << "Completed urban model setup" << std::endl;
+      }
+
+      // Set hydrology boundary conditions after setup to override initialization defaults
+      SetHydrologyBoundaryConditions(urban, numLandunits, mpi_rank);
+
+      // Advance the model one time step
+      UrbanCall(UrbanAdvance(urban, &ierr), &ierr);
+      if (mpi_rank == 0) {
+        std::cout << "Advanced model one time step" << std::endl;
+      }
+
+      // Destroy Urban object
+      UrbanCall(UrbanDestroy(&urban, &ierr), &ierr);
     }
-
-    // Set all urban parameters
-    SetUrbanParameters(urban, numLandunits, mpi_rank);
-
-    // Setup urban model (initialize temperatures and other setup tasks)
-    UrbanCall(UrbanSetup(urban, &ierr), &ierr);
-    if (mpi_rank == 0) {
-      std::cout << "Completed urban model setup" << std::endl;
-    }
-
-    // Set hydrology boundary conditions after setup to override initialization defaults
-    SetHydrologyBoundaryConditions(urban, numLandunits, mpi_rank);
-
-    // Advance the model one time step
-    UrbanCall(UrbanAdvance(urban, &ierr), &ierr);
-    if (mpi_rank == 0) {
-      std::cout << "Advanced model one time step" << std::endl;
-    }
-
-    // Destroy Urban object
-    UrbanCall(UrbanDestroy(&urban, &ierr), &ierr);
   }
 
   Kokkos::finalize();
