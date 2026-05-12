@@ -102,4 +102,15 @@ void UrbanSetQflxSubSnowImperviousRoad(UrbanType urban, const double *values,
   SetView1D(urban->imperviousRoad.QflxSubSnow, values, length, status);
 }
 
+// AC heat flux setter — used to seed EFluxForAC from ELM's eflx_urban_ac on
+// restart so that the first UrbanComputeHeatDiffusion uses the correct
+// previous-timestep AC heat as the road boundary condition.
+void UrbanSetEFluxForAC(UrbanType urban, const double *values, int length,
+                        UrbanErrorCode *status) {
+  if (!ValidateInputsWithData(urban, values, status))
+    return;
+
+  SetView1D(urban->building.EFluxForAC, values, length, status);
+}
+
 } // extern "C"

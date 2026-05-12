@@ -1693,6 +1693,15 @@ module urban_mod
       integer(c_int) :: status
     end subroutine UrbanSetQflxSubSnowImperviousRoad_C
 
+    subroutine UrbanSetEFluxForAC_C(urban, values, length, status) &
+      bind(C, name="UrbanSetEFluxForAC")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetEFluxForAC_C
+
     ! DewCondensation compute C interface
     subroutine UrbanComputeDewCondensationRoofImperviousRoad_C(urban, dtime, status) &
       bind(C, name="UrbanComputeDewCondensationRoofImperviousRoad")
@@ -3105,6 +3114,14 @@ module urban_mod
     integer(c_int), intent(out) :: status
     call UrbanSetQflxSubSnowImperviousRoad_C(urban%ptr, values, length, status)
   end subroutine UrbanSetQflxSubSnowImperviousRoad
+
+  subroutine UrbanSetEFluxForAC(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), value :: length
+    integer(c_int), intent(out) :: status
+    call UrbanSetEFluxForAC_C(urban%ptr, values, length, status)
+  end subroutine UrbanSetEFluxForAC
 
   ! DewCondensation compute subroutine
   subroutine UrbanComputeDewCondensationRoofImperviousRoad(urban, dtime, status)

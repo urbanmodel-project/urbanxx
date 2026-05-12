@@ -163,8 +163,9 @@ KOKKOS_INLINE_FUNCTION void UpdateImperviousRoadHeatCapacityTimesDz(
 //
 // ELM uses moisture-dependent Johansen conductivity for these layers every
 // timestep.  URBANxx was only setting dry conductivity at initialization.
-// This function applies the same Johansen formula as ComputeSoilThermalConductivity
-// and then recomputes the affected interface conductivities.
+// This function applies the same Johansen formula as
+// ComputeSoilThermalConductivity and then recomputes the affected interface
+// conductivities.
 template <typename ViewType, typename IntView>
 KOKKOS_INLINE_FUNCTION void UpdateImperviousRoadThermalProperties(
     const int l, const int numLayers, const IntView &numActiveLayers,
@@ -174,11 +175,11 @@ KOKKOS_INLINE_FUNCTION void UpdateImperviousRoadThermalProperties(
     const ViewType &zc, const ViewType &zi, const ViewType &tkLayer,
     const ViewType &tkInterface) {
 
-  constexpr Real tfrz  = SHR_CONST_TKFRZ;
+  constexpr Real tfrz = SHR_CONST_TKFRZ;
   constexpr Real denh2o = SHR_CONST_RHOWATER;
   constexpr Real denice = SHR_CONST_RHOICE;
-  constexpr Real tkwat  = TKWATER;
-  constexpr Real tkice  = TKICE;
+  constexpr Real tkwat = TKWATER;
+  constexpr Real tkice = TKICE;
 
   const int nActive = numActiveLayers(l);
 
@@ -199,9 +200,9 @@ KOKKOS_INLINE_FUNCTION void UpdateImperviousRoadThermalProperties(
       const Real liq_vol = water_liquid(l, k) / (denh2o * dz(l, k));
       const Real ice_vol = water_ice(l, k) / (denice * dz(l, k));
       const Real fl = liq_vol / (liq_vol + ice_vol);
-      const Real dksat =
-          tk_minerals(l, k) * Kokkos::pow(tkwat, fl * watsat(l, k)) *
-          Kokkos::pow(tkice, (1.0 - fl) * watsat(l, k));
+      const Real dksat = tk_minerals(l, k) *
+                         Kokkos::pow(tkwat, fl * watsat(l, k)) *
+                         Kokkos::pow(tkice, (1.0 - fl) * watsat(l, k));
       tkLayer(l, k) = dke * dksat + (1.0 - dke) * tk_dry(l, k);
     } else {
       tkLayer(l, k) = tk_dry(l, k);
@@ -558,7 +559,7 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
   // Persistent AC heat flux storage (per road area, W/m²), computed from the
   // previous timestep's building heat fluxes and applied to road surfaces
   // in the current timestep.  Mirrors ELM's eflx_heat_from_ac_patch timing.
-  auto bldg_eflux_ac      = urban.building.EFluxForAC;
+  auto bldg_eflux_ac = urban.building.EFluxForAC;
   auto bldg_eflux_ac_prev = urban.building.EFluxForAC_Prev;
 
   // Single parallel kernel over all landunits
@@ -645,9 +646,11 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
         // surfaces
 
         // Pervious road (with evaporation + previous AC heat)
-        const Real perv_EflxGnet = ComputeGroundNetEnergyFlux(
-            perv_netSw(l), perv_netLw(l), perv_EflxShGrnd(l),
-            perv_QflxEvapSoil(l), perv_QflxTranEvap(l)) + ac_heat_prev;
+        const Real perv_EflxGnet =
+            ComputeGroundNetEnergyFlux(perv_netSw(l), perv_netLw(l),
+                                       perv_EflxShGrnd(l), perv_QflxEvapSoil(l),
+                                       perv_QflxTranEvap(l)) +
+            ac_heat_prev;
         const Real perv_DEflxGnet_DTemp = ComputeGroundNetEnergyFluxDerivative(
             perv_Cgrnds(l), perv_Cgrndl(l), perv_emiss(l), perv_Temp(l));
 
@@ -659,9 +662,11 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
             roof_Cgrnds(l), roof_Cgrndl(l), roof_emiss(l), roof_Temp(l));
 
         // Impervious road (with evaporation + previous AC heat)
-        const Real imperv_EflxGnet = ComputeGroundNetEnergyFlux(
-            imperv_netSw(l), imperv_netLw(l), imperv_EflxShGrnd(l),
-            imperv_QflxEvapSoil(l), imperv_QflxTranEvap(l)) + ac_heat_prev;
+        const Real imperv_EflxGnet =
+            ComputeGroundNetEnergyFlux(
+                imperv_netSw(l), imperv_netLw(l), imperv_EflxShGrnd(l),
+                imperv_QflxEvapSoil(l), imperv_QflxTranEvap(l)) +
+            ac_heat_prev;
         const Real imperv_DEflxGnet_DTemp =
             ComputeGroundNetEnergyFluxDerivative(
                 imperv_Cgrnds(l), imperv_Cgrndl(l), imperv_emiss(l),
@@ -702,8 +707,9 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
         imperv_TGrnd0(l) = imperv_temp(l, 0);
         perv_TGrnd0(l) = perv_temp(l, 0);
 
-        // Save inner-surface OLD temperatures for building heat flux computation
-        // (needed for Crank-Nicolson eflx_building_heat after the solve).
+        // Save inner-surface OLD temperatures for building heat flux
+        // computation (needed for Crank-Nicolson eflx_building_heat after the
+        // solve).
         const int inner_k = numUrbanLayers - 1;
         const Real T_roof_inner_old = roof_temp(l, inner_k);
         const Real T_sunwall_inner_old = sunwall_temp(l, inner_k);
@@ -738,8 +744,8 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
                                         hasBottomBC_building, building_temp(l));
         Solve1DHeatDiffusion(dtime, shadewall_surf, shadewall_bc);
 
-        // --- Compute building heat flux and update AC heat for next timestep ---
-        // This mirrors ELM: after SolveTemperature for walls/roof, compute
+        // --- Compute building heat flux and update AC heat for next timestep
+        // --- This mirrors ELM: after SolveTemperature for walls/roof, compute
         // eflx_building_heat = cnfac*fn_old + (1-cnfac)*fn1_new, then
         // eflx_urban_ac = |eflx_building_heat| when cool_on.
         // The result is stored and used in the road EflxGnet at the NEXT step.
@@ -752,8 +758,8 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
           // fn_old = tk*(t_bld - T_old) / (zi_inner - zc_inner)
           // fn_new = tk*(t_bld - T_new) / (zi_inner - zc_inner)
           // eflx_bldg = CNFAC*fn_old + (1-CNFAC)*fn_new
-          auto bldg_heat_flux = [&](Real tk_inner, Real zi_inner,
-                                    Real zc_inner, Real T_inner_old,
+          auto bldg_heat_flux = [&](Real tk_inner, Real zi_inner, Real zc_inner,
+                                    Real T_inner_old,
                                     Real T_inner_new) -> Real {
             const Real inv_dz = 1.0 / (zi_inner - zc_inner);
             const Real fn_old = tk_inner * (t_bld - T_inner_old) * inv_dz;
@@ -762,34 +768,30 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
           };
 
           const Real eflx_bldg_roof = bldg_heat_flux(
-              roof_tkInterface(l, inner_k),
-              roof_zi(l, numUrbanLayers),
-              roof_zc(l, inner_k),
-              T_roof_inner_old, roof_temp(l, inner_k));
+              roof_tkInterface(l, inner_k), roof_zi(l, numUrbanLayers),
+              roof_zc(l, inner_k), T_roof_inner_old, roof_temp(l, inner_k));
 
           const Real eflx_bldg_sunwall = bldg_heat_flux(
-              sunwall_tkInterface(l, inner_k),
-              sunwall_zi(l, numUrbanLayers),
-              sunwall_zc(l, inner_k),
-              T_sunwall_inner_old, sunwall_temp(l, inner_k));
+              sunwall_tkInterface(l, inner_k), sunwall_zi(l, numUrbanLayers),
+              sunwall_zc(l, inner_k), T_sunwall_inner_old,
+              sunwall_temp(l, inner_k));
 
           const Real eflx_bldg_shadewall = bldg_heat_flux(
               shadewall_tkInterface(l, inner_k),
-              shadewall_zi(l, numUrbanLayers),
-              shadewall_zc(l, inner_k),
+              shadewall_zi(l, numUrbanLayers), shadewall_zc(l, inner_k),
               T_shadewall_inner_old, shadewall_temp(l, inner_k));
 
           // Compute new AC heat per road area (mirrors ELM UrbanFluxesMod):
-          //   eflx_heat_from_ac(l) = wt_roof*ac_roof + (1-wt_roof)*hwr*(sun+shade)
-          //   eflx_heat_from_ac_patch = eflx_heat_from_ac(l) / (1 - wt_roof)
+          //   eflx_heat_from_ac(l) = wt_roof*ac_roof +
+          //   (1-wt_roof)*hwr*(sun+shade) eflx_heat_from_ac_patch =
+          //   eflx_heat_from_ac(l) / (1 - wt_roof)
           Real ac_heat_new = 0.0;
           if (cool_on) {
             const Real ac_roof = Kokkos::fabs(eflx_bldg_roof);
             const Real ac_sunwall = Kokkos::fabs(eflx_bldg_sunwall);
             const Real ac_shadewall = Kokkos::fabs(eflx_bldg_shadewall);
             const Real eflx_heat_from_ac_l =
-                wtr * ac_roof +
-                (1.0 - wtr) * hwr * (ac_sunwall + ac_shadewall);
+                wtr * ac_roof + (1.0 - wtr) * hwr * (ac_sunwall + ac_shadewall);
             ac_heat_new = eflx_heat_from_ac_l / (1.0 - wtr);
           }
         }

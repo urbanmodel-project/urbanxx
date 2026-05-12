@@ -24,10 +24,12 @@ struct CompositeRoadSurfaceData {
 };
 
 struct BuildingDataType {
-  DECLARE_DEVICE_VIEW(1DR8, Temperature;)      // building temperature (K)
-  DECLARE_DEVICE_VIEW(1DR8, EFlxForHeating;)   // building heat flux (W/m^2)
-  DECLARE_DEVICE_VIEW(1DR8, EFluxForAC;)       // building cool flux (W/m^2) — current timestep
-  DECLARE_DEVICE_VIEW(1DR8, EFluxForAC_Prev;)  // building cool flux (W/m^2) — previous timestep
+  DECLARE_DEVICE_VIEW(1DR8, Temperature;)    // building temperature (K)
+  DECLARE_DEVICE_VIEW(1DR8, EFlxForHeating;) // building heat flux (W/m^2)
+  DECLARE_DEVICE_VIEW(
+      1DR8, EFluxForAC;) // building cool flux (W/m^2) — current timestep
+  DECLARE_DEVICE_VIEW(
+      1DR8, EFluxForAC_Prev;) // building cool flux (W/m^2) — previous timestep
 
   BuildingDataType(int numLandunits) {
     ALLOCATE_DEVICE_VIEW(Temperature, Array1DR8, numLandunits)
