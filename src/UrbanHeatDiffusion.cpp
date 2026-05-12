@@ -643,9 +643,13 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
             imperv_cv_times_dz);
 
         // Step 4: Compute ground net energy flux and its derivative for all
-        // surfaces
+        // surfaces.
+        // For road surfaces, use ac_heat_prev (AC heat from the previous
+        // timestep).  This mirrors ELM's 1-timestep lag: UrbanFluxes reads
+        // eflx_urban_ac set by the *previous* SoilTemperature call and uses it
+        // in the current SoilTemperature call's road boundary condition.
 
-        // Pervious road (with evaporation + previous AC heat)
+        // Pervious road (with evaporation + previous-timestep AC heat)
         const Real perv_EflxGnet =
             ComputeGroundNetEnergyFlux(perv_netSw(l), perv_netLw(l),
                                        perv_EflxShGrnd(l), perv_QflxEvapSoil(l),
@@ -661,7 +665,7 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
         const Real roof_DEflxGnet_DTemp = ComputeGroundNetEnergyFluxDerivative(
             roof_Cgrnds(l), roof_Cgrndl(l), roof_emiss(l), roof_Temp(l));
 
-        // Impervious road (with evaporation + previous AC heat)
+        // Impervious road (with evaporation + previous-timestep AC heat)
         const Real imperv_EflxGnet =
             ComputeGroundNetEnergyFlux(
                 imperv_netSw(l), imperv_netLw(l), imperv_EflxShGrnd(l),
@@ -783,8 +787,8 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
 
           // Compute new AC heat per road area (mirrors ELM UrbanFluxesMod):
           //   eflx_heat_from_ac(l) = wt_roof*ac_roof +
-          //   (1-wt_roof)*hwr*(sun+shade) eflx_heat_from_ac_patch =
-          //   eflx_heat_from_ac(l) / (1 - wt_roof)
+          //   (1-wt_roof)*hwr*(sun+shade)
+          //   eflx_heat_from_ac_patch = eflx_heat_from_ac(l) / (1 - wt_roof)
           Real ac_heat_new = 0.0;
           if (cool_on) {
             const Real ac_roof = Kokkos::fabs(eflx_bldg_roof);
@@ -794,6 +798,9 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
                 wtr * ac_roof + (1.0 - wtr) * hwr * (ac_sunwall + ac_shadewall);
             ac_heat_new = eflx_heat_from_ac_l / (1.0 - wtr);
           }
+          // Store the computed AC heat so it is available as ac_heat_prev
+          // in the next timestep (mirrors ELM's 1-timestep lag for road BCs).
+          bldg_eflux_ac(l) = ac_heat_new;
         }
         // --- end AC heat update ---
 
