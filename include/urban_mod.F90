@@ -110,6 +110,49 @@ module urban_mod
       integer(c_int) :: status
     end subroutine UrbanSetAlbedoRoof_C
 
+    ! AbsorbedShortRad setter functions (restore restart state)
+    subroutine UrbanSetAbsorbedShortRadRoof_C(urban, values, size, status) bind(C, name="UrbanSetAbsorbedShortRadRoof")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), dimension(3) :: size
+      integer(c_int) :: status
+    end subroutine UrbanSetAbsorbedShortRadRoof_C
+
+    subroutine UrbanSetAbsorbedShortRadImperviousRoad_C(urban, values, size, &
+         status) bind(C, name="UrbanSetAbsorbedShortRadImperviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), dimension(3) :: size
+      integer(c_int) :: status
+    end subroutine UrbanSetAbsorbedShortRadImperviousRoad_C
+
+    subroutine UrbanSetAbsorbedShortRadPerviousRoad_C(urban, values, size, &
+         status) bind(C, name="UrbanSetAbsorbedShortRadPerviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), dimension(3) :: size
+      integer(c_int) :: status
+    end subroutine UrbanSetAbsorbedShortRadPerviousRoad_C
+
+    subroutine UrbanSetAbsorbedShortRadSunlitWall_C(urban, values, size, status) bind(C, name="UrbanSetAbsorbedShortRadSunlitWall")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), dimension(3) :: size
+      integer(c_int) :: status
+    end subroutine UrbanSetAbsorbedShortRadSunlitWall_C
+
+    subroutine UrbanSetAbsorbedShortRadShadedWall_C(urban, values, size, status) bind(C, name="UrbanSetAbsorbedShortRadShadedWall")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), dimension(3) :: size
+      integer(c_int) :: status
+    end subroutine UrbanSetAbsorbedShortRadShadedWall_C
+
     ! Emissivity setter functions
     subroutine UrbanSetEmissivityPerviousRoad_C(urban, values, length, status) bind(C, name="UrbanSetEmissivityPerviousRoad")
       import :: c_ptr, c_int
@@ -1889,6 +1932,46 @@ module urban_mod
     integer(c_int), intent(out) :: status
     call UrbanSetAlbedoRoof_C(urban%ptr, values, size, status)
   end subroutine UrbanSetAlbedoRoof
+
+  subroutine UrbanSetAbsorbedShortRadRoof(urban, values, size, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), dimension(3), intent(in) :: size
+    integer(c_int), intent(out) :: status
+    call UrbanSetAbsorbedShortRadRoof_C(urban%ptr, values, size, status)
+  end subroutine UrbanSetAbsorbedShortRadRoof
+
+  subroutine UrbanSetAbsorbedShortRadImperviousRoad(urban, values, size, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), dimension(3), intent(in) :: size
+    integer(c_int), intent(out) :: status
+    call UrbanSetAbsorbedShortRadImperviousRoad_C(urban%ptr, values, size, status)
+  end subroutine UrbanSetAbsorbedShortRadImperviousRoad
+
+  subroutine UrbanSetAbsorbedShortRadPerviousRoad(urban, values, size, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), dimension(3), intent(in) :: size
+    integer(c_int), intent(out) :: status
+    call UrbanSetAbsorbedShortRadPerviousRoad_C(urban%ptr, values, size, status)
+  end subroutine UrbanSetAbsorbedShortRadPerviousRoad
+
+  subroutine UrbanSetAbsorbedShortRadSunlitWall(urban, values, size, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), dimension(3), intent(in) :: size
+    integer(c_int), intent(out) :: status
+    call UrbanSetAbsorbedShortRadSunlitWall_C(urban%ptr, values, size, status)
+  end subroutine UrbanSetAbsorbedShortRadSunlitWall
+
+  subroutine UrbanSetAbsorbedShortRadShadedWall(urban, values, size, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), dimension(3), intent(in) :: size
+    integer(c_int), intent(out) :: status
+    call UrbanSetAbsorbedShortRadShadedWall_C(urban%ptr, values, size, status)
+  end subroutine UrbanSetAbsorbedShortRadShadedWall
 
   subroutine UrbanSetEmissivityPerviousRoad(urban, values, length, status)
     type(UrbanType), intent(in) :: urban
