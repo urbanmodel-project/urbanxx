@@ -72,6 +72,59 @@ constexpr Real ZETAM =
 constexpr Real ZETAT =
     0.465; // transition point of flux-gradient relation (temperature profile)
 
+// Compute effective surface relative humidity (qred) for pervious road.
+// Mirrors ELM's CanopyTemperatureMod.F90 logic for icol_road_perv.
+// Assumption: frac_sno = 0.0 (no snow on pervious road).
+//
+// qred = (1 - frac_sno) * hr_road_perv + frac_sno
+//      = hr_road_perv    (since frac_sno = 0)
+//
+// hr_road_perv = sum_j( rootfr_j * fac_j )
+//   rootfr_j = 0.1 (uniform profile, from ELM SoilStateType initialisation)
+//   fac_j    = min( max(vol_liq_j - watdry_j, 0) / (watopt_j - watdry_j), 1 )
+//              (zero when layer is frozen)
+//   watdry_j = watsat_j * (316230 / sucsat_j) ^ (-1/bsw_j)
+//   watopt_j = watsat_j * (158490 / sucsat_j) ^ (-1/bsw_j)
+KOKKOS_INLINE_FUNCTION
+Real ComputeQredPerviousRoad(int l, const PerviousRoadDataType &perroad) {
+  const Real frac_sno = 0.0; // assumed: no snow on pervious road
+
+  constexpr Real denh2o = SHR_CONST_RHOWATER; // density of liquid water [kg/m³]
+  constexpr Real denice = SHR_CONST_RHOICE;   // density of ice [kg/m³]
+  // rootfr_road_perv = 0.1 (uniform across nlevsoi layers) per ELM init
+  constexpr Real rootfr = 0.1;
+
+  Real hr_road_perv = 0.0;
+  for (int j = 0; j < NUM_LAYERS_ABV_BEDROCK; ++j) {
+    Real fac = 0.0;
+    if (perroad.Temperature(l, j) >= SHR_CONST_TKFRZ) {
+      const Real watsat_j = perroad.soil.WatSat(l, j);
+      const Real sucsat_j = perroad.soil.SucSat(l, j);
+      const Real bsw_j = perroad.soil.Bsw(l, j);
+      const Real dz_j = perroad.Dz(l, j);
+
+      const Real vol_ice =
+          Kokkos::min(watsat_j, perroad.soil.WaterIce(l, j) / (dz_j * denice));
+      const Real eff_porosity = watsat_j - vol_ice;
+      const Real vol_liq = Kokkos::min(
+          eff_porosity, perroad.soil.WaterLiquid(l, j) / (dz_j * denh2o));
+
+      // Clapp-Hornberger wilting point and field-capacity analogues
+      const Real watdry =
+          watsat_j * Kokkos::pow(316230.0 / sucsat_j, -1.0 / bsw_j);
+      const Real watopt =
+          watsat_j * Kokkos::pow(158490.0 / sucsat_j, -1.0 / bsw_j);
+
+      fac = Kokkos::min(Kokkos::max(vol_liq - watdry, 0.0) / (watopt - watdry),
+                        1.0);
+    }
+    hr_road_perv += rootfr * fac;
+  }
+
+  // qred with frac_sno = 0: qred = hr_road_perv
+  return (1.0 - frac_sno) * hr_road_perv + frac_sno;
+}
+
 KOKKOS_INLINE_FUNCTION
 void QSat(Real T, Real p, Real &es, Real &esdT, Real &qs, Real &qsdT) {
   // For water vapor (temperature range 0C-100C)
@@ -784,6 +837,13 @@ void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
         ComputeQsatForSurfaces(l, forcP, roofQsat, sunwallQsat, shadewallQsat,
                                improadQsat, perroadQsat);
 
+        // Compute effective surface relative humidity for pervious road.
+        // qred < 1 when soil moisture is below field capacity, reducing the
+        // effective specific humidity available for evaporation.
+        // frac_sno is assumed to be 0 (see ComputeQredPerviousRoad).
+        const Real qredPervroad =
+            ComputeQredPerviousRoad(l, urban.perviousRoad);
+
         // Compute canyon wind speed
         Real canyonUWind;
         ComputeCanyonUWind(htRoofVal, zDTownVal, z0TownVal, forcHgtUVal,
@@ -816,10 +876,10 @@ void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
           SurfaceTempHumidData surfaceData = {
               urban.roof.Qs(l),
               urban.imperviousRoad.Qs(l),
-              urban.perviousRoad.Qs(l),
+              qredPervroad * urban.perviousRoad.Qs(l),
               urban.roof.QsdT(l),
               urban.imperviousRoad.QsdT(l),
-              urban.perviousRoad.QsdT(l),
+              qredPervroad * urban.perviousRoad.QsdT(l),
               urban.roof.EffectiveSurfTemp(l),
               urban.imperviousRoad.EffectiveSurfTemp(l),
               urban.perviousRoad.EffectiveSurfTemp(l),
@@ -877,10 +937,10 @@ void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
         SurfaceTempHumidData surfaceData = {
             urban.roof.Qs(l),
             urban.imperviousRoad.Qs(l),
-            urban.perviousRoad.Qs(l),
+            qredPervroad * urban.perviousRoad.Qs(l),
             urban.roof.QsdT(l),
             urban.imperviousRoad.QsdT(l),
-            urban.perviousRoad.QsdT(l),
+            qredPervroad * urban.perviousRoad.QsdT(l),
             urban.roof.EffectiveSurfTemp(l),
             urban.imperviousRoad.EffectiveSurfTemp(l),
             urban.perviousRoad.EffectiveSurfTemp(l),
@@ -919,10 +979,13 @@ void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
             urban.imperviousRoad.QflxTranEvap(l));
 
         // Pervious road (with partitioning logic)
+        // Use qredPervroad * Qs to match ELM's qg = qred * qsatg for
+        // icol_road_perv.
         ComputePerviousRoadHeatFluxes(
             taf, qaf, urban.perviousRoad.EffectiveSurfTemp(l),
-            urban.perviousRoad.Qs(l), forcRho(l), condcs.roadPerv.wtusUnscl,
-            condcs.roadPerv.wtuqUnscl, urban.perviousRoad.EflxShGrnd(l),
+            qredPervroad * urban.perviousRoad.Qs(l), forcRho(l),
+            condcs.roadPerv.wtusUnscl, condcs.roadPerv.wtuqUnscl,
+            urban.perviousRoad.EflxShGrnd(l),
             urban.perviousRoad.QflxEvapSoil(l),
             urban.perviousRoad.QflxTranEvap(l));
 
