@@ -280,6 +280,22 @@ module urban_mod
       integer(c_int) :: status
     end subroutine UrbanSetWatSatForPerviousRoad
 
+    subroutine UrbanSetWatDryForPerviousRoad(urban, values, size, status) bind(C, name="UrbanSetWatDryForPerviousRoad")
+      import :: c_ptr, c_int, UrbanType
+      type(UrbanType), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), dimension(2) :: size
+      integer(c_int) :: status
+    end subroutine UrbanSetWatDryForPerviousRoad
+
+    subroutine UrbanSetWatOptForPerviousRoad(urban, values, size, status) bind(C, name="UrbanSetWatOptForPerviousRoad")
+      import :: c_ptr, c_int, UrbanType
+      type(UrbanType), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), dimension(2) :: size
+      integer(c_int) :: status
+    end subroutine UrbanSetWatOptForPerviousRoad
+
     subroutine UrbanSetBswForPerviousRoad(urban, values, size, status) bind(C, name="UrbanSetBswForPerviousRoad")
       import :: c_ptr, c_int, UrbanType
       type(UrbanType), value :: urban

@@ -62,6 +62,11 @@ struct SoilDataType {
   DECLARE_DEVICE_VIEW(2DR8, HkSat)  // saturated hydraulic conductivity [mm/s]
   DECLARE_DEVICE_VIEW(2DR8, Bsw)    // Clapp and Hornberger "b" parameter [-]
   DECLARE_DEVICE_VIEW(2DR8, SucSat) // saturated suction [mm]
+  DECLARE_DEVICE_VIEW(
+      2DR8, WatDry) // vol. water at wilting point (no-ET threshold) [-]
+  DECLARE_DEVICE_VIEW(
+      2DR8,
+      WatOpt) // vol. water at field-capacity analogue (full-ET threshold) [-]
 
   // Tridiagonal matrix arrays for hydrology solver (nlevbed+1 to include
   // aquifer layer)
@@ -87,6 +92,8 @@ struct SoilDataType {
     ALLOCATE_DEVICE_VIEW(HkSat, Array2DR8, numLandunits, numSoilLayers)
     ALLOCATE_DEVICE_VIEW(Bsw, Array2DR8, numLandunits, numSoilLayers)
     ALLOCATE_DEVICE_VIEW(SucSat, Array2DR8, numLandunits, numSoilLayers)
+    ALLOCATE_DEVICE_VIEW(WatDry, Array2DR8, numLandunits, numSoilLayers)
+    ALLOCATE_DEVICE_VIEW(WatOpt, Array2DR8, numLandunits, numSoilLayers)
 
     // Allocate tridiagonal arrays (+1 for aquifer layer)
     ALLOCATE_DEVICE_VIEW(Amx, Array2DR8, numLandunits, numSoilLayers + 1)
@@ -264,6 +271,7 @@ struct PerviousRoadDataType : SnowCoveredSurfaceData {
   // Hydrology flux variables (layer-level)
   DECLARE_DEVICE_VIEW(1DR8, QflxInfl) // infiltration flux [mm/s]
   DECLARE_DEVICE_VIEW(2DR8, QflxTran) // transpiration flux [mm/s]
+  DECLARE_DEVICE_VIEW(2DR8, Rootr)    // effective root fraction per layer [-]
 
   // Column-level hydrology variables
   DECLARE_DEVICE_VIEW(1DR8, Zwt)         // water table depth [m]
@@ -307,6 +315,7 @@ struct PerviousRoadDataType : SnowCoveredSurfaceData {
     ALLOCATE_DEVICE_VIEW(Smp, Array2DR8, numLandunits, numSoilLayers)
     ALLOCATE_DEVICE_VIEW(QflxInfl, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(QflxTran, Array2DR8, numLandunits, numSoilLayers)
+    ALLOCATE_DEVICE_VIEW(Rootr, Array2DR8, numLandunits, numSoilLayers)
     ALLOCATE_DEVICE_VIEW(Zwt, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(Qcharge, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(Jwt, Array1DI4, numLandunits)

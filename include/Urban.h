@@ -153,6 +153,14 @@ URBAN_EXTERN void UrbanSetWatSatForPerviousRoad(UrbanType urban,
                                                 const double *values,
                                                 const int size[2],
                                                 UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetWatDryForPerviousRoad(UrbanType urban,
+                                                const double *values,
+                                                const int size[2],
+                                                UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetWatOptForPerviousRoad(UrbanType urban,
+                                                const double *values,
+                                                const int size[2],
+                                                UrbanErrorCode *status);
 URBAN_EXTERN void UrbanSetBswForPerviousRoad(UrbanType urban,
                                              const double *values,
                                              const int size[2],

@@ -344,6 +344,20 @@ void UrbanSetWatSatForPerviousRoad(UrbanType urban, const double *values,
   SetView2D(urban->perviousRoad.soil.WatSat, values, size, status);
 }
 
+void UrbanSetWatDryForPerviousRoad(UrbanType urban, const double *values,
+                                   const int size[2], UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
+    return;
+  SetView2D(urban->perviousRoad.soil.WatDry, values, size, status);
+}
+
+void UrbanSetWatOptForPerviousRoad(UrbanType urban, const double *values,
+                                   const int size[2], UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
+    return;
+  SetView2D(urban->perviousRoad.soil.WatOpt, values, size, status);
+}
+
 void UrbanSetBswForPerviousRoad(UrbanType urban, const double *values,
                                 const int size[2], UrbanErrorCode *status) {
   if (!ValidateInputsWithSize(urban, values, size, status))
