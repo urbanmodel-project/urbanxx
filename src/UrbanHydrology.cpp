@@ -127,10 +127,13 @@ void SetupHydrologyTridiagonal(UrbanType urban, Real dtime) {
   auto qflx_infl = urban->perviousRoad.QflxInfl;
   auto qflx_tran = urban->perviousRoad.QflxTran;
   auto qflx_tran_evap = urban->perviousRoad.QflxTranEvap;
+  auto rootr = urban->perviousRoad.Rootr;
   auto zwt = urban->perviousRoad.Zwt;
   auto jwt = urban->perviousRoad.Jwt;
 
   auto watsat = urban->perviousRoad.soil.WatSat;
+  auto watdry = urban->perviousRoad.soil.WatDry;
+  auto watopt = urban->perviousRoad.soil.WatOpt;
   auto hksat = urban->perviousRoad.soil.HkSat;
   auto bsw = urban->perviousRoad.soil.Bsw;
   auto sucsat = urban->perviousRoad.soil.SucSat;
@@ -227,9 +230,42 @@ void SetupHydrologyTridiagonal(UrbanType urban, Real dtime) {
 
           dsmpdw[j] =
               ComputeMatricPotentialDerivative(smp(l, j), vol_liq, bsw(l, j));
+        }
 
-          if (j < 10)
-            qflx_tran(l, j) = qflx_tran_evap(l) / 10.0;
+        // Compute moisture-stress root fractions (mirrors ELM
+        // CanopyTemperatureMod logic)
+        constexpr Real rootfr =
+            0.1; // uniform structural root fraction (ELM SoilStateType init)
+        Real rootr_tmp[NUM_SOIL_LAYERS] = {};
+        Real hr = 0.0;
+        for (int j = 0; j < nlevbed; ++j) {
+          Real fac = 0.0;
+          if (urban->perviousRoad.Temperature(l, j) >= SHR_CONST_TKFRZ) {
+            const Real watsat_j = watsat(l, j);
+            const Real watdry_j = watdry(l, j);
+            const Real watopt_j = watopt(l, j);
+            const Real dz_j = dz(l, j);
+            const Real vol_ice = Kokkos::fmin(
+                watsat_j, h2osoi_ice(l, j) / (dz_j * SHR_CONST_RHOICE));
+            const Real eff_por = watsat_j - vol_ice;
+            const Real vol_liq = Kokkos::fmin(
+                eff_por, h2osoi_liq(l, j) / (dz_j * SHR_CONST_RHOWATER));
+            fac = Kokkos::fmin(Kokkos::fmax(vol_liq - watdry_j, 0.0) /
+                                   (watopt_j - watdry_j),
+                               1.0);
+          }
+          rootr_tmp[j] = rootfr * fac;
+          hr += rootr_tmp[j];
+        }
+        // Normalize and store; layers at and beyond nlevbed get 0
+        for (int j = 0; j < nlevbed; ++j) {
+          rootr(l, j) = (hr > 0.0) ? rootr_tmp[j] / hr : 0.0;
+        }
+
+        // Use moisture-stress-weighted root fractions to distribute
+        // transpiration
+        for (int j = 0; j < nlevbed; ++j) {
+          qflx_tran(l, j) = rootr(l, j) * qflx_tran_evap(l);
         }
 
         // Initialize tridiagonal matrix coefficients for layers below soil
@@ -576,7 +612,6 @@ void UpdateSoilWater(UrbanType urban, Real dtime) {
         for (int j = 0; j < nlevbed; ++j) {
           if (h2osoi_liq(l, j) < 0.0) {
             qflx_deficit(l) -= h2osoi_liq(l, j) / dtime;
-            h2osoi_liq(l, j) = 0.0;
           }
         }
       });
@@ -615,6 +650,7 @@ void UrbanComputeHydrology(UrbanType urban, Real dtime,
 
   try {
     ComputeHydraulicProperties(urban);
+
     SetupHydrologyTridiagonal(urban, dtime);
     SolveHydrologyTridiagonal(urban);
     UpdateSoilWater(urban, dtime);
