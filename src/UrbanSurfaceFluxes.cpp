@@ -843,6 +843,15 @@ void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
         // frac_sno is assumed to be 0 (see ComputeQredPerviousRoad).
         const Real qredPervroad =
             ComputeQredPerviousRoad(l, urban.perviousRoad);
+        if (urban.perviousRoad.Qs(l) > forcQ &&
+            forcQ > qredPervroad * urban.perviousRoad.Qs(l)) {
+          // If qaf is between qred * qs and qs, then set qaf to qred * qs
+          urban.perviousRoad.Qs(l) = forcQ;
+          urban.perviousRoad.QsdT(l) = 0.0;
+        } else {
+          urban.perviousRoad.Qs(l) *= qredPervroad;
+          urban.perviousRoad.QsdT(l) *= qredPervroad;
+        }
 
         // Compute canyon wind speed
         Real canyonUWind;
@@ -876,10 +885,10 @@ void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
           SurfaceTempHumidData surfaceData = {
               urban.roof.Qs(l),
               urban.imperviousRoad.Qs(l),
-              qredPervroad * urban.perviousRoad.Qs(l),
+              urban.perviousRoad.Qs(l),
               urban.roof.QsdT(l),
               urban.imperviousRoad.QsdT(l),
-              qredPervroad * urban.perviousRoad.QsdT(l),
+              urban.perviousRoad.QsdT(l),
               urban.roof.EffectiveSurfTemp(l),
               urban.imperviousRoad.EffectiveSurfTemp(l),
               urban.perviousRoad.EffectiveSurfTemp(l),
@@ -937,10 +946,10 @@ void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
         SurfaceTempHumidData surfaceData = {
             urban.roof.Qs(l),
             urban.imperviousRoad.Qs(l),
-            qredPervroad * urban.perviousRoad.Qs(l),
+            urban.perviousRoad.Qs(l),
             urban.roof.QsdT(l),
             urban.imperviousRoad.QsdT(l),
-            qredPervroad * urban.perviousRoad.QsdT(l),
+            urban.perviousRoad.QsdT(l),
             urban.roof.EffectiveSurfTemp(l),
             urban.imperviousRoad.EffectiveSurfTemp(l),
             urban.perviousRoad.EffectiveSurfTemp(l),
@@ -983,9 +992,8 @@ void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
         // icol_road_perv.
         ComputePerviousRoadHeatFluxes(
             taf, qaf, urban.perviousRoad.EffectiveSurfTemp(l),
-            qredPervroad * urban.perviousRoad.Qs(l), forcRho(l),
-            condcs.roadPerv.wtusUnscl, condcs.roadPerv.wtuqUnscl,
-            urban.perviousRoad.EflxShGrnd(l),
+            urban.perviousRoad.Qs(l), forcRho(l), condcs.roadPerv.wtusUnscl,
+            condcs.roadPerv.wtuqUnscl, urban.perviousRoad.EflxShGrnd(l),
             urban.perviousRoad.QflxEvapSoil(l),
             urban.perviousRoad.QflxTranEvap(l));
 
