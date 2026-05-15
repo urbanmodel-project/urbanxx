@@ -64,6 +64,28 @@ URBAN_EXTERN void UrbanSetAlbedoShadedWall(UrbanType urban,
 URBAN_EXTERN void UrbanSetAlbedoRoof(UrbanType urban, const double *values,
                                      const int size[3], UrbanErrorCode *status);
 
+// AbsorbedShortRad setter functions (used to restore restart state)
+URBAN_EXTERN void UrbanSetAbsorbedShortRadRoof(UrbanType urban,
+                                               const double *values,
+                                               const int size[3],
+                                               UrbanErrorCode *status);
+URBAN_EXTERN void
+UrbanSetAbsorbedShortRadImperviousRoad(UrbanType urban, const double *values,
+                                       const int size[3],
+                                       UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetAbsorbedShortRadPerviousRoad(UrbanType urban,
+                                                       const double *values,
+                                                       const int size[3],
+                                                       UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetAbsorbedShortRadSunlitWall(UrbanType urban,
+                                                     const double *values,
+                                                     const int size[3],
+                                                     UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetAbsorbedShortRadShadedWall(UrbanType urban,
+                                                     const double *values,
+                                                     const int size[3],
+                                                     UrbanErrorCode *status);
+
 // Emissivity setter functions
 URBAN_EXTERN void UrbanSetEmissivityPerviousRoad(UrbanType urban,
                                                  const double *values,
@@ -128,6 +150,14 @@ URBAN_EXTERN void UrbanSetOrganicPerviousRoad(UrbanType urban,
 // Call after UrbanSetup() to override the internally-computed values with ELM
 // values.
 URBAN_EXTERN void UrbanSetWatSatForPerviousRoad(UrbanType urban,
+                                                const double *values,
+                                                const int size[2],
+                                                UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetWatDryForPerviousRoad(UrbanType urban,
+                                                const double *values,
+                                                const int size[2],
+                                                UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetWatOptForPerviousRoad(UrbanType urban,
                                                 const double *values,
                                                 const int size[2],
                                                 UrbanErrorCode *status);
@@ -257,6 +287,14 @@ URBAN_EXTERN void UrbanSetSoilIceContentForPerviousRoad(UrbanType urban,
                                                         const double *values,
                                                         const int size[2],
                                                         UrbanErrorCode *status);
+URBAN_EXTERN void
+UrbanSetSoilLiquidWaterForImperviousRoad(UrbanType urban, const double *values,
+                                         const int size[2],
+                                         UrbanErrorCode *status);
+URBAN_EXTERN void
+UrbanSetSoilIceContentForImperviousRoad(UrbanType urban, const double *values,
+                                        const int size[2],
+                                        UrbanErrorCode *status);
 
 // Layer temperature setter functions
 URBAN_EXTERN void UrbanSetLayerTempRoof(UrbanType urban, const double *values,

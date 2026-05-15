@@ -110,6 +110,49 @@ module urban_mod
       integer(c_int) :: status
     end subroutine UrbanSetAlbedoRoof_C
 
+    ! AbsorbedShortRad setter functions (restore restart state)
+    subroutine UrbanSetAbsorbedShortRadRoof_C(urban, values, size, status) bind(C, name="UrbanSetAbsorbedShortRadRoof")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), dimension(3) :: size
+      integer(c_int) :: status
+    end subroutine UrbanSetAbsorbedShortRadRoof_C
+
+    subroutine UrbanSetAbsorbedShortRadImperviousRoad_C(urban, values, size, &
+         status) bind(C, name="UrbanSetAbsorbedShortRadImperviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), dimension(3) :: size
+      integer(c_int) :: status
+    end subroutine UrbanSetAbsorbedShortRadImperviousRoad_C
+
+    subroutine UrbanSetAbsorbedShortRadPerviousRoad_C(urban, values, size, &
+         status) bind(C, name="UrbanSetAbsorbedShortRadPerviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), dimension(3) :: size
+      integer(c_int) :: status
+    end subroutine UrbanSetAbsorbedShortRadPerviousRoad_C
+
+    subroutine UrbanSetAbsorbedShortRadSunlitWall_C(urban, values, size, status) bind(C, name="UrbanSetAbsorbedShortRadSunlitWall")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), dimension(3) :: size
+      integer(c_int) :: status
+    end subroutine UrbanSetAbsorbedShortRadSunlitWall_C
+
+    subroutine UrbanSetAbsorbedShortRadShadedWall_C(urban, values, size, status) bind(C, name="UrbanSetAbsorbedShortRadShadedWall")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), dimension(3) :: size
+      integer(c_int) :: status
+    end subroutine UrbanSetAbsorbedShortRadShadedWall_C
+
     ! Emissivity setter functions
     subroutine UrbanSetEmissivityPerviousRoad_C(urban, values, length, status) bind(C, name="UrbanSetEmissivityPerviousRoad")
       import :: c_ptr, c_int
@@ -236,6 +279,22 @@ module urban_mod
       integer(c_int), dimension(2) :: size
       integer(c_int) :: status
     end subroutine UrbanSetWatSatForPerviousRoad
+
+    subroutine UrbanSetWatDryForPerviousRoad(urban, values, size, status) bind(C, name="UrbanSetWatDryForPerviousRoad")
+      import :: c_ptr, c_int, UrbanType
+      type(UrbanType), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), dimension(2) :: size
+      integer(c_int) :: status
+    end subroutine UrbanSetWatDryForPerviousRoad
+
+    subroutine UrbanSetWatOptForPerviousRoad(urban, values, size, status) bind(C, name="UrbanSetWatOptForPerviousRoad")
+      import :: c_ptr, c_int, UrbanType
+      type(UrbanType), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), dimension(2) :: size
+      integer(c_int) :: status
+    end subroutine UrbanSetWatOptForPerviousRoad
 
     subroutine UrbanSetBswForPerviousRoad(urban, values, size, status) bind(C, name="UrbanSetBswForPerviousRoad")
       import :: c_ptr, c_int, UrbanType
@@ -946,6 +1005,24 @@ module urban_mod
       integer(c_int), dimension(2) :: size
       integer(c_int) :: status
     end subroutine UrbanSetSoilIceContentForPerviousRoad_C
+
+    subroutine UrbanSetSoilLiquidWaterForImperviousRoad_C(urban, values, size, status) &
+      bind(C, name="UrbanSetSoilLiquidWaterForImperviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), dimension(2) :: size
+      integer(c_int) :: status
+    end subroutine UrbanSetSoilLiquidWaterForImperviousRoad_C
+
+    subroutine UrbanSetSoilIceContentForImperviousRoad_C(urban, values, size, status) &
+      bind(C, name="UrbanSetSoilIceContentForImperviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), dimension(2) :: size
+      integer(c_int) :: status
+    end subroutine UrbanSetSoilIceContentForImperviousRoad_C
 
     ! Shortwave radiation getter functions - Absorbed
     subroutine UrbanGetAbsorbedShortwaveRoof_C(urban, values, size, status) bind(C, name="UrbanGetAbsorbedShortwaveRoof")
@@ -1675,6 +1752,15 @@ module urban_mod
       integer(c_int) :: status
     end subroutine UrbanSetQflxSubSnowImperviousRoad_C
 
+    subroutine UrbanSetEFluxForAC_C(urban, values, length, status) &
+      bind(C, name="UrbanSetEFluxForAC")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetEFluxForAC_C
+
     ! DewCondensation compute C interface
     subroutine UrbanComputeDewCondensationRoofImperviousRoad_C(urban, dtime, status) &
       bind(C, name="UrbanComputeDewCondensationRoofImperviousRoad")
@@ -1862,6 +1948,46 @@ module urban_mod
     integer(c_int), intent(out) :: status
     call UrbanSetAlbedoRoof_C(urban%ptr, values, size, status)
   end subroutine UrbanSetAlbedoRoof
+
+  subroutine UrbanSetAbsorbedShortRadRoof(urban, values, size, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), dimension(3), intent(in) :: size
+    integer(c_int), intent(out) :: status
+    call UrbanSetAbsorbedShortRadRoof_C(urban%ptr, values, size, status)
+  end subroutine UrbanSetAbsorbedShortRadRoof
+
+  subroutine UrbanSetAbsorbedShortRadImperviousRoad(urban, values, size, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), dimension(3), intent(in) :: size
+    integer(c_int), intent(out) :: status
+    call UrbanSetAbsorbedShortRadImperviousRoad_C(urban%ptr, values, size, status)
+  end subroutine UrbanSetAbsorbedShortRadImperviousRoad
+
+  subroutine UrbanSetAbsorbedShortRadPerviousRoad(urban, values, size, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), dimension(3), intent(in) :: size
+    integer(c_int), intent(out) :: status
+    call UrbanSetAbsorbedShortRadPerviousRoad_C(urban%ptr, values, size, status)
+  end subroutine UrbanSetAbsorbedShortRadPerviousRoad
+
+  subroutine UrbanSetAbsorbedShortRadSunlitWall(urban, values, size, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), dimension(3), intent(in) :: size
+    integer(c_int), intent(out) :: status
+    call UrbanSetAbsorbedShortRadSunlitWall_C(urban%ptr, values, size, status)
+  end subroutine UrbanSetAbsorbedShortRadSunlitWall
+
+  subroutine UrbanSetAbsorbedShortRadShadedWall(urban, values, size, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), dimension(3), intent(in) :: size
+    integer(c_int), intent(out) :: status
+    call UrbanSetAbsorbedShortRadShadedWall_C(urban%ptr, values, size, status)
+  end subroutine UrbanSetAbsorbedShortRadShadedWall
 
   subroutine UrbanSetEmissivityPerviousRoad(urban, values, length, status)
     type(UrbanType), intent(in) :: urban
@@ -2163,6 +2289,22 @@ module urban_mod
     integer(c_int), intent(out) :: status
     call UrbanSetSoilIceContentForPerviousRoad_C(urban%ptr, values, size, status)
   end subroutine UrbanSetSoilIceContentForPerviousRoad
+
+  subroutine UrbanSetSoilLiquidWaterForImperviousRoad(urban, values, size, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), dimension(2), intent(in) :: size
+    integer(c_int), intent(out) :: status
+    call UrbanSetSoilLiquidWaterForImperviousRoad_C(urban%ptr, values, size, status)
+  end subroutine UrbanSetSoilLiquidWaterForImperviousRoad
+
+  subroutine UrbanSetSoilIceContentForImperviousRoad(urban, values, size, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), dimension(2), intent(in) :: size
+    integer(c_int), intent(out) :: status
+    call UrbanSetSoilIceContentForImperviousRoad_C(urban%ptr, values, size, status)
+  end subroutine UrbanSetSoilIceContentForImperviousRoad
 
   ! Shortwave radiation getter functions - Absorbed
   subroutine UrbanGetAbsorbedShortwaveRoof(urban, values, size, status)
@@ -3071,6 +3213,14 @@ module urban_mod
     integer(c_int), intent(out) :: status
     call UrbanSetQflxSubSnowImperviousRoad_C(urban%ptr, values, length, status)
   end subroutine UrbanSetQflxSubSnowImperviousRoad
+
+  subroutine UrbanSetEFluxForAC(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), value :: length
+    integer(c_int), intent(out) :: status
+    call UrbanSetEFluxForAC_C(urban%ptr, values, length, status)
+  end subroutine UrbanSetEFluxForAC
 
   ! DewCondensation compute subroutine
   subroutine UrbanComputeDewCondensationRoofImperviousRoad(urban, dtime, status)

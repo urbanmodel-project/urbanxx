@@ -516,6 +516,12 @@ static void UrbanInitializePerviousRoadSoils(UrbanType urban) {
           qflx_tran(l, k) = 0.0;
         }
 
+        // Initialize root fractions to uniform (1/nSoilLayers); recomputed
+        // each timestep in SetupHydrologyTridiagonal from soil moisture state
+        for (int k = 0; k < numSoilLayers; ++k) {
+          urban->perviousRoad.Rootr(l, k) = 1.0 / numSoilLayers;
+        }
+
         // Copy water content from soil to hydrology state variables
         for (int k = 0; k < numSoilLayers; ++k) {
           h2osoi_liq(l, k) = water_liquid(l, k);

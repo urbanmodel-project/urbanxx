@@ -127,10 +127,13 @@ void SetupHydrologyTridiagonal(UrbanType urban, Real dtime) {
   auto qflx_infl = urban->perviousRoad.QflxInfl;
   auto qflx_tran = urban->perviousRoad.QflxTran;
   auto qflx_tran_evap = urban->perviousRoad.QflxTranEvap;
+  auto rootr = urban->perviousRoad.Rootr;
   auto zwt = urban->perviousRoad.Zwt;
   auto jwt = urban->perviousRoad.Jwt;
 
   auto watsat = urban->perviousRoad.soil.WatSat;
+  auto watdry = urban->perviousRoad.soil.WatDry;
+  auto watopt = urban->perviousRoad.soil.WatOpt;
   auto hksat = urban->perviousRoad.soil.HkSat;
   auto bsw = urban->perviousRoad.soil.Bsw;
   auto sucsat = urban->perviousRoad.soil.SucSat;
@@ -165,7 +168,9 @@ void SetupHydrologyTridiagonal(UrbanType urban, Real dtime) {
         // Aquifer layer (if water table below soil column)
         if (jwt_l == nlevbed) {
           const Real z_top = zi(l, nlevbed) * 1000.0;
-          const Real delta_z_zwt = Kokkos::fmax(zwtmm - z_top, 1.0);
+          Real delta_z_zwt = zwtmm - z_top;
+          if (delta_z_zwt == 0.0)
+            delta_z_zwt = 1.0;
 
           // Cannot use ComputeEquilibriumWaterContent for aquifer layer since
           // the algorithm here is slightly different than what is used for soil
@@ -225,9 +230,42 @@ void SetupHydrologyTridiagonal(UrbanType urban, Real dtime) {
 
           dsmpdw[j] =
               ComputeMatricPotentialDerivative(smp(l, j), vol_liq, bsw(l, j));
+        }
 
-          if (j < 10)
-            qflx_tran(l, j) = qflx_tran_evap(l) / 10.0;
+        // Compute moisture-stress root fractions (mirrors ELM
+        // CanopyTemperatureMod logic)
+        constexpr Real rootfr =
+            0.1; // uniform structural root fraction (ELM SoilStateType init)
+        Real rootr_tmp[NUM_SOIL_LAYERS] = {};
+        Real hr = 0.0;
+        for (int j = 0; j < nlevbed; ++j) {
+          Real fac = 0.0;
+          if (urban->perviousRoad.Temperature(l, j) >= SHR_CONST_TKFRZ) {
+            const Real watsat_j = watsat(l, j);
+            const Real watdry_j = watdry(l, j);
+            const Real watopt_j = watopt(l, j);
+            const Real dz_j = dz(l, j);
+            const Real vol_ice = Kokkos::fmin(
+                watsat_j, h2osoi_ice(l, j) / (dz_j * SHR_CONST_RHOICE));
+            const Real eff_por = watsat_j - vol_ice;
+            const Real vol_liq = Kokkos::fmin(
+                eff_por, h2osoi_liq(l, j) / (dz_j * SHR_CONST_RHOWATER));
+            fac = Kokkos::fmin(Kokkos::fmax(vol_liq - watdry_j, 0.0) /
+                                   (watopt_j - watdry_j),
+                               1.0);
+          }
+          rootr_tmp[j] = rootfr * fac;
+          hr += rootr_tmp[j];
+        }
+        // Normalize and store; layers at and beyond nlevbed get 0
+        for (int j = 0; j < nlevbed; ++j) {
+          rootr(l, j) = (hr > 0.0) ? rootr_tmp[j] / hr : 0.0;
+        }
+
+        // Use moisture-stress-weighted root fractions to distribute
+        // transpiration
+        for (int j = 0; j < nlevbed; ++j) {
+          qflx_tran(l, j) = rootr(l, j) * qflx_tran_evap(l);
         }
 
         // Initialize tridiagonal matrix coefficients for layers below soil
@@ -291,8 +329,7 @@ void SetupHydrologyTridiagonal(UrbanType urban, Real dtime) {
         // Bottom layer j=nlevbed-1
         {
           const int j = nlevbed - 1;
-
-          if (jwt_l < nlevbed - 1) {
+          if (nlevbed > jwt_l) {
             // Water table is in soil column - zero flow bottom boundary
             Real den = (Zc(l, j) - Zc(l, j - 1)) * 1000.0;
             Real dzq = zq[j] - zq[j - 1];
@@ -471,7 +508,49 @@ void UpdateSoilWater(UrbanType urban, Real dtime) {
 
   Kokkos::parallel_for(
       "UpdateSoilWater", nlandunits, KOKKOS_LAMBDA(const int l) {
+        const Real zwtmm = zwt(l) * 1000.0;
         const int jwt_l = jwt(l);
+
+        // Compute equilibrium matric potentials for each layer
+        Real zq[NUM_SOIL_LAYERS + 1];
+        for (int j = 0; j < nlevbed; ++j) {
+          const Real z_top = zi(l, j) * 1000.0;
+          const Real z_bot = zi(l, j + 1) * 1000.0;
+
+          const Real vol_eq = ComputeEquilibriumWaterContent(
+              zwtmm, z_top, z_bot, watsat(l, j), sucsat(l, j), bsw(l, j));
+
+          zq[j] = ComputeEquilibriumMatricPotential(
+              vol_eq, watsat(l, j), sucsat(l, j), bsw(l, j), SMP_MIN);
+        }
+
+        // Aquifer layer (if water table below soil column)
+        if (jwt_l == nlevbed) {
+          const Real z_top = zi(l, nlevbed) * 1000.0;
+          Real delta_z_zwt = zwtmm - z_top;
+          if (delta_z_zwt == 0.0)
+            delta_z_zwt = 1.0;
+
+          // Cannot use ComputeEquilibriumWaterContent for aquifer layer since
+          // the algorithm here is slightly different than what is used for soil
+          // layers
+          const Real zwt_loc = zwtmm;
+          const Real watsat_loc = watsat(l, nlevbed - 1);
+          const Real sucsat_loc = sucsat(l, nlevbed - 1);
+          const Real bsw_loc = bsw(l, nlevbed - 1);
+          const Real temp_i = 1.0;
+          const Real temp_0 = Kokkos::pow(
+              (sucsat_loc + zwt_loc - z_top) / sucsat_loc, 1.0 - 1.0 / bsw_loc);
+          const Real vol_eq1 = -sucsat_loc * watsat_loc /
+                               (1.0 - 1.0 / bsw_loc) / (delta_z_zwt) *
+                               (temp_i - temp_0);
+          const Real vol_eq =
+              Kokkos::fmin(watsat_loc, Kokkos::fmax(vol_eq1, 0.0));
+
+          zq[nlevbed] = ComputeEquilibriumMatricPotential(
+              vol_eq, watsat(l, nlevbed - 1), sucsat(l, nlevbed - 1),
+              bsw(l, nlevbed - 1), SMP_MIN);
+        }
 
         // Update liquid water content for soil layers
         for (int j = 0; j < nlevbed; ++j) {
@@ -479,7 +558,7 @@ void UpdateSoilWater(UrbanType urban, Real dtime) {
         }
 
         // Compute aquifer recharge rate
-        if (jwt_l < nlevbed - 1) {
+        if (jwt_l < nlevbed) {
           // Water table is in soil column (layer jwt_l, 0-based).
           // ELM: jwt(c)+1 (1-based) == jwt_l (0-based).
           const Real wh_zwt = 0.0; // At water table: smp = -sucsat and zq =
@@ -502,26 +581,12 @@ void UpdateSoilWater(UrbanType urban, Real dtime) {
           const Real ka = imped * hksat(l, jwt_l) *
                           Kokkos::pow(s1, 2.0 * bsw(l, jwt_l) + 3.0);
 
-          // Compute equilibrium matric potential at jwt layer.
-          // Layer jwt_l spans zi(l, jwt_l) [top] to zi(l, jwt_l+1) [bottom].
-          // ELM: zimm(c, jwt_l) [top] and zimm(c, jwt_l+1) [bottom].
-          const Real z_top = zi(l, jwt_l) * 1000.0;
-          const Real z_bot = zi(l, jwt_l + 1) * 1000.0;
-          const Real zwtmm = zwt(l) * 1000.0;
-
-          const Real vol_eq = ComputeEquilibriumWaterContent(
-              zwtmm, z_top, z_bot, watsat(l, jwt_l), sucsat(l, jwt_l),
-              bsw(l, jwt_l));
-
-          const Real zq = ComputeEquilibriumMatricPotential(
-              vol_eq, watsat(l, jwt_l), sucsat(l, jwt_l), bsw(l, jwt_l),
-              SMP_MIN);
-
           // ELM: smp(c, max(1, jwt(c))) 1-based = smp(l, max(0, jwt_l-1))
           // 0-based
           const int jwt_max = Kokkos::fmax(0, jwt_l - 1);
           const Real smp1 = Kokkos::fmax(SMP_MIN, smp(l, jwt_max));
-          const Real wh = smp1 - zq;
+          const int index = Kokkos::fmax(0, jwt_l - 1);
+          const Real wh = smp1 - zq[index];
 
           // Compute recharge rate.
           // ELM: zwt - z(c, jwt(c)) where z(c, jwt(c)) (1-based) = Zc(l,
@@ -547,7 +612,6 @@ void UpdateSoilWater(UrbanType urban, Real dtime) {
         for (int j = 0; j < nlevbed; ++j) {
           if (h2osoi_liq(l, j) < 0.0) {
             qflx_deficit(l) -= h2osoi_liq(l, j) / dtime;
-            h2osoi_liq(l, j) = 0.0;
           }
         }
       });
@@ -586,6 +650,7 @@ void UrbanComputeHydrology(UrbanType urban, Real dtime,
 
   try {
     ComputeHydraulicProperties(urban);
+
     SetupHydrologyTridiagonal(urban, dtime);
     SolveHydrologyTridiagonal(urban);
     UpdateSoilWater(urban, dtime);

@@ -134,6 +134,52 @@ void UrbanSetAlbedoRoof(UrbanType urban, const double *values,
   SetView3D(urban->urbanParams.albedo.Roof, values, size, status);
 }
 
+// AbsorbedShortRad setter functions (restore restart state)
+void UrbanSetAbsorbedShortRadRoof(UrbanType urban, const double *values,
+                                  const int size[3], UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
+    return;
+
+  SetView3D(urban->roof.AbsorbedShortRad, values, size, status);
+}
+
+void UrbanSetAbsorbedShortRadImperviousRoad(UrbanType urban,
+                                            const double *values,
+                                            const int size[3],
+                                            UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
+    return;
+
+  SetView3D(urban->imperviousRoad.AbsorbedShortRad, values, size, status);
+}
+
+void UrbanSetAbsorbedShortRadPerviousRoad(UrbanType urban, const double *values,
+                                          const int size[3],
+                                          UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
+    return;
+
+  SetView3D(urban->perviousRoad.AbsorbedShortRad, values, size, status);
+}
+
+void UrbanSetAbsorbedShortRadSunlitWall(UrbanType urban, const double *values,
+                                        const int size[3],
+                                        UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
+    return;
+
+  SetView3D(urban->sunlitWall.AbsorbedShortRad, values, size, status);
+}
+
+void UrbanSetAbsorbedShortRadShadedWall(UrbanType urban, const double *values,
+                                        const int size[3],
+                                        UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
+    return;
+
+  SetView3D(urban->shadedWall.AbsorbedShortRad, values, size, status);
+}
+
 // Emissivity setter functions
 void UrbanSetEmissivityPerviousRoad(UrbanType urban, const double *values,
                                     int length, UrbanErrorCode *status) {
@@ -296,6 +342,20 @@ void UrbanSetWatSatForPerviousRoad(UrbanType urban, const double *values,
   if (!ValidateInputsWithSize(urban, values, size, status))
     return;
   SetView2D(urban->perviousRoad.soil.WatSat, values, size, status);
+}
+
+void UrbanSetWatDryForPerviousRoad(UrbanType urban, const double *values,
+                                   const int size[2], UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
+    return;
+  SetView2D(urban->perviousRoad.soil.WatDry, values, size, status);
+}
+
+void UrbanSetWatOptForPerviousRoad(UrbanType urban, const double *values,
+                                   const int size[2], UrbanErrorCode *status) {
+  if (!ValidateInputsWithSize(urban, values, size, status))
+    return;
+  SetView2D(urban->perviousRoad.soil.WatOpt, values, size, status);
 }
 
 void UrbanSetBswForPerviousRoad(UrbanType urban, const double *values,
