@@ -216,7 +216,8 @@ struct SnowCoveredSurfaceData : SurfaceDataBase {
   DECLARE_DEVICE_VIEW(1DR8, H2OSno) // snow water equivalent [kg/m²]
   DECLARE_DEVICE_VIEW(
       1DR8, IntSno) // integrated (max-season) snowfall [kg/m²], Niu-Yang state
-  DECLARE_DEVICE_VIEW(1DR8, FracSno) // snow-covered fraction [-]
+  DECLARE_DEVICE_VIEW(1DR8, FracSno)   // snow-covered fraction [-]
+  DECLARE_DEVICE_VIEW(1DR8, SnowDepth) // geometric snow depth [m]
 
   SnowCoveredSurfaceData(int numLandunits, int numRadBands, int numRadTypes,
                          int numLayers)
@@ -234,6 +235,7 @@ struct SnowCoveredSurfaceData : SurfaceDataBase {
     ALLOCATE_DEVICE_VIEW(H2OSno, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(IntSno, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(FracSno, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(SnowDepth, Array1DR8, numLandunits)
   }
 };
 

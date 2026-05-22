@@ -247,30 +247,48 @@ void ComputeSnowCover(URBANXX::_p_UrbanType &urban) {
   const double large_intsnow = 1.0e8; // ELM cap on int_snow
 
   auto forc_snow = urban.atmosphereData.ForcSnow; // kg/m²/s
+  auto forc_temp = urban.atmosphereData.ForcTemp; // air temperature (K)
 
   auto roofH2OSno = urban.roof.H2OSno;
   auto roofIntSno = urban.roof.IntSno;
   auto roofFracSno = urban.roof.FracSno;
   auto roofSubSnow = urban.roof.QflxSubSnow;
+  auto roofSnowDepth = urban.roof.SnowDepth;
 
   auto impH2OSno = urban.imperviousRoad.H2OSno;
   auto impIntSno = urban.imperviousRoad.IntSno;
   auto impFracSno = urban.imperviousRoad.FracSno;
   auto impSubSnow = urban.imperviousRoad.QflxSubSnow;
+  auto impSnowDepth = urban.imperviousRoad.SnowDepth;
 
   auto perH2OSno = urban.perviousRoad.H2OSno;
   auto perIntSno = urban.perviousRoad.IntSno;
   auto perFracSno = urban.perviousRoad.FracSno;
   auto perSubSnow = urban.perviousRoad.QflxSubSnow;
+  auto perSnowDepth = urban.perviousRoad.SnowDepth;
 
   Kokkos::parallel_for(
       "ComputeSnowCover", urban.numLandunits, KOKKOS_LAMBDA(const int l) {
+        // Compute bulk density of new snow from air temperature
+        // (port of ELM CanopyHydrologyMod.F90, urban path, oldfflag=0).
+        // tfrz = 273.15 K
+        constexpr double tfrz = 273.15;
+        const double T = forc_temp(l);
+        double bifall;
+        if (T > tfrz + 2.0)
+          bifall = 50.0 + 1.7 * std::pow(17.0, 1.5);
+        else if (T > tfrz - 15.0)
+          bifall = 50.0 + 1.7 * std::pow(T - tfrz + 15.0, 1.5);
+        else
+          bifall = 50.0;
+
         // Lambda: update one snow-covered surface given its views.
-        // forc_snow is shared across all three surfaces for the same landunit.
+        // forc_snow and bifall are shared across all three surfaces.
         auto update = [&](Kokkos::View<double *> h2osno_v,
                           Kokkos::View<double *> int_sno_v,
                           Kokkos::View<double *> frac_sno_v,
-                          Kokkos::View<double *> sub_snow_v) {
+                          Kokkos::View<double *> sub_snow_v,
+                          Kokkos::View<double *> snow_depth_v) {
           const double newsnow = forc_snow(l) * dtime; // kg/m²
           const double sub_loss =
               sub_snow_v(l) * dtime; // previous-step sublimation
@@ -278,6 +296,9 @@ void ComputeSnowCover(URBANXX::_p_UrbanType &urban) {
           double h2osno = h2osno_v(l);
           double int_sno = int_sno_v(l);
           double frac_sno = frac_sno_v(l);
+
+          // Save SWE before sublimation removal for proportional depth scaling
+          const double h2osno_old = h2osno;
 
           // Remove sublimation from existing pack
           h2osno = Kokkos::max(0.0, h2osno - sub_loss);
@@ -325,14 +346,28 @@ void ComputeSnowCover(URBANXX::_p_UrbanType &urban) {
             }
           }
 
+          // --- Update geometric snow depth ---
+          // Scale existing depth by the fraction of SWE remaining after
+          // sublimation, then add new-snow depth.
+          double snow_depth = snow_depth_v(l);
+          if (h2osno_old > 0.0)
+            snow_depth *=
+                (Kokkos::max(0.0, h2osno_old - sub_loss) / h2osno_old);
+          if (snow_depth < 0.0 || h2osno_old <= 0.0)
+            snow_depth = 0.0;
+          snow_depth += newsnow / bifall;
+          if (h2osno <= 0.0)
+            snow_depth = 0.0;
+          snow_depth_v(l) = snow_depth;
+
           h2osno_v(l) = h2osno;
           int_sno_v(l) = int_sno;
           frac_sno_v(l) = Kokkos::max(0.0, Kokkos::min(1.0, frac_sno));
         };
 
-        update(roofH2OSno, roofIntSno, roofFracSno, roofSubSnow);
-        update(impH2OSno, impIntSno, impFracSno, impSubSnow);
-        update(perH2OSno, perIntSno, perFracSno, perSubSnow);
+        update(roofH2OSno, roofIntSno, roofFracSno, roofSubSnow, roofSnowDepth);
+        update(impH2OSno, impIntSno, impFracSno, impSubSnow, impSnowDepth);
+        update(perH2OSno, perIntSno, perFracSno, perSubSnow, perSnowDepth);
       });
   Kokkos::fence();
 }
