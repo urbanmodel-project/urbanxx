@@ -560,6 +560,12 @@ module urban_mod
     end subroutine UrbanAdvance_C
 
     ! Physics computation functions
+    subroutine UrbanComputeSnowCover_C(urban, status) bind(C, name="UrbanComputeSnowCover")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      integer(c_int) :: status
+    end subroutine UrbanComputeSnowCover_C
+
     subroutine UrbanComputeNetLongwave_C(urban, status) bind(C, name="UrbanComputeNetLongwave")
       import :: c_ptr, c_int
       type(c_ptr), value :: urban
@@ -2122,6 +2128,12 @@ module urban_mod
     integer(c_int), intent(out) :: status
     call UrbanAdvance_C(urban%ptr, status)
   end subroutine UrbanAdvance
+
+  subroutine UrbanComputeSnowCover(urban, status)
+    type(UrbanType), intent(in) :: urban
+    integer(c_int), intent(out) :: status
+    call UrbanComputeSnowCover_C(urban%ptr, status)
+  end subroutine UrbanComputeSnowCover
 
   subroutine UrbanComputeNetLongwave(urban, status)
     type(UrbanType), intent(in) :: urban

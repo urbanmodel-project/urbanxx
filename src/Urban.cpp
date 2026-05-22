@@ -97,6 +97,21 @@ void UrbanComputeNetLongwave(UrbanType urban, UrbanErrorCode *status) {
   }
 }
 
+void UrbanComputeSnowCover(UrbanType urban, UrbanErrorCode *status) {
+  if (urban == nullptr || status == nullptr) {
+    if (status)
+      *status = URBAN_ERR_INVALID_ARGUMENT;
+    return;
+  }
+
+  try {
+    URBANXX::ComputeSnowCover(*urban);
+    *status = URBAN_SUCCESS;
+  } catch (...) {
+    *status = URBAN_ERR_INTERNAL;
+  }
+}
+
 void UrbanComputeNetShortwave(UrbanType urban, UrbanErrorCode *status) {
   if (urban == nullptr || status == nullptr) {
     if (status)

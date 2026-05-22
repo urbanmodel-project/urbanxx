@@ -7,6 +7,7 @@
 #include "private/UrbanSurfaceTypeImpl.h"
 #include "private/UrbanTypeImpl.h"
 #include <Kokkos_Core.hpp>
+#include <cmath>
 #include <iostream>
 
 namespace URBANXX {
@@ -230,6 +231,112 @@ WallRadiation InitializeSingleWall(const Real LtotForWall,
   return rad;
 }
 
+// Update internal snow state (H2OSno, IntSno, FracSno) for all snow-covered
+// horizontal urban surfaces (roof, impervious road, pervious road) using only
+// atmospheric forcing already stored inside the urban struct.  Walls are
+// excluded — vertical surfaces do not accumulate snow.
+void ComputeSnowCover(URBANXX::_p_UrbanType &urban) {
+  const double dtime = 1800.0; // s — hardcoded URBANxx timestep
+  // ELM's accum_factor is declared real(r8) but assigned literal 0.1 (no _r8
+  // suffix). Without -fdefault-real-8, gfortran widens the nearest float32 to
+  // float64: 0.100000001490116119..., NOT the true double
+  // 0.1000000000000000056. Using (double)(0.1f) matches ELM's CanopyHydrology
+  // exactly.
+  const double accum_factor = (double)(0.1f);
+  const double n_melt = 1.0;          // flat urban surfaces (roof/road)
+  const double large_intsnow = 1.0e8; // ELM cap on int_snow
+
+  auto forc_snow = urban.atmosphereData.ForcSnow; // kg/m²/s
+
+  auto roofH2OSno = urban.roof.H2OSno;
+  auto roofIntSno = urban.roof.IntSno;
+  auto roofFracSno = urban.roof.FracSno;
+  auto roofSubSnow = urban.roof.QflxSubSnow;
+
+  auto impH2OSno = urban.imperviousRoad.H2OSno;
+  auto impIntSno = urban.imperviousRoad.IntSno;
+  auto impFracSno = urban.imperviousRoad.FracSno;
+  auto impSubSnow = urban.imperviousRoad.QflxSubSnow;
+
+  auto perH2OSno = urban.perviousRoad.H2OSno;
+  auto perIntSno = urban.perviousRoad.IntSno;
+  auto perFracSno = urban.perviousRoad.FracSno;
+  auto perSubSnow = urban.perviousRoad.QflxSubSnow;
+
+  Kokkos::parallel_for(
+      "ComputeSnowCover", urban.numLandunits, KOKKOS_LAMBDA(const int l) {
+        // Lambda: update one snow-covered surface given its views.
+        // forc_snow is shared across all three surfaces for the same landunit.
+        auto update = [&](Kokkos::View<double *> h2osno_v,
+                          Kokkos::View<double *> int_sno_v,
+                          Kokkos::View<double *> frac_sno_v,
+                          Kokkos::View<double *> sub_snow_v) {
+          const double newsnow = forc_snow(l) * dtime; // kg/m²
+          const double sub_loss =
+              sub_snow_v(l) * dtime; // previous-step sublimation
+
+          double h2osno = h2osno_v(l);
+          double int_sno = int_sno_v(l);
+          double frac_sno = frac_sno_v(l);
+
+          // Remove sublimation from existing pack
+          h2osno = Kokkos::max(0.0, h2osno - sub_loss);
+
+          if (h2osno <= 0.0) {
+            // No existing snowpack
+            if (newsnow > 0.0) {
+              frac_sno = tanh(accum_factor * newsnow);
+              double frac_safe = Kokkos::max(frac_sno, 1.0e-6);
+              double denom =
+                  0.5 *
+                  (cos(M_PI * Kokkos::pow(1.0 - frac_safe, 1.0 / n_melt)) +
+                   1.0);
+              double temp_intsnow = (denom > 0.0) ? (newsnow / denom) : newsnow;
+              int_sno = Kokkos::min(large_intsnow, temp_intsnow) + newsnow;
+              h2osno = newsnow;
+            } else {
+              frac_sno = 0.0;
+              int_sno = 0.0;
+            }
+          } else {
+            // Existing snowpack present
+            if (newsnow > 0.0) {
+              // Accumulation branch
+              frac_sno =
+                  1.0 - (1.0 - tanh(accum_factor * newsnow)) * (1.0 - frac_sno);
+              double frac_safe = Kokkos::max(frac_sno, 1.0e-6);
+              double denom =
+                  0.5 *
+                  (cos(M_PI * Kokkos::pow(1.0 - frac_safe, 1.0 / n_melt)) +
+                   1.0);
+              double temp_intsnow = (denom > 0.0) ? ((h2osno + newsnow) / denom)
+                                                  : (h2osno + newsnow);
+              int_sno = Kokkos::min(large_intsnow, temp_intsnow) + newsnow;
+              h2osno += newsnow;
+            }
+            // Depletion branch (Niu-Yang 2007): recompute frac_sno from
+            // ratio of current h2osno to the max-season int_sno
+            if (int_sno > 0.0) {
+              double smr = Kokkos::min(1.0, h2osno / int_sno);
+              frac_sno =
+                  1.0 -
+                  Kokkos::pow(acos(Kokkos::min(1.0, 2.0 * smr - 1.0)) / M_PI,
+                              n_melt);
+            }
+          }
+
+          h2osno_v(l) = h2osno;
+          int_sno_v(l) = int_sno;
+          frac_sno_v(l) = Kokkos::max(0.0, Kokkos::min(1.0, frac_sno));
+        };
+
+        update(roofH2OSno, roofIntSno, roofFracSno, roofSubSnow);
+        update(impH2OSno, impIntSno, impFracSno, impSubSnow);
+        update(perH2OSno, perIntSno, perFracSno, perSubSnow);
+      });
+  Kokkos::fence();
+}
+
 void ComputeNetLongwave(URBANXX::_p_UrbanType &urban) {
   // Get number of landunits for parallel execution
   const int numLandunits = urban.numLandunits;
@@ -251,6 +358,12 @@ void ComputeNetLongwave(URBANXX::_p_UrbanType &urban) {
   auto emissWall = urban.urbanParams.emissivity.Wall;
   auto emissImpRoad = urban.urbanParams.emissivity.ImperviousRoad;
   auto emissPerRoad = urban.urbanParams.emissivity.PerviousRoad;
+
+  // Snow-covered fraction views for emissivity blending (walls excluded)
+  auto fracSnoRoof = urban.roof.FracSno;
+  auto fracSnoImpRoad = urban.imperviousRoad.FracSno;
+  auto fracSnoPerRoad = urban.perviousRoad.FracSno;
+  constexpr double snoem = 0.97; // ELM snow emissivity constant
 
   // Access surface temperatures
   auto tempRoof = urban.roof.EffectiveSurfTemp;
@@ -281,8 +394,16 @@ void ComputeNetLongwave(URBANXX::_p_UrbanType &urban) {
         // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         // Computations for roof
         // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        upLwRoof(l) = emissRoof(l) * STEBOL * Kokkos::pow(tempRoof(l), 4.0) +
-                      (1.0 - emissRoof(l)) * forcLRad(l);
+        // Blend bare-surface emissivity with snow emissivity (walls excluded)
+        const Real emissRoofS =
+            emissRoof(l) * (1.0 - fracSnoRoof(l)) + snoem * fracSnoRoof(l);
+        const Real emissImpRoadS = emissImpRoad(l) * (1.0 - fracSnoImpRoad(l)) +
+                                   snoem * fracSnoImpRoad(l);
+        const Real emissPerRoadS = emissPerRoad(l) * (1.0 - fracSnoPerRoad(l)) +
+                                   snoem * fracSnoPerRoad(l);
+
+        upLwRoof(l) = emissRoofS * STEBOL * Kokkos::pow(tempRoof(l), 4.0) +
+                      (1.0 - emissRoofS) * forcLRad(l);
         netLwRoof(l) = upLwRoof(l) - forcLRad(l);
 
         // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -298,11 +419,12 @@ void ComputeNetLongwave(URBANXX::_p_UrbanType &urban) {
         // View factors for roads
         const RoadViewFactors roadVF = {vf_sr(l), vf_wr(l)};
 
-        // Initialize impervious and pervious roads
+        // Initialize impervious and pervious roads (using snow-blended
+        // emissivities)
         auto impRoad = InitializeSingleRoad(
-            LtotForRoad, emissImpRoad(l), tempImpRoad(l), roadVF, fracImpRoad);
+            LtotForRoad, emissImpRoadS, tempImpRoad(l), roadVF, fracImpRoad);
         auto perRoad =
-            InitializeSingleRoad(LtotForRoad, emissPerRoad(l), tempPerRoad(l),
+            InitializeSingleRoad(LtotForRoad, emissPerRoadS, tempPerRoad(l),
                                  roadVF, fracPervRoad(l));
 
         // Combine both roads
@@ -358,8 +480,8 @@ void ComputeNetLongwave(URBANXX::_p_UrbanType &urban) {
                         hwr(l);
 
           impRoad.flux =
-              Fluxes(emissImpRoad(l), tempImpRoad(l), LtotForRoad, fracImpRoad);
-          perRoad.flux = Fluxes(emissPerRoad(l), tempPerRoad(l), LtotForRoad,
+              Fluxes(emissImpRoadS, tempImpRoad(l), LtotForRoad, fracImpRoad);
+          perRoad.flux = Fluxes(emissPerRoadS, tempPerRoad(l), LtotForRoad,
                                 fracPervRoad(l));
 
           RoadAbs =
@@ -398,9 +520,9 @@ void ComputeNetLongwave(URBANXX::_p_UrbanType &urban) {
 
           // step(3): Compute reflected radiation components for this iteration
           impRoad.ref =
-              ReflectRoad(LtotForRoad, emissImpRoad(l), roadVF, fracImpRoad);
-          perRoad.ref = ReflectRoad(LtotForRoad, emissPerRoad(l), roadVF,
-                                    fracPervRoad(l));
+              ReflectRoad(LtotForRoad, emissImpRoadS, roadVF, fracImpRoad);
+          perRoad.ref =
+              ReflectRoad(LtotForRoad, emissPerRoadS, roadVF, fracPervRoad(l));
 
           RoadRefToSky = impRoad.ref.toSkyByWt + perRoad.ref.toSkyByWt;
           RoadRefToSunlitWall =
