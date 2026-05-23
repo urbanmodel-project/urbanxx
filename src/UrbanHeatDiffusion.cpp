@@ -465,6 +465,7 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
   auto perv_Temp = urban.perviousRoad.EffectiveSurfTemp;
   auto perv_TGrnd0 = urban.perviousRoad.TGrnd0;
   auto perv_emiss = urban.urbanParams.emissivity.PerviousRoad;
+  auto perv_H2OSno = urban.perviousRoad.H2OSno;
 
   // Access roof property views
   auto roof_netLw = urban.roof.NetLongRad;
@@ -484,6 +485,7 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
   auto roof_dz = urban.roof.Dz;
   auto roof_zc = urban.roof.Zc;
   auto roof_zi = urban.roof.Zi;
+  auto roof_H2OSno = urban.roof.H2OSno;
 
   // Access impervious road property views
   auto imperv_tkLayer = urban.imperviousRoad.TkLayer;
@@ -512,6 +514,7 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
   auto imperv_watsat = urban.perviousRoad.soil.WatSat;
   auto imperv_tk_minerals = urban.perviousRoad.soil.TkMinerals;
   auto imperv_tk_dry = urban.perviousRoad.soil.TkDry;
+  auto imperv_H2OSno = urban.imperviousRoad.H2OSno;
 
   // Access sunlit wall property views
   auto sunwall_netLw = urban.sunlitWall.NetLongRad;
@@ -641,6 +644,24 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
             l, numSoilLayers, imperv_numActiveLayers, imperv_cv_solids,
             imperv_watsat, imperv_water_liquid, imperv_water_ice, imperv_dz,
             imperv_cv_times_dz);
+
+        // Step 3c: Path A thin-snow heat capacity correction.
+        // When snow water is present but no discrete snow layers have formed
+        // (thin-snow regime), ELM augments the heat capacity of the top
+        // soil/urban layer with cpice * h2osno (SoilTemperatureMod.F90 ~1070).
+        // URBANxx must apply the same correction to match ELM's tridiagonal
+        // system; otherwise the top-layer temperature responds too strongly to
+        // the surface flux, producing a ~0.15 K mismatch on snowy timesteps.
+        // cpice = SHR_CONST_CPICE [J/(kg·K)]; H2OSno [kg/m²].
+        if (roof_H2OSno(l) > 0.0) {
+          roof_cv_times_dz(l, 0) += SHR_CONST_CPICE * roof_H2OSno(l);
+        }
+        if (imperv_H2OSno(l) > 0.0) {
+          imperv_cv_times_dz(l, 0) += SHR_CONST_CPICE * imperv_H2OSno(l);
+        }
+        if (perv_H2OSno(l) > 0.0) {
+          perv_cv_times_dz(l, 0) += SHR_CONST_CPICE * perv_H2OSno(l);
+        }
 
         // Step 4: Compute ground net energy flux and its derivative for all
         // surfaces.
