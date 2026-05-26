@@ -167,22 +167,6 @@ void ComputeSoilFluxes(URBANXX::_p_UrbanType &urban) {
 
           eflxSoilGrnd = netSw - netLw - eflx_lwrad_del - eflxShGrnd -
                          qflxEvapSoil * htvp - qflxTranEvap * SHR_CONST_LATVAP;
-          if (l == 0) {
-            printf("\n");
-            printf("computeSteps123_snow l %d:\n", l);
-            printf("netSw          = %18.16f\n", netSw);
-            printf("netLw          = %18.16f\n", netLw);
-            printf("eflx_lwrad_del = %18.16f\n", eflx_lwrad_del);
-            printf("eflxShGrnd     = %18.16f\n", eflxShGrnd);
-            printf("qflxEvapSoil   = %18.16f\n", qflxEvapSoil);
-            printf("qflxTranEvap   = %18.16f\n", qflxTranEvap);
-            printf("eflxSoilGrnd   = %18.16f\n", eflxSoilGrnd);
-            printf("effectiveT     = %18.16f\n", effectiveT);
-            printf("tgnd0          = %18.16f\n", tgnd0);
-            printf("tinc           = %18.16f\n", tinc);
-            printf("emiss          = %18.16f\n", emiss);
-            printf("htvp           = %18.16f\n", htvp);
-          }
 
           // --- Step 3: four evap/dew fluxes (after eflxSoilGrnd) ---
           // Uses egirat-scaled qflxEvapSoil; matches ELM order.
@@ -193,8 +177,7 @@ void ComputeSoilFluxes(URBANXX::_p_UrbanType &urban) {
 
           if (qflxEvapSoil >= 0.0) {
             if (total > 0.0) {
-              qflxEvapGrnd =
-                  Kokkos::max(qflxEvapSoil * (topLiq / total), 0.0);
+              qflxEvapGrnd = Kokkos::max(qflxEvapSoil * (topLiq / total), 0.0);
             }
             qflxSubSnow = qflxEvapSoil - qflxEvapGrnd;
           } else {
