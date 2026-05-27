@@ -496,18 +496,20 @@ template <typename TempView, typename ScalarView1D, typename CvView,
           typename GeomView>
 KOKKOS_INLINE_FUNCTION void ApplyThinSnowPhaseChange(
     int l, TempView &temp, ScalarView1D &h2osno, ScalarView1D &snow_depth,
-    Real &top_wice, Real &top_wliq, const CvView &cv_times_dz,
-    const GeomView &dz, const GeomView &zc, const GeomView &zi, Real cgrnds,
-    Real cgrndl, Real emiss, Real tgnd0, bool useTopLayerAdjustment, Real capr,
-    Real dtime) {
+    ScalarView1D &qflx_snow_melt_v, Real &top_wice, Real &top_wliq,
+    const CvView &cv_times_dz, const GeomView &dz, const GeomView &zc,
+    const GeomView &zi, Real cgrnds, Real cgrndl, Real emiss, Real tgnd0,
+    bool useTopLayerAdjustment, Real capr, Real dtime) {
 
   constexpr Real tfrz = SHR_CONST_TKFRZ;
   constexpr Real hfus = SHR_CONST_LATICE;
 
   // No thin-snow phase change if no snow water or temperature already at/below
   // freezing
-  if (h2osno(l) <= 0.0 || temp(l, 0) <= tfrz)
+  if (h2osno(l) <= 0.0 || temp(l, 0) <= tfrz) {
+    qflx_snow_melt_v(l) = 0.0;
     return;
+  }
 
   // Clamp temperature to freezing point; tinc is the temperature decrement
   // (negative, since T was above tfrz)
@@ -535,8 +537,10 @@ KOKKOS_INLINE_FUNCTION void ApplyThinSnowPhaseChange(
   // Energy available for melting (j == snl+1 case, j > 0 in ELM indexing)
   // hm = dhsdT*tinc - tinc/fact_top  (> 0 when T > tfrz)
   const Real hm = dhsdT * tinc - tinc / fact_top;
-  if (hm <= 0.0)
+  if (hm <= 0.0) {
+    qflx_snow_melt_v(l) = 0.0;
     return;
+  }
 
   const Real xm = hm * dtime / hfus;
 
@@ -547,6 +551,8 @@ KOKKOS_INLINE_FUNCTION void ApplyThinSnowPhaseChange(
     const Real propor = h2osno(l) / h2osno_old;
     snow_depth(l) = propor * snow_depth(l);
   }
+  // Store thin-snow melt rate (mirrors ELM qflx_snow_melt)
+  qflx_snow_melt_v(l) = Kokkos::fmax(0.0, h2osno_old - h2osno(l)) / dtime;
   // Energy remaining after melting h2osno
   Real heatr = hm - hfus * (h2osno_old - h2osno(l)) / dtime;
 
@@ -688,6 +694,7 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
   auto perv_emiss = urban.urbanParams.emissivity.PerviousRoad;
   auto perv_H2OSno = urban.perviousRoad.H2OSno;
   auto perv_SnowDepth = urban.perviousRoad.SnowDepth;
+  auto perv_QflxSnowMelt = urban.perviousRoad.QflxSnowMelt;
   auto perv_bsw = urban.perviousRoad.soil.Bsw;
   auto perv_sucsat = urban.perviousRoad.soil.SucSat;
 
@@ -711,6 +718,7 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
   auto roof_zi = urban.roof.Zi;
   auto roof_H2OSno = urban.roof.H2OSno;
   auto roof_SnowDepth = urban.roof.SnowDepth;
+  auto roof_QflxSnowMelt = urban.roof.QflxSnowMelt;
   auto roof_TopH2OSoiLiq = urban.roof.TopH2OSoiLiq;
   auto roof_TopH2OSoiIce = urban.roof.TopH2OSoiIce;
 
@@ -743,6 +751,7 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
   auto imperv_tk_dry = urban.perviousRoad.soil.TkDry;
   auto imperv_H2OSno = urban.imperviousRoad.H2OSno;
   auto imperv_SnowDepth = urban.imperviousRoad.SnowDepth;
+  auto imperv_QflxSnowMelt = urban.imperviousRoad.QflxSnowMelt;
   auto imperv_TopH2OSoiLiq = urban.imperviousRoad.TopH2OSoiLiq;
   auto imperv_TopH2OSoiIce = urban.imperviousRoad.TopH2OSoiIce;
 
@@ -981,11 +990,12 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
 
         // Phase change (thin-snow): mirrors ELM Phasechange_beta for the
         // snl=0, h2osno>0 case on the roof top layer.
-        ApplyThinSnowPhaseChange(
-            l, roof_temp, roof_H2OSno, roof_SnowDepth, roof_TopH2OSoiIce(l),
-            roof_TopH2OSoiLiq(l), roof_cv_times_dz, roof_dz, roof_zc, roof_zi,
-            roof_Cgrnds(l), roof_Cgrndl(l), roof_emiss(l), roof_TGrnd0(l),
-            /*useTopLayerAdjustment=*/false, capr, dtime);
+        ApplyThinSnowPhaseChange(l, roof_temp, roof_H2OSno, roof_SnowDepth,
+                                 roof_QflxSnowMelt, roof_TopH2OSoiIce(l),
+                                 roof_TopH2OSoiLiq(l), roof_cv_times_dz,
+                                 roof_dz, roof_zc, roof_zi, roof_Cgrnds(l),
+                                 roof_Cgrndl(l), roof_emiss(l), roof_TGrnd0(l),
+                                 /*useTopLayerAdjustment=*/false, capr, dtime);
 
         // Solve heat diffusion for sunlit wall
         SurfaceProperties sunwall_surf(
@@ -1076,10 +1086,10 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
         // snl=0, h2osno>0 case on the impervious road top layer.
         ApplyThinSnowPhaseChange(
             l, imperv_temp, imperv_H2OSno, imperv_SnowDepth,
-            imperv_TopH2OSoiIce(l), imperv_TopH2OSoiLiq(l), imperv_cv_times_dz,
-            imperv_dz, imperv_zc, imperv_zi, imperv_Cgrnds(l), imperv_Cgrndl(l),
-            imperv_emiss(l), imperv_TGrnd0(l), /*useTopLayerAdjustment=*/true,
-            capr, dtime);
+            imperv_QflxSnowMelt, imperv_TopH2OSoiIce(l), imperv_TopH2OSoiLiq(l),
+            imperv_cv_times_dz, imperv_dz, imperv_zc, imperv_zi,
+            imperv_Cgrnds(l), imperv_Cgrndl(l), imperv_emiss(l),
+            imperv_TGrnd0(l), /*useTopLayerAdjustment=*/true, capr, dtime);
 
         // Solve heat diffusion for pervious road
         SurfaceProperties perv_surf(l, numSoilLayers, perv_temp, perv_zc,
@@ -1093,10 +1103,10 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
         // Phase change (thin-snow): mirrors ELM Phasechange_beta for the
         // snl=0, h2osno>0 case on the pervious road top layer.
         ApplyThinSnowPhaseChange(l, perv_temp, perv_H2OSno, perv_SnowDepth,
-                                 perv_water_ice(l, 0), perv_water_liquid(l, 0),
-                                 perv_cv_times_dz, perv_dz, perv_zc, perv_zi,
-                                 perv_Cgrnds(l), perv_Cgrndl(l), perv_emiss(l),
-                                 perv_TGrnd0(l),
+                                 perv_QflxSnowMelt, perv_water_ice(l, 0),
+                                 perv_water_liquid(l, 0), perv_cv_times_dz,
+                                 perv_dz, perv_zc, perv_zi, perv_Cgrnds(l),
+                                 perv_Cgrndl(l), perv_emiss(l), perv_TGrnd0(l),
                                  /*useTopLayerAdjustment=*/true, capr, dtime);
 
         // Soil phase change for all pervious road layers (melt/freeze within

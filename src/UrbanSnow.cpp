@@ -27,18 +27,21 @@ void ComputeSnowCover(URBANXX::_p_UrbanType &urban) {
   auto roofIntSno = urban.roof.IntSno;
   auto roofFracSno = urban.roof.FracSno;
   auto roofSubSnow = urban.roof.QflxSubSnow;
+  auto roofSnowMelt = urban.roof.QflxSnowMelt;
   auto roofSnowDepth = urban.roof.SnowDepth;
 
   auto impH2OSno = urban.imperviousRoad.H2OSno;
   auto impIntSno = urban.imperviousRoad.IntSno;
   auto impFracSno = urban.imperviousRoad.FracSno;
   auto impSubSnow = urban.imperviousRoad.QflxSubSnow;
+  auto impSnowMelt = urban.imperviousRoad.QflxSnowMelt;
   auto impSnowDepth = urban.imperviousRoad.SnowDepth;
 
   auto perH2OSno = urban.perviousRoad.H2OSno;
   auto perIntSno = urban.perviousRoad.IntSno;
   auto perFracSno = urban.perviousRoad.FracSno;
   auto perSubSnow = urban.perviousRoad.QflxSubSnow;
+  auto perSnowMelt = urban.perviousRoad.QflxSnowMelt;
   auto perSnowDepth = urban.perviousRoad.SnowDepth;
 
   Kokkos::parallel_for(
@@ -62,6 +65,7 @@ void ComputeSnowCover(URBANXX::_p_UrbanType &urban) {
                           Kokkos::View<double *> int_sno_v,
                           Kokkos::View<double *> frac_sno_v,
                           Kokkos::View<double *> sub_snow_v,
+                          Kokkos::View<double *> snow_melt_v,
                           Kokkos::View<double *> snow_depth_v) {
           const double newsnow = forc_snow(l) * dtime; // kg/m²
           const double sub_loss =
@@ -70,6 +74,10 @@ void ComputeSnowCover(URBANXX::_p_UrbanType &urban) {
           double h2osno = h2osno_v(l);
           double int_sno = int_sno_v(l);
           double frac_sno = frac_sno_v(l);
+          if (l == 0)
+            printf("ELM UrbanSnow: l=%d, newsnow = %18.16f, frac_sno=%18.16f, "
+                   "h2osno=%18.16f\n",
+                   l, newsnow, frac_sno, h2osno);
 
           // Save SWE before sublimation removal for proportional depth scaling
           const double h2osno_old = h2osno;
@@ -95,6 +103,19 @@ void ComputeSnowCover(URBANXX::_p_UrbanType &urban) {
             }
           } else {
             // Existing snowpack present
+
+            // ELM CanopyHydrology lines 557-563: frac_sno depletion driven by
+            // thin-snow melt from the previous timestep.  Must run before the
+            // accumulation branch (matches ELM ordering).
+            const double snowmelt = snow_melt_v(l) * dtime;
+            if (snowmelt > 0.0 && int_sno > 0.0) {
+              double smr = Kokkos::min(1.0, h2osno / int_sno);
+              frac_sno =
+                  1.0 -
+                  Kokkos::pow(acos(Kokkos::min(1.0, 2.0 * smr - 1.0)) / M_PI,
+                              n_melt);
+            }
+
             if (newsnow > 0.0) {
               // Accumulation branch
               frac_sno =
@@ -108,15 +129,6 @@ void ComputeSnowCover(URBANXX::_p_UrbanType &urban) {
                                                   : (h2osno + newsnow);
               int_sno = Kokkos::min(large_intsnow, temp_intsnow) + newsnow;
               h2osno += newsnow;
-            }
-            // Depletion branch (Niu-Yang 2007): recompute frac_sno from
-            // ratio of current h2osno to the max-season int_sno
-            if (int_sno > 0.0) {
-              double smr = Kokkos::min(1.0, h2osno / int_sno);
-              frac_sno =
-                  1.0 -
-                  Kokkos::pow(acos(Kokkos::min(1.0, 2.0 * smr - 1.0)) / M_PI,
-                              n_melt);
             }
           }
 
@@ -139,9 +151,12 @@ void ComputeSnowCover(URBANXX::_p_UrbanType &urban) {
           frac_sno_v(l) = Kokkos::max(0.0, Kokkos::min(1.0, frac_sno));
         };
 
-        update(roofH2OSno, roofIntSno, roofFracSno, roofSubSnow, roofSnowDepth);
-        update(impH2OSno, impIntSno, impFracSno, impSubSnow, impSnowDepth);
-        update(perH2OSno, perIntSno, perFracSno, perSubSnow, perSnowDepth);
+        update(roofH2OSno, roofIntSno, roofFracSno, roofSubSnow, roofSnowMelt,
+               roofSnowDepth);
+        update(impH2OSno, impIntSno, impFracSno, impSubSnow, impSnowMelt,
+               impSnowDepth);
+        update(perH2OSno, perIntSno, perFracSno, perSubSnow, perSnowMelt,
+               perSnowDepth);
       });
   Kokkos::fence();
 }
@@ -164,6 +179,10 @@ void ComputeUpdateSnowFraction(URBANXX::_p_UrbanType &urban) {
         roofFracSno(l) = Kokkos::min(roofSnowDepth(l) / 0.05, 1.0);
         impFracSno(l) = Kokkos::min(impSnowDepth(l) / 0.05, 1.0);
         perFracSno(l) = Kokkos::min(perSnowDepth(l) / 0.05, 1.0);
+        if (l == 0)
+          printf(" URBANxx Update snow fraction: l = %d; snowDepth = %18.16f; "
+                 "frac = %18.16f\n",
+                 l, impSnowDepth(l), impFracSno(l));
       });
   Kokkos::fence();
 }
