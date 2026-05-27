@@ -566,6 +566,13 @@ module urban_mod
       integer(c_int) :: status
     end subroutine UrbanComputeSnowCover_C
 
+    subroutine UrbanComputeUpdateSnowFraction_C(urban, status) &
+        bind(C, name="UrbanComputeUpdateSnowFraction")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      integer(c_int) :: status
+    end subroutine UrbanComputeUpdateSnowFraction_C
+
     subroutine UrbanComputeNetLongwave_C(urban, status) bind(C, name="UrbanComputeNetLongwave")
       import :: c_ptr, c_int
       type(c_ptr), value :: urban
@@ -2134,6 +2141,12 @@ module urban_mod
     integer(c_int), intent(out) :: status
     call UrbanComputeSnowCover_C(urban%ptr, status)
   end subroutine UrbanComputeSnowCover
+
+  subroutine UrbanComputeUpdateSnowFraction(urban, status)
+    type(UrbanType), intent(in)  :: urban
+    integer(c_int),  intent(out) :: status
+    call UrbanComputeUpdateSnowFraction_C(urban%ptr, status)
+  end subroutine UrbanComputeUpdateSnowFraction
 
   subroutine UrbanComputeNetLongwave(urban, status)
     type(UrbanType), intent(in) :: urban

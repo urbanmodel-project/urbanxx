@@ -234,6 +234,8 @@ URBAN_EXTERN void UrbanAdvance(UrbanType urban, UrbanErrorCode *status);
 // Physics computation functions
 URBAN_EXTERN void UrbanComputeSnowCover(UrbanType urban,
                                         UrbanErrorCode *status);
+URBAN_EXTERN void UrbanComputeUpdateSnowFraction(UrbanType urban,
+                                                 UrbanErrorCode *status);
 URBAN_EXTERN void UrbanComputeNetLongwave(UrbanType urban,
                                           UrbanErrorCode *status);
 URBAN_EXTERN void UrbanComputeNetShortwave(UrbanType urban,
