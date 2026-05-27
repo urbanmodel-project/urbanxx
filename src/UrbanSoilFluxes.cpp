@@ -152,10 +152,6 @@ void ComputeSoilFluxes(URBANXX::_p_UrbanType &urban) {
             const Real egirat = egsmax / qflxEvapSoil;
             const Real save_qflxEvapSoil = qflxEvapSoil;
             qflxEvapSoil *= egirat;
-            printf("(l = %d) eflxShGrnd = %18.16f; correction: (%18.16f - "
-                   "%18.16f) * %18.16f = %18.16f\n",
-                   l, eflxShGrnd, save_qflxEvapSoil, qflxEvapSoil, htvp,
-                   (save_qflxEvapSoil - qflxEvapSoil) * htvp);
             eflxShGrnd += (save_qflxEvapSoil - qflxEvapSoil) * htvp;
           }
 
