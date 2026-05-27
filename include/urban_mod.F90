@@ -1737,6 +1737,34 @@ module urban_mod
       integer(c_int) :: status
     end subroutine UrbanSetQflxSubSnowRoof_C
 
+    ! NMelt (SCA shape parameter) setter C interfaces
+    subroutine UrbanSetNMeltRoof_C(urban, values, length, status) &
+      bind(C, name="UrbanSetNMeltRoof")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetNMeltRoof_C
+
+    subroutine UrbanSetNMeltImperviousRoad_C(urban, values, length, status) &
+      bind(C, name="UrbanSetNMeltImperviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetNMeltImperviousRoad_C
+
+    subroutine UrbanSetNMeltPerviousRoad_C(urban, values, length, status) &
+      bind(C, name="UrbanSetNMeltPerviousRoad")
+      import :: c_ptr, c_int
+      type(c_ptr), value :: urban
+      type(c_ptr), value :: values
+      integer(c_int), value :: length
+      integer(c_int) :: status
+    end subroutine UrbanSetNMeltPerviousRoad_C
+
     ! DewCondensation setter C interfaces (impervious road)
     subroutine UrbanSetQflxDewGrndImperviousRoad_C(urban, values, length, status) &
       bind(C, name="UrbanSetQflxDewGrndImperviousRoad")
@@ -3213,6 +3241,31 @@ module urban_mod
     integer(c_int), intent(out) :: status
     call UrbanSetQflxSubSnowRoof_C(urban%ptr, values, length, status)
   end subroutine UrbanSetQflxSubSnowRoof
+
+  ! NMelt (SCA shape parameter) setter subroutines
+  subroutine UrbanSetNMeltRoof(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), value :: length
+    integer(c_int), intent(out) :: status
+    call UrbanSetNMeltRoof_C(urban%ptr, values, length, status)
+  end subroutine UrbanSetNMeltRoof
+
+  subroutine UrbanSetNMeltImperviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), value :: length
+    integer(c_int), intent(out) :: status
+    call UrbanSetNMeltImperviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanSetNMeltImperviousRoad
+
+  subroutine UrbanSetNMeltPerviousRoad(urban, values, length, status)
+    type(UrbanType), intent(in) :: urban
+    type(c_ptr), value :: values
+    integer(c_int), value :: length
+    integer(c_int), intent(out) :: status
+    call UrbanSetNMeltPerviousRoad_C(urban%ptr, values, length, status)
+  end subroutine UrbanSetNMeltPerviousRoad
 
   ! DewCondensation setter subroutines (impervious road)
   subroutine UrbanSetQflxDewGrndImperviousRoad(urban, values, length, status)

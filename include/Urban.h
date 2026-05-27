@@ -717,6 +717,16 @@ URBAN_EXTERN void UrbanSetQflxSubSnowImperviousRoad(UrbanType urban,
                                                     int length,
                                                     UrbanErrorCode *status);
 
+// NMelt (SCA shape parameter) setter functions
+URBAN_EXTERN void UrbanSetNMeltRoof(UrbanType urban, const double *values,
+                                    int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetNMeltImperviousRoad(UrbanType urban,
+                                              const double *values, int length,
+                                              UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetNMeltPerviousRoad(UrbanType urban,
+                                            const double *values, int length,
+                                            UrbanErrorCode *status);
+
 // DewCondensation compute function
 URBAN_EXTERN void
 UrbanComputeDewCondensationRoofImperviousRoad(UrbanType urban, double dtime,

@@ -19,6 +19,7 @@ set(URBAN_SOURCES
     UrbanSoilFluxes.cpp
     UrbanSoilFluxesGetters.cpp
     UrbanSoilFluxesSetters.cpp
+    UrbanSnowSetters.cpp
     UrbanSurfaceRunoff.cpp
     UrbanSurfaceRunoffGetters.cpp
     UrbanSurfaceRunoffSetters.cpp
