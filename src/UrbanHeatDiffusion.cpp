@@ -434,6 +434,57 @@ KOKKOS_INLINE_FUNCTION void Solve1DHeatDiffusion(
   }
 }
 
+// Phase-change imelt state constants (used by all phase-change helpers below)
+namespace {
+constexpr int kNoPhaseChange = 0; // T within phase-change band; no action
+constexpr int kMelting = 1;       // T > tfrz and wice > 0
+constexpr int kFreezing = 2;      // T < tfrz and wliq > supercool threshold
+} // anonymous namespace
+
+// Apply phase-change energy to a single layer: update wice, wliq, and
+// temperature given available energy hm.
+// dhsdT: surface-flux derivative (nonzero only at top layer k=0).
+//        Pass 0.0 for interior layers — the denominator reduces to 1,
+//        recovering the simple residual form used by ELM for j > snl+1.
+// supercool: freezing threshold [kg/m²]; pass 0.0 for melt-only callers.
+KOKKOS_INLINE_FUNCTION void
+ApplyPhaseChangeEnergyToLayer(Real hm, Real fact, Real dhsdT, Real supercool,
+                              Real dtime, Real &wice, Real &wliq, Real &T) {
+
+  constexpr Real tfrz = SHR_CONST_TKFRZ;
+  constexpr Real hfus = SHR_CONST_LATICE;
+
+  const Real wmass0 = wice + wliq;
+  const Real xm = hm * dtime / hfus;
+
+  Real wice_new;
+  if (xm > 0.0) {
+    wice_new = Kokkos::fmax(0.0, wice - xm);
+  } else if (xm < 0.0) {
+    if (wmass0 < supercool) {
+      wice_new = 0.0;
+    } else {
+      wice_new = Kokkos::fmin(wmass0 - supercool, wice - xm);
+    }
+  } else {
+    wice_new = wice;
+  }
+
+  const Real heatr = hm - hfus * (wice - wice_new) / dtime;
+  wliq = Kokkos::fmax(0.0, wmass0 - wice_new);
+  wice = wice_new;
+
+  // Residual temperature correction (unified form: denominator = 1 -
+  // fact*dhsdT, which equals 1 when dhsdT=0 for interior layers, recovering the
+  // simple form).
+  if (Kokkos::fabs(heatr) > 0.0) {
+    const Real denom = 1.0 - fact * dhsdT;
+    if (Kokkos::fabs(denom) > 1.0e-30) {
+      T = tfrz + fact * heatr / denom;
+    }
+  }
+}
+
 // Apply thin-snow phase change (ELM Phasechange_beta, snl=0, h2osno>0 path)
 // for roof, imperviousRoad, and perviousRoad top layer.
 // Mirrors ELM: if T[0] > tfrz and H2OSno > 0, clamp T[0] to tfrz,
@@ -502,21 +553,11 @@ KOKKOS_INLINE_FUNCTION void ApplyThinSnowPhaseChange(
   if (heatr <= 0.0)
     return; // All energy consumed; T stays at tfrz
 
-  // Remaining energy: melt top-layer soil ice
-  const Real xm_rem = heatr * dtime / hfus;
-  const Real wice0 = top_wice;
-  const Real wmass0 = top_wice + top_wliq;
-  top_wice = Kokkos::fmax(0.0, wice0 - xm_rem);
-  top_wliq = Kokkos::fmax(0.0, wmass0 - top_wice);
-  const Real heatr2 = heatr - hfus * (wice0 - top_wice) / dtime;
-
-  // Residual temperature correction (j == snl+1, j > 0, frac_h2osfc=0)
-  if (Kokkos::fabs(heatr2) > 0.0) {
-    const Real denom = 1.0 - fact_top * dhsdT;
-    if (Kokkos::fabs(denom) > 1.0e-30) {
-      temp(l, 0) = tfrz + fact_top * heatr2 / denom;
-    }
-  }
+  // Remaining energy: melt top-layer soil ice and apply residual correction.
+  // supercool=0 (melt-only path); dhsdT accounts for the top-layer flux
+  // derivative.
+  ApplyPhaseChangeEnergyToLayer(heatr, fact_top, dhsdT, /*supercool=*/0.0,
+                                dtime, top_wice, top_wliq, temp(l, 0));
 }
 
 // Apply soil phase change for pervious road layers (all layers k=0..n-1).
@@ -562,168 +603,55 @@ KOKKOS_INLINE_FUNCTION void ApplyPerviousRoadSoilPhaseChange(
       }
     }
 
-    int imelt = 0;
+    int imelt = kNoPhaseChange;
     Real tinc = 0.0;
 
     if (wice > 0.0 && T > tfrz) {
-      imelt = 1;
+      imelt = kMelting;
       tinc = tfrz - T; // negative
       temp(l, k) = tfrz;
     } else if (wliq > supercool && T < tfrz) {
-      imelt = 2;
+      imelt = kFreezing;
       tinc = tfrz - T; // positive
       temp(l, k) = tfrz;
     }
 
-    if (imelt == 0)
+    if (imelt == kNoPhaseChange)
       continue;
 
     // Energy: internal layers use hm = -tinc/fact.
     // For top layer (k=0), include dhsdT*tinc, matching ELM top-layer path.
+    // dhsdT_k is saved for the residual correction in
+    // ApplyPhaseChangeEnergyToLayer.
     Real hm;
+    Real dhsdT_k = 0.0;
     if (k == 0) {
       const Real cgrnd = cgrnds + cgrndl * SHR_CONST_LATVAP;
-      const Real dhsdT =
-          -cgrnd - 4.0 * emiss * STEBOL * Kokkos::pow(tgnd0, 3.0);
-      hm = dhsdT * tinc - tinc / fact_k;
+      dhsdT_k = -cgrnd - 4.0 * emiss * STEBOL * Kokkos::pow(tgnd0, 3.0);
+      hm = dhsdT_k * tinc - tinc / fact_k;
     } else {
       hm = -tinc / fact_k;
     }
 
     // Guard against sign errors (ELM does the same check)
-    if (imelt == 1 && hm < 0.0) {
+    if (imelt == kMelting && hm < 0.0) {
       temp(l, k) = tfrz + tinc;
       continue;
     }
-    if (imelt == 2 && hm > 0.0) {
-      temp(l, k) = tfrz + tinc;
-      continue;
-    }
-
-    const Real xm = hm * dtime / hfus;
-
-    Real wice_new;
-    if (xm > 0.0) {
-      wice_new = Kokkos::fmax(0.0, wice - xm);
-    } else if (xm < 0.0) {
-      if (wmass0 < supercool) {
-        wice_new = 0.0;
-      } else {
-        wice_new = Kokkos::fmin(wmass0 - supercool, wice - xm);
-      }
-    } else {
-      wice_new = wice;
-    }
-
-    const Real heatr = hm - hfus * (wice - wice_new) / dtime;
-    water_liq(l, k) = Kokkos::fmax(0.0, wmass0 - wice_new);
-    water_ice(l, k) = wice_new;
-
-    if (Kokkos::fabs(heatr) > 0.0) {
-      temp(l, k) = tfrz + fact_k * heatr;
-    }
-  }
-}
-
-// Apply soil phase change for deep impervious road layers (k=nActive..
-// NUM_LAYERS_ABV_BEDROCK-1). Same algorithm as ApplyPerviousRoadSoilPhaseChange
-// but operates on separate WaterLiquid/WaterIce views for impervious road.
-// The soil hydraulic properties (watsat, bsw, sucsat) are shared with the
-// pervious road (same underlying natural soil).
-template <typename TempView, typename WaterView, typename CvView,
-          typename SoilView, typename DzView, typename IntView>
-KOKKOS_INLINE_FUNCTION void ApplyDeepImperviousRoadPhaseChange(
-    int l, int numSoilLayers, const IntView &numActiveLayers, TempView &temp,
-    WaterView &water_ice, WaterView &water_liq, const CvView &cv_times_dz,
-    const SoilView &watsat, const SoilView &bsw, const SoilView &sucsat,
-    const DzView &dz, const DzView &zc, const DzView &zi, Real cpar,
-    Real cgrnds, Real cgrndl, Real emiss, Real tgnd0, Real dtime) {
-
-  constexpr Real tfrz = SHR_CONST_TKFRZ;
-  constexpr Real hfus = SHR_CONST_LATICE;
-  constexpr Real grav = GRAVITY;
-
-  const int nActive = numActiveLayers(l);
-  for (int k = nActive; k < NUM_LAYERS_ABV_BEDROCK; ++k) {
-    const Real T = temp(l, k);
-    const Real wice = water_ice(l, k);
-    const Real wliq = water_liq(l, k);
-    const Real wmass0 = wice + wliq;
-    Real fact_k = dtime / cv_times_dz(l, k);
-    if (k == 0) {
-      const Real dz1 = zc(l, 0) - zi(l, 0);
-      const Real dz2 = zc(l, 1) - zi(l, 0);
-      const Real dz_eff = 0.5 * (dz1 + cpar * dz2);
-      fact_k = fact_k * dz(l, 0) / dz_eff;
-    }
-
-    // Supercool threshold
-    Real supercool = 0.0;
-    if (T < tfrz) {
-      const Real smp = hfus * (tfrz - T) / (grav * T) * 1000.0;
-      if (smp > 0.0 && sucsat(l, k) > 0.0 && bsw(l, k) > 0.0) {
-        const Real sc = watsat(l, k) *
-                        Kokkos::pow(smp / sucsat(l, k), -1.0 / bsw(l, k)) *
-                        dz(l, k) * 1000.0;
-        supercool = Kokkos::fmax(0.0, sc);
-      }
-    }
-
-    int imelt = 0;
-    Real tinc = 0.0;
-
-    if (wice > 0.0 && T > tfrz) {
-      imelt = 1;
-      tinc = tfrz - T;
-      temp(l, k) = tfrz;
-    } else if (wliq > supercool && T < tfrz) {
-      imelt = 2;
-      tinc = tfrz - T;
-      temp(l, k) = tfrz;
-    }
-
-    if (imelt == 0)
-      continue;
-
-    Real hm = -tinc / fact_k;
-    if (k == 0) {
-      const Real cgrnd = cgrnds + cgrndl * SHR_CONST_LATVAP;
-      const Real dhsdT =
-          -cgrnd - 4.0 * emiss * STEBOL * Kokkos::pow(tgnd0, 3.0);
-      hm += dhsdT * tinc;
-    }
-
-    if (imelt == 1 && hm < 0.0) {
-      temp(l, k) = tfrz + tinc;
-      continue;
-    }
-    if (imelt == 2 && hm > 0.0) {
+    if (imelt == kFreezing && hm > 0.0) {
       temp(l, k) = tfrz + tinc;
       continue;
     }
 
-    const Real xm = hm * dtime / hfus;
-
-    Real wice_new;
-    if (xm > 0.0) {
-      wice_new = Kokkos::fmax(0.0, wice - xm);
-    } else if (xm < 0.0) {
-      if (wmass0 < supercool) {
-        wice_new = 0.0;
-      } else {
-        wice_new = Kokkos::fmin(wmass0 - supercool, wice - xm);
-      }
-    } else {
-      wice_new = wice;
-    }
-
-    const Real heatr = hm - hfus * (wice - wice_new) / dtime;
-    water_liq(l, k) = Kokkos::fmax(0.0, wmass0 - wice_new);
-    water_ice(l, k) = wice_new;
-
-    if (Kokkos::fabs(heatr) > 0.0) {
-      temp(l, k) = tfrz + fact_k * heatr;
-    }
+    // Apply phase-change energy: update wice, wliq, and residual temperature.
+    // dhsdT_k is nonzero at k=0, fixing the missing denominator (1 -
+    // fact*dhsdT) in the ELM top-layer residual correction (j == snl+1 path).
+    Real wice_k = wice, wliq_k = wliq, T_k = temp(l, k);
+    ApplyPhaseChangeEnergyToLayer(hm, fact_k, dhsdT_k, supercool, dtime, wice_k,
+                                  wliq_k, T_k);
+    water_ice(l, k) = wice_k;
+    water_liq(l, k) = wliq_k;
+    temp(l, k) = T_k;
   }
 }
 
@@ -1152,17 +1080,6 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
             imperv_dz, imperv_zc, imperv_zi, imperv_Cgrnds(l), imperv_Cgrndl(l),
             imperv_emiss(l), imperv_TGrnd0(l), /*useTopLayerAdjustment=*/true,
             capr, dtime);
-
-        // Phase change for deep impervious road layers (beyond active road
-        // construction material).  Replaces the former simplified algorithm
-        // with the ELM-matching formulation (supercool threshold + residual
-        // temperature correction).
-        ApplyDeepImperviousRoadPhaseChange(
-            l, numSoilLayers, imperv_numActiveLayers, imperv_temp,
-            imperv_water_ice, imperv_water_liquid, imperv_cv_times_dz,
-            imperv_watsat, perv_bsw, perv_sucsat, imperv_dz, imperv_zc,
-            imperv_zi, capr, imperv_Cgrnds(l), imperv_Cgrndl(l),
-            imperv_emiss(l), imperv_TGrnd0(l), dtime);
 
         // Solve heat diffusion for pervious road
         SurfaceProperties perv_surf(l, numSoilLayers, perv_temp, perv_zc,
