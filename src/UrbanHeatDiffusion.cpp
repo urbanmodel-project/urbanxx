@@ -20,21 +20,27 @@ namespace URBANXX {
 // Crank-Nicolson weighting factor for implicit time-stepping
 constexpr Real CNFAC = 0.5;
 
-// Compute ground net energy flux for a surface
+// Compute ground net energy flux for a surface.
+// htvp is the latent heat used for qflxEvapSoil: use SHR_CONST_LATVAP (=hvap)
+// for evaporation or SHR_CONST_LATVAP+SHR_CONST_LATICE (=hsub) for sublimation
+// when the top layer has ice but no liquid water (mirrors ELM
+// CanopyTemperatureMod).
 KOKKOS_INLINE_FUNCTION
 Real ComputeGroundNetEnergyFlux(Real netSw, Real netLw, Real eflxShGrnd,
                                 Real qflxEvapSoil = 0.0,
-                                Real qflxTranEvap = 0.0) {
+                                Real qflxTranEvap = 0.0,
+                                Real htvp = SHR_CONST_LATVAP) {
   return netSw - netLw -
-         (eflxShGrnd + qflxEvapSoil * SHR_CONST_LATVAP +
-          qflxTranEvap * SHR_CONST_LATVAP);
+         (eflxShGrnd + qflxEvapSoil * htvp + qflxTranEvap * SHR_CONST_LATVAP);
 }
 
-// Compute derivative of ground net energy flux w.r.t. temperature
+// Compute derivative of ground net energy flux w.r.t. temperature.
+// htvp: same sublimation/evaporation flag as ComputeGroundNetEnergyFlux.
 KOKKOS_INLINE_FUNCTION
 Real ComputeGroundNetEnergyFluxDerivative(Real cgrnds, Real cgrndl, Real emiss,
-                                          Real temp) {
-  const Real cgrnd = cgrnds + cgrndl * SHR_CONST_LATVAP;
+                                          Real temp,
+                                          Real htvp = SHR_CONST_LATVAP) {
+  const Real cgrnd = cgrnds + cgrndl * htvp;
   const Real dlwrdDTemp = 4.0 * emiss * STEBOL * Kokkos::pow(temp, 3.0);
   return -cgrnd - dlwrdDTemp;
 }
@@ -499,24 +505,17 @@ KOKKOS_INLINE_FUNCTION void ApplyThinSnowPhaseChange(
     ScalarView1D &qflx_snow_melt_v, Real &top_wice, Real &top_wliq,
     const CvView &cv_times_dz, const GeomView &dz, const GeomView &zc,
     const GeomView &zi, Real cgrnds, Real cgrndl, Real emiss, Real tgnd0,
-    bool useTopLayerAdjustment, Real capr, Real dtime) {
+    bool useTopLayerAdjustment, Real capr, Real dtime,
+    Real htvp = SHR_CONST_LATVAP) {
 
   constexpr Real tfrz = SHR_CONST_TKFRZ;
   constexpr Real hfus = SHR_CONST_LATICE;
 
-  // No thin-snow phase change if no snow water or temperature already at/below
-  // freezing
-  if (h2osno(l) <= 0.0 || temp(l, 0) <= tfrz) {
-    qflx_snow_melt_v(l) = 0.0;
-    return;
-  }
+  // Initialize melt flux; updated below only if melt occurs.
+  qflx_snow_melt_v(l) = 0.0;
 
-  // Clamp temperature to freezing point; tinc is the temperature decrement
-  // (negative, since T was above tfrz)
-  const Real tinc = tfrz - temp(l, 0); // < 0
-  temp(l, 0) = tfrz;
-
-  // Compute fact_top (ELM's fact(c,j) for the top layer)
+  // Compute fact_top (ELM's fact(c,j) for the top layer) — needed by both
+  // melt and freeze paths.
   Real fact_top;
   if (useTopLayerAdjustment) {
     // Road surfaces: Turing factor (ELM SoilTemperatureMod fact formula)
@@ -529,41 +528,58 @@ KOKKOS_INLINE_FUNCTION void ApplyThinSnowPhaseChange(
     fact_top = dtime / cv_times_dz(l, 0);
   }
 
-  // dhsdT = -(cgrnds + cgrndl*hvap + 4*emiss*STEBOL*tgnd0^3)
-  // (matches ComputeGroundNetEnergyFluxDerivative)
-  const Real cgrnd = cgrnds + cgrndl * SHR_CONST_LATVAP;
+  // dhsdT = -(cgrnds + cgrndl*htvp + 4*emiss*STEBOL*tgnd0^3)
+  // (matches ComputeGroundNetEnergyFluxDerivative with the same htvp)
+  const Real cgrnd = cgrnds + cgrndl * htvp;
   const Real dhsdT = -cgrnd - 4.0 * emiss * STEBOL * Kokkos::pow(tgnd0, 3.0);
 
-  // Energy available for melting (j == snl+1 case, j > 0 in ELM indexing)
-  // hm = dhsdT*tinc - tinc/fact_top  (> 0 when T > tfrz)
-  const Real hm = dhsdT * tinc - tinc / fact_top;
-  if (hm <= 0.0) {
-    qflx_snow_melt_v(l) = 0.0;
-    return;
+  // MELT path: thin snow present and T above freezing.
+  // Mirrors ELM Phasechange_beta snl=0, h2osno>0, j=1, T>tfrz path.
+  if (h2osno(l) > 0.0 && temp(l, 0) > tfrz) {
+    const Real tinc = tfrz - temp(l, 0); // < 0
+    temp(l, 0) = tfrz;
+
+    // Energy available for melting (> 0 when T > tfrz)
+    const Real hm = dhsdT * tinc - tinc / fact_top;
+    if (hm > 0.0) {
+      const Real xm = hm * dtime / hfus;
+
+      // Melt h2osno first
+      const Real h2osno_old = h2osno(l);
+      h2osno(l) = Kokkos::fmax(0.0, h2osno_old - xm);
+      if (h2osno_old > 0.0) {
+        const Real propor = h2osno(l) / h2osno_old;
+        snow_depth(l) = propor * snow_depth(l);
+      }
+      // Store thin-snow melt rate (mirrors ELM qflx_snow_melt)
+      qflx_snow_melt_v(l) = Kokkos::fmax(0.0, h2osno_old - h2osno(l)) / dtime;
+      // Energy remaining after melting h2osno
+      const Real heatr = hm - hfus * (h2osno_old - h2osno(l)) / dtime;
+      if (heatr > 0.0) {
+        // Remaining energy: melt top-layer soil ice and apply residual
+        // temperature correction.  supercool=0 (melt-only path).
+        ApplyPhaseChangeEnergyToLayer(heatr, fact_top, dhsdT, /*supercool=*/0.0,
+                                      dtime, top_wice, top_wliq, temp(l, 0));
+      }
+    }
   }
 
-  const Real xm = hm * dtime / hfus;
-
-  // Melt h2osno first
-  const Real h2osno_old = h2osno(l);
-  h2osno(l) = Kokkos::fmax(0.0, h2osno_old - xm);
-  if (h2osno_old > 0.0) {
-    const Real propor = h2osno(l) / h2osno_old;
-    snow_depth(l) = propor * snow_depth(l);
+  // FREEZE path: liquid present in top layer and T below freezing.
+  // Mirrors ELM Phasechange_beta soil-layer loop for j=1 of non-soil urban
+  // surfaces (roof, impervious road): supercool=0, so any wliq>0 with T<tfrz
+  // triggers freezing — independent of whether snow is present.
+  if (top_wliq > 0.0 && temp(l, 0) < tfrz) {
+    const Real tinc = tfrz - temp(l, 0); // > 0
+    temp(l, 0) = tfrz;
+    // Energy available (< 0 for freezing)
+    const Real hm = dhsdT * tinc - tinc / fact_top;
+    if (hm < 0.0) {
+      ApplyPhaseChangeEnergyToLayer(hm, fact_top, dhsdT, /*supercool=*/0.0,
+                                    dtime, top_wice, top_wliq, temp(l, 0));
+    } else {
+      temp(l, 0) = tfrz + tinc; // restore; no phase change
+    }
   }
-  // Store thin-snow melt rate (mirrors ELM qflx_snow_melt)
-  qflx_snow_melt_v(l) = Kokkos::fmax(0.0, h2osno_old - h2osno(l)) / dtime;
-  // Energy remaining after melting h2osno
-  Real heatr = hm - hfus * (h2osno_old - h2osno(l)) / dtime;
-
-  if (heatr <= 0.0)
-    return; // All energy consumed; T stays at tfrz
-
-  // Remaining energy: melt top-layer soil ice and apply residual correction.
-  // supercool=0 (melt-only path); dhsdT accounts for the top-layer flux
-  // derivative.
-  ApplyPhaseChangeEnergyToLayer(heatr, fact_top, dhsdT, /*supercool=*/0.0,
-                                dtime, top_wice, top_wliq, temp(l, 0));
 }
 
 // Apply soil phase change for pervious road layers (all layers k=0..n-1).
@@ -578,7 +594,7 @@ KOKKOS_INLINE_FUNCTION void ApplyPerviousRoadSoilPhaseChange(
     WaterView &water_liq, const CvView &cv_times_dz, const SoilView &watsat,
     const SoilView &bsw, const SoilView &sucsat, const DzView &dz,
     const DzView &zc, const DzView &zi, Real cpar, Real cgrnds, Real cgrndl,
-    Real emiss, Real tgnd0, Real dtime) {
+    Real emiss, Real tgnd0, Real dtime, Real htvp = SHR_CONST_LATVAP) {
 
   constexpr Real tfrz = SHR_CONST_TKFRZ;
   constexpr Real hfus = SHR_CONST_LATICE;
@@ -632,7 +648,7 @@ KOKKOS_INLINE_FUNCTION void ApplyPerviousRoadSoilPhaseChange(
     Real hm;
     Real dhsdT_k = 0.0;
     if (k == 0) {
-      const Real cgrnd = cgrnds + cgrndl * SHR_CONST_LATVAP;
+      const Real cgrnd = cgrnds + cgrndl * htvp;
       dhsdT_k = -cgrnd - 4.0 * emiss * STEBOL * Kokkos::pow(tgnd0, 3.0);
       hm = dhsdT_k * tinc - tinc / fact_k;
     } else {
@@ -892,12 +908,21 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
         // system; otherwise the top-layer temperature responds too strongly to
         // the surface flux, producing a ~0.15 K mismatch on snowy timesteps.
         // cpice = SHR_CONST_CPICE [J/(kg·K)]; H2OSno [kg/m²].
-        if (roof_H2OSno(l) > 0.0) {
-          roof_cv_times_dz(l, 0) += SHR_CONST_CPICE * roof_H2OSno(l);
-        }
-        if (imperv_H2OSno(l) > 0.0) {
-          imperv_cv_times_dz(l, 0) += SHR_CONST_CPICE * imperv_H2OSno(l);
-        }
+        //
+        // IMPORTANT: roof_cv_times_dz and imperv_cv_times_dz are persistent
+        // Kokkos views (material properties, not reset each timestep). The
+        // correction must be reverted after each surface's solve+phase_change
+        // to avoid cumulative accumulation across timesteps. Save the amounts
+        // added here so they can be subtracted back below.
+        // perv_cv_times_dz IS reset each timestep by
+        // ComputeSoilHeatCapacityTimesDz (Step 3), so no restoration is needed
+        // for pervious road.
+        const Real cv_snow_roof =
+            (roof_H2OSno(l) > 0.0) ? SHR_CONST_CPICE * roof_H2OSno(l) : 0.0;
+        const Real cv_snow_imperv =
+            (imperv_H2OSno(l) > 0.0) ? SHR_CONST_CPICE * imperv_H2OSno(l) : 0.0;
+        roof_cv_times_dz(l, 0) += cv_snow_roof;
+        imperv_cv_times_dz(l, 0) += cv_snow_imperv;
         if (perv_H2OSno(l) > 0.0) {
           perv_cv_times_dz(l, 0) += SHR_CONST_CPICE * perv_H2OSno(l);
         }
@@ -909,14 +934,20 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
         // eflx_urban_ac set by the *previous* SoilTemperature call and uses it
         // in the current SoilTemperature call's road boundary condition.
 
+        // Determine htvp for pervious road: use SHR_CONST_LATVAP
+        // unconditionally, matching ELM's UrbanFluxes convention for urban
+        // surfaces (which does not use the sublimation latent heat switch from
+        // CanopyTemperatureMod).
+        const Real perv_htvp = SHR_CONST_LATVAP;
         // Pervious road (with evaporation + previous-timestep AC heat)
         const Real perv_EflxGnet =
             ComputeGroundNetEnergyFlux(perv_netSw(l), perv_netLw(l),
                                        perv_EflxShGrnd(l), perv_QflxEvapSoil(l),
-                                       perv_QflxTranEvap(l)) +
+                                       perv_QflxTranEvap(l), perv_htvp) +
             ac_heat_prev;
         const Real perv_DEflxGnet_DTemp = ComputeGroundNetEnergyFluxDerivative(
-            perv_Cgrnds(l), perv_Cgrndl(l), perv_emiss(l), perv_Temp(l));
+            perv_Cgrnds(l), perv_Cgrndl(l), perv_emiss(l), perv_Temp(l),
+            perv_htvp);
 
         // Roof (with evaporation)
         const Real roof_EflxGnet = ComputeGroundNetEnergyFlux(
@@ -996,6 +1027,10 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
                                  roof_dz, roof_zc, roof_zi, roof_Cgrnds(l),
                                  roof_Cgrndl(l), roof_emiss(l), roof_TGrnd0(l),
                                  /*useTopLayerAdjustment=*/false, capr, dtime);
+
+        // Restore roof cv_times_dz: revert the thin-snow correction added in
+        // Step 3c so that the persistent view is not permanently modified.
+        roof_cv_times_dz(l, 0) -= cv_snow_roof;
 
         // Solve heat diffusion for sunlit wall
         SurfaceProperties sunwall_surf(
@@ -1091,6 +1126,10 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
             imperv_Cgrnds(l), imperv_Cgrndl(l), imperv_emiss(l),
             imperv_TGrnd0(l), /*useTopLayerAdjustment=*/true, capr, dtime);
 
+        // Restore imperv cv_times_dz: revert the thin-snow correction added in
+        // Step 3c so that the persistent view is not permanently modified.
+        imperv_cv_times_dz(l, 0) -= cv_snow_imperv;
+
         // Solve heat diffusion for pervious road
         SurfaceProperties perv_surf(l, numSoilLayers, perv_temp, perv_zc,
                                     perv_zi, perv_dz, perv_tkInterface,
@@ -1098,16 +1137,17 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
         BoundaryConditions perv_bc(perv_EflxGnet, perv_DEflxGnet_DTemp,
                                    useTopAdjustment_road, capr,
                                    hasBottomBC_road, noBottomTemp);
+
         Solve1DHeatDiffusion(dtime, perv_surf, perv_bc);
 
         // Phase change (thin-snow): mirrors ELM Phasechange_beta for the
         // snl=0, h2osno>0 case on the pervious road top layer.
-        ApplyThinSnowPhaseChange(l, perv_temp, perv_H2OSno, perv_SnowDepth,
-                                 perv_QflxSnowMelt, perv_water_ice(l, 0),
-                                 perv_water_liquid(l, 0), perv_cv_times_dz,
-                                 perv_dz, perv_zc, perv_zi, perv_Cgrnds(l),
-                                 perv_Cgrndl(l), perv_emiss(l), perv_TGrnd0(l),
-                                 /*useTopLayerAdjustment=*/true, capr, dtime);
+        ApplyThinSnowPhaseChange(
+            l, perv_temp, perv_H2OSno, perv_SnowDepth, perv_QflxSnowMelt,
+            perv_water_ice(l, 0), perv_water_liquid(l, 0), perv_cv_times_dz,
+            perv_dz, perv_zc, perv_zi, perv_Cgrnds(l), perv_Cgrndl(l),
+            perv_emiss(l), perv_TGrnd0(l),
+            /*useTopLayerAdjustment=*/true, capr, dtime, perv_htvp);
 
         // Soil phase change for all pervious road layers (melt/freeze within
         // natural soil): mirrors ELM Phasechange_beta is_soil/icol_road_perv.
@@ -1115,7 +1155,7 @@ void ComputeHeatDiffusion(URBANXX::_p_UrbanType &urban) {
             l, numSoilLayers, perv_temp, perv_water_ice, perv_water_liquid,
             perv_cv_times_dz, perv_watsat, perv_bsw, perv_sucsat, perv_dz,
             perv_zc, perv_zi, capr, perv_Cgrnds(l), perv_Cgrndl(l),
-            perv_emiss(l), perv_TGrnd0(l), dtime);
+            perv_emiss(l), perv_TGrnd0(l), dtime, perv_htvp);
 
         // Update EffectiveSurfTemp from the newly computed first-layer
         // temperature for each surface. This keeps the radiation derivative
