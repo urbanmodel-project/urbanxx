@@ -116,24 +116,46 @@ void ComputeSoilFluxes(URBANXX::_p_UrbanType &urban) {
   Kokkos::parallel_for(
       "ComputeSoilFluxes", numLandunits, KOKKOS_LAMBDA(int l) {
         // ------------------------------------------------------------------
-        // Helper lambda for SnowCoveredSurfaceData surfaces (Steps 1 and 2).
-        // qflxEvapSoil and qflxTranEvap are views on SnowCoveredSurfaceData.
+        // Combined lambda for SnowCoveredSurfaceData surfaces.
+        // Order matches ELM SoilFluxesMod.F90 for urban columns:
+        //   Step 1 — temperature correction to eflxShGrnd and qflxEvapSoil
+        //   egirat  — clamp evap demand to topsoil availability; correct
+        //             eflxShGrnd using scaled qflxEvapSoil
+        //   Step 2 — eflxSoilGrnd (using egirat-corrected fluxes)
+        //   Step 3 — four evap/dew fluxes (using egirat-scaled qflxEvapSoil)
         // ------------------------------------------------------------------
-        auto computeSteps12_snow = [&](int l, Real tgnd0, Real &effectiveT,
-                                       Real netSw, Real netLw, Real emiss,
-                                       Real cgrnds, Real cgrndl,
-                                       Real &eflxShGrnd, Real &qflxEvapSoil,
-                                       Real qflxTranEvap, Real &eflxSoilGrnd) {
+        auto computeSteps123_snow = [&](int l, Real tgnd0, Real &effectiveT,
+                                        Real netSw, Real netLw, Real emiss,
+                                        Real cgrnds, Real cgrndl, Real topLiq,
+                                        Real topIce, Real &eflxShGrnd,
+                                        Real &qflxEvapSoil, Real qflxTranEvap,
+                                        Real &eflxSoilGrnd, Real &qflxEvapGrnd,
+                                        Real &qflxSubSnow, Real &qflxDewSnow,
+                                        Real &qflxDewGrnd) {
           // --- Step 1: temperature-correction to fluxes ---
           const Real tinc = effectiveT - tgnd0;
           eflxShGrnd += tinc * cgrnds;
           qflxEvapSoil += tinc * cgrndl;
 
-          // --- Step 2: EflxSoilGrnd ---
-          const Real htvp = (effectiveT > SHR_CONST_TKFRZ)
-                                ? SHR_CONST_LATVAP
-                                : (SHR_CONST_LATVAP + SHR_CONST_LATICE);
+          // htvp computed once; used consistently throughout
+          // const Real htvp = (effectiveT > SHR_CONST_TKFRZ)
+          //                      ? SHR_CONST_LATVAP
+          //                      : (SHR_CONST_LATVAP + SHR_CONST_LATICE);
+          const Real htvp = SHR_CONST_LATVAP;
 
+          // --- egirat: clamp total evaporation to available topsoil water ---
+          // (ELM SoilFluxesMod: computed and applied before eflx_soil_grnd)
+          const Real dtime = 30.0 * 60.0; // seconds
+          const Real total = topLiq + topIce;
+          const Real egsmax = total / dtime;
+          if (qflxEvapSoil > egsmax) {
+            const Real egirat = egsmax / qflxEvapSoil;
+            const Real save_qflxEvapSoil = qflxEvapSoil;
+            qflxEvapSoil *= egirat;
+            eflxShGrnd += (save_qflxEvapSoil - qflxEvapSoil) * htvp;
+          }
+
+          // --- Step 2: EflxSoilGrnd (after egirat correction) ---
           // dlrad = 0 for all urban surfaces
           // wasteheat / ac / traffic = 0 for now
           const Real eflx_lwrad_del =
@@ -141,6 +163,26 @@ void ComputeSoilFluxes(URBANXX::_p_UrbanType &urban) {
 
           eflxSoilGrnd = netSw - netLw - eflx_lwrad_del - eflxShGrnd -
                          qflxEvapSoil * htvp - qflxTranEvap * SHR_CONST_LATVAP;
+
+          // --- Step 3: four evap/dew fluxes (after eflxSoilGrnd) ---
+          // Uses egirat-scaled qflxEvapSoil; matches ELM order.
+          qflxEvapGrnd = 0.0;
+          qflxSubSnow = 0.0;
+          qflxDewSnow = 0.0;
+          qflxDewGrnd = 0.0;
+
+          if (qflxEvapSoil >= 0.0) {
+            if (total > 0.0) {
+              qflxEvapGrnd = Kokkos::max(qflxEvapSoil * (topLiq / total), 0.0);
+            }
+            qflxSubSnow = qflxEvapSoil - qflxEvapGrnd;
+          } else {
+            if (effectiveT < SHR_CONST_TKFRZ) {
+              qflxDewSnow = Kokkos::abs(qflxEvapSoil);
+            } else {
+              qflxDewGrnd = Kokkos::abs(qflxEvapSoil);
+            }
+          }
         };
 
         // ------------------------------------------------------------------
@@ -165,79 +207,33 @@ void ComputeSoilFluxes(URBANXX::_p_UrbanType &urban) {
           eflxSoilGrnd = netSw - netLw - eflx_lwrad_del - eflxShGrnd;
         };
 
-        // ------------------------------------------------------------------
-        // Helper lambda for Step 3 (SnowCoveredSurfaceData only).
-        // ------------------------------------------------------------------
-        auto computeStep3 = [&](int l, Real effectiveT, Real qflxEvapSoil,
-                                Real topLiq, Real topIce, Real &qflxEvapGrnd,
-                                Real &qflxSubSnow, Real &qflxDewSnow,
-                                Real &qflxDewGrnd) {
-          // Urban: qflx_ev_snow = QflxEvapSoil (no separate soil/snow
-          // split)
-          const Real qflx_ev_snow = qflxEvapSoil;
-
-          qflxEvapGrnd = 0.0;
-          qflxSubSnow = 0.0;
-          qflxDewSnow = 0.0;
-          qflxDewGrnd = 0.0;
-
-          if (qflx_ev_snow >= 0.0) {
-            const Real total = topLiq + topIce;
-            if (total > 0.0) {
-              qflxEvapGrnd = Kokkos::max(qflx_ev_snow * (topLiq / total), 0.0);
-            } else {
-              qflxEvapGrnd = 0.0;
-            }
-            qflxSubSnow = qflx_ev_snow - qflxEvapGrnd;
-            // Clamp total evaporation to available topsoil water (egirat from
-            // ELM SoilFluxesMod)
-            const Real dtime = 30.0 * 60.0; // seconds
-            const Real egsmax = total / dtime;
-            if (qflx_ev_snow > egsmax) {
-              const Real egirat = egsmax / qflx_ev_snow;
-              qflxEvapGrnd *= egirat;
-              qflxSubSnow *= egirat;
-            }
-          } else {
-            if (effectiveT < SHR_CONST_TKFRZ) {
-              qflxDewSnow = Kokkos::abs(qflx_ev_snow);
-            } else {
-              qflxDewGrnd = Kokkos::abs(qflx_ev_snow);
-            }
-          }
-        };
-
         // ---- Roof ----
-        computeSteps12_snow(
+        computeSteps123_snow(
             l, roof_TGrnd0(l), roof_Temp(l), roof_NetSw(l), roof_NetLw(l),
-            roof_Emiss(l), roof_Cgrnds(l), roof_Cgrndl(l), roof_EflxShGrnd(l),
-            roof_QflxEvapSoil(l), roof_QflxTranEvap(l), roof_EflxSoilGrnd(l));
-        computeStep3(l, roof_Temp(l), roof_QflxEvapSoil(l), roof_TopLiq(l),
-                     roof_TopIce(l), roof_QflxEvapGrnd(l), roof_QflxSubSnow(l),
-                     roof_QflxDewSnow(l), roof_QflxDewGrnd(l));
+            roof_Emiss(l), roof_Cgrnds(l), roof_Cgrndl(l), roof_TopLiq(l),
+            roof_TopIce(l), roof_EflxShGrnd(l), roof_QflxEvapSoil(l),
+            roof_QflxTranEvap(l), roof_EflxSoilGrnd(l), roof_QflxEvapGrnd(l),
+            roof_QflxSubSnow(l), roof_QflxDewSnow(l), roof_QflxDewGrnd(l));
 
         // ---- Impervious road ----
-        computeSteps12_snow(l, imperv_TGrnd0(l), imperv_Temp(l),
-                            imperv_NetSw(l), imperv_NetLw(l), imperv_Emiss(l),
-                            imperv_Cgrnds(l), imperv_Cgrndl(l),
-                            imperv_EflxShGrnd(l), imperv_QflxEvapSoil(l),
-                            imperv_QflxTranEvap(l), imperv_EflxSoilGrnd(l));
+        computeSteps123_snow(l, imperv_TGrnd0(l), imperv_Temp(l),
+                             imperv_NetSw(l), imperv_NetLw(l), imperv_Emiss(l),
+                             imperv_Cgrnds(l), imperv_Cgrndl(l),
+                             imperv_TopLiq(l), imperv_TopIce(l),
+                             imperv_EflxShGrnd(l), imperv_QflxEvapSoil(l),
+                             imperv_QflxTranEvap(l), imperv_EflxSoilGrnd(l),
+                             imperv_QflxEvapGrnd(l), imperv_QflxSubSnow(l),
+                             imperv_QflxDewSnow(l), imperv_QflxDewGrnd(l));
         imperv_EflxSoilGrnd(l) += bldg_eflux_ac_prev(l);
-        computeStep3(l, imperv_Temp(l), imperv_QflxEvapSoil(l),
-                     imperv_TopLiq(l), imperv_TopIce(l), imperv_QflxEvapGrnd(l),
-                     imperv_QflxSubSnow(l), imperv_QflxDewSnow(l),
-                     imperv_QflxDewGrnd(l));
 
         // ---- Pervious road (top layer = index 0) ----
-        computeSteps12_snow(
+        computeSteps123_snow(
             l, perv_TGrnd0(l), perv_Temp(l), perv_NetSw(l), perv_NetLw(l),
-            perv_Emiss(l), perv_Cgrnds(l), perv_Cgrndl(l), perv_EflxShGrnd(l),
-            perv_QflxEvapSoil(l), perv_QflxTranEvap(l), perv_EflxSoilGrnd(l));
+            perv_Emiss(l), perv_Cgrnds(l), perv_Cgrndl(l), perv_H2OSoiLiq(l, 0),
+            perv_H2OSoiIce(l, 0), perv_EflxShGrnd(l), perv_QflxEvapSoil(l),
+            perv_QflxTranEvap(l), perv_EflxSoilGrnd(l), perv_QflxEvapGrnd(l),
+            perv_QflxSubSnow(l), perv_QflxDewSnow(l), perv_QflxDewGrnd(l));
         perv_EflxSoilGrnd(l) += bldg_eflux_ac_prev(l);
-        computeStep3(l, perv_Temp(l), perv_QflxEvapSoil(l),
-                     perv_H2OSoiLiq(l, 0), perv_H2OSoiIce(l, 0),
-                     perv_QflxEvapGrnd(l), perv_QflxSubSnow(l),
-                     perv_QflxDewSnow(l), perv_QflxDewGrnd(l));
 
         // ---- Sunlit wall (Steps 1-2 only; walls have no evap/tran views) ----
         computeSteps12_wall(sunwall_TGrnd0(l), sunwall_Temp(l),

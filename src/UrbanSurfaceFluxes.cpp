@@ -710,8 +710,8 @@ void ComputeSurfaceHeatFluxes(Real taf, Real qaf, Real tSurf, Real qSurf,
 KOKKOS_INLINE_FUNCTION
 void ComputePerviousRoadHeatFluxes(Real taf, Real qaf, Real tSurf, Real qSurf,
                                    Real forcRho, Real wtusUnscl, Real wtuqUnscl,
-                                   Real &eflxShGrnd, Real &qflxEvapSoil,
-                                   Real &qflxTranEvap) {
+                                   Real fracSno, Real &eflxShGrnd,
+                                   Real &qflxEvapSoil, Real &qflxTranEvap) {
   // Temperature and humidity differences (canyon air - surface)
   const Real dth = taf - tSurf;
   const Real dqh = qaf - qSurf;
@@ -721,18 +721,16 @@ void ComputePerviousRoadHeatFluxes(Real taf, Real qaf, Real tSurf, Real qSurf,
 
   // Latent heat flux - partition between soil evaporation and transpiration.
   // Mirrors ELM's UrbanFluxesMod logic for icol_road_perv:
-  //   dqh > 0  → condensation/dew  → assign to soil evaporation
-  //   dqh <= 0 → evaporation       → assign to transpiration
-  // (ELM also routes to soil when frac_sno > 0 or soilalpha_u <= 0, but those
-  // inputs are not available in URBANxx; the check in UrbanxxSurfaceFluxesMod
-  // compares qflx_evap_soi + qflx_tran_veg against qflxEvapSoil, so total
-  // flux is always validated regardless of which bucket ELM uses.)
-  if (dqh > 0.0) {
-    // Condensation/dew - assign to soil evaporation
+  //   dqh > 0       → condensation/dew → assign to soil evaporation
+  //   fracSno > 0   → snow present     → assign to soil evaporation (ELM
+  //   frac_sno branch) dqh <= 0 and no snow → evaporation → assign to
+  //   transpiration
+  if (dqh > 0.0 || fracSno > 0.0) {
+    // Condensation/dew or snow-covered - assign to soil evaporation
     qflxEvapSoil = -forcRho * wtuqUnscl * dqh;
     qflxTranEvap = 0.0;
   } else {
-    // Evaporation - assign to transpiration (no vegetation, but ELM uses this
+    // Evaporation with no snow - assign to transpiration (ELM uses this
     // bucket for pervious road evaporation when liquid water is available)
     qflxEvapSoil = 0.0;
     qflxTranEvap = -forcRho * wtuqUnscl * dqh;
@@ -896,21 +894,32 @@ void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
               urban.shadedWall.EffectiveSurfTemp(l)};
 
           Real tafNew, qafNew;
-          // Use 0.666666666666 (not 2.0/3.0) to match ELM's literal constant in
-          // UrbanFluxesMod.F90 exactly, maximising the chance of BFB results.
-          const Real fwetRoof = Kokkos::min(
-              Kokkos::pow(Kokkos::max(0.0, urban.roof.TopH2OSoiLiq(l) +
-                                               urban.roof.TopH2OSoiIce(l)) /
-                              PONDMX_URBAN,
-                          0.666666666666),
-              1.0);
-          const Real fwetRoadImperv = Kokkos::min(
-              Kokkos::pow(
-                  Kokkos::max(0.0, urban.imperviousRoad.TopH2OSoiLiq(l) +
-                                       urban.imperviousRoad.TopH2OSoiIce(l)) /
-                      PONDMX_URBAN,
-                  0.666666666666),
-              1.0);
+          // Two-branch fwet formula matching ELM's UrbanFluxesMod.F90:
+          // if snow_depth > 0: ramp to full wetness at 5 cm depth;
+          // otherwise: pond-water formula from top-layer liquid+ice.
+          const Real snowDepthRoof = urban.roof.SnowDepth(l);
+          const Real fwetRoof =
+              (snowDepthRoof > 0.0)
+                  ? Kokkos::min(snowDepthRoof / 0.05, 1.0)
+                  : Kokkos::min(
+                        Kokkos::pow(
+                            Kokkos::max(0.0, urban.roof.TopH2OSoiLiq(l) +
+                                                 urban.roof.TopH2OSoiIce(l)) /
+                                PONDMX_URBAN,
+                            0.666666666666),
+                        1.0);
+          const Real snowDepthImperv = urban.imperviousRoad.SnowDepth(l);
+          const Real fwetRoadImperv =
+              (snowDepthImperv > 0.0)
+                  ? Kokkos::min(snowDepthImperv / 0.05, 1.0)
+                  : Kokkos::min(
+                        Kokkos::pow(
+                            Kokkos::max(
+                                0.0, urban.imperviousRoad.TopH2OSoiLiq(l) +
+                                         urban.imperviousRoad.TopH2OSoiIce(l)) /
+                                PONDMX_URBAN,
+                            0.666666666666),
+                        1.0);
           ComputeNewTafAndQaf(canyonWind, thm, rahu, rawu, canyonData,
                               surfaceData, qaf, fwetRoof, fwetRoadImperv,
                               tafNew, qafNew, condcs);
@@ -993,7 +1002,8 @@ void ComputeSurfaceFluxes(URBANXX::_p_UrbanType &urban) {
         ComputePerviousRoadHeatFluxes(
             taf, qaf, urban.perviousRoad.EffectiveSurfTemp(l),
             urban.perviousRoad.Qs(l), forcRho(l), condcs.roadPerv.wtusUnscl,
-            condcs.roadPerv.wtuqUnscl, urban.perviousRoad.EflxShGrnd(l),
+            condcs.roadPerv.wtuqUnscl, urban.perviousRoad.FracSno(l),
+            urban.perviousRoad.EflxShGrnd(l),
             urban.perviousRoad.QflxEvapSoil(l),
             urban.perviousRoad.QflxTranEvap(l));
 

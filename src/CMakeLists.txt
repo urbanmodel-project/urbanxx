@@ -9,6 +9,7 @@ set(URBAN_SOURCES
     UrbanHydrologyGetters.cpp
     AtmosphereType.cpp
     UrbanLongwaveRad.cpp
+    UrbanSnow.cpp
     UrbanShortwaveRad.cpp
     UrbanSurfaceFluxes.cpp
     UrbanHeatDiffusion.cpp
@@ -18,6 +19,7 @@ set(URBAN_SOURCES
     UrbanSoilFluxes.cpp
     UrbanSoilFluxesGetters.cpp
     UrbanSoilFluxesSetters.cpp
+    UrbanSnowSetters.cpp
     UrbanSurfaceRunoff.cpp
     UrbanSurfaceRunoffGetters.cpp
     UrbanSurfaceRunoffSetters.cpp

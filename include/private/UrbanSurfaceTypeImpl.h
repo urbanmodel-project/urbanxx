@@ -208,8 +208,19 @@ struct SnowCoveredSurfaceData : SurfaceDataBase {
   DECLARE_DEVICE_VIEW(
       1DR8, QflxSubSnow) // sublimation from ice (mm H2O/s)      [+ = to atm]
   DECLARE_DEVICE_VIEW(1DR8,
+                      QflxSnowMelt) // thin-snow melt rate [kg/(m² s)]
+  DECLARE_DEVICE_VIEW(1DR8,
                       QflxDewSnow) // dew deposited to snow pack (mm H2O/s)
   DECLARE_DEVICE_VIEW(1DR8, QflxDewGrnd) // dew on bare ground (mm H2O/s)
+
+  // Internal snow state (persists across timesteps; computed autonomously
+  // without any ELM state crossing the boundary)
+  DECLARE_DEVICE_VIEW(1DR8, H2OSno) // snow water equivalent [kg/m²]
+  DECLARE_DEVICE_VIEW(
+      1DR8, IntSno) // integrated (max-season) snowfall [kg/m²], Niu-Yang state
+  DECLARE_DEVICE_VIEW(1DR8, FracSno)   // snow-covered fraction [-]
+  DECLARE_DEVICE_VIEW(1DR8, SnowDepth) // geometric snow depth [m]
+  DECLARE_DEVICE_VIEW(1DR8, NMelt) // SCA shape parameter [-] (col_pp%n_melt)
 
   SnowCoveredSurfaceData(int numLandunits, int numRadBands, int numRadTypes,
                          int numLayers)
@@ -222,8 +233,14 @@ struct SnowCoveredSurfaceData : SurfaceDataBase {
     ALLOCATE_DEVICE_VIEW(QflxTranEvap, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(QflxEvapGrnd, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(QflxSubSnow, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(QflxSnowMelt, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(QflxDewSnow, Array1DR8, numLandunits)
     ALLOCATE_DEVICE_VIEW(QflxDewGrnd, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(H2OSno, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(IntSno, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(FracSno, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(SnowDepth, Array1DR8, numLandunits)
+    ALLOCATE_DEVICE_VIEW(NMelt, Array1DR8, numLandunits)
   }
 };
 

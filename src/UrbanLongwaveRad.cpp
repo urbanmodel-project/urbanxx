@@ -4,9 +4,11 @@
 #include "private/UrbanDebugUtils.h"
 #include "private/UrbanLongwaveRadImpl.h"
 #include "private/UrbanParamsTypeImpl.h"
+#include "private/UrbanSnowImpl.h"
 #include "private/UrbanSurfaceTypeImpl.h"
 #include "private/UrbanTypeImpl.h"
 #include <Kokkos_Core.hpp>
+#include <cmath>
 #include <iostream>
 
 namespace URBANXX {
@@ -252,6 +254,12 @@ void ComputeNetLongwave(URBANXX::_p_UrbanType &urban) {
   auto emissImpRoad = urban.urbanParams.emissivity.ImperviousRoad;
   auto emissPerRoad = urban.urbanParams.emissivity.PerviousRoad;
 
+  // Snow-covered fraction views for emissivity blending (walls excluded)
+  auto fracSnoRoof = urban.roof.FracSno;
+  auto fracSnoImpRoad = urban.imperviousRoad.FracSno;
+  auto fracSnoPerRoad = urban.perviousRoad.FracSno;
+  constexpr double snoem = 0.97; // ELM snow emissivity constant
+
   // Access surface temperatures
   auto tempRoof = urban.roof.EffectiveSurfTemp;
   auto tempSunlitWall = urban.sunlitWall.EffectiveSurfTemp;
@@ -281,8 +289,16 @@ void ComputeNetLongwave(URBANXX::_p_UrbanType &urban) {
         // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         // Computations for roof
         // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        upLwRoof(l) = emissRoof(l) * STEBOL * Kokkos::pow(tempRoof(l), 4.0) +
-                      (1.0 - emissRoof(l)) * forcLRad(l);
+        // Blend bare-surface emissivity with snow emissivity (walls excluded)
+        const Real emissRoofS =
+            emissRoof(l) * (1.0 - fracSnoRoof(l)) + snoem * fracSnoRoof(l);
+        const Real emissImpRoadS = emissImpRoad(l) * (1.0 - fracSnoImpRoad(l)) +
+                                   snoem * fracSnoImpRoad(l);
+        const Real emissPerRoadS = emissPerRoad(l) * (1.0 - fracSnoPerRoad(l)) +
+                                   snoem * fracSnoPerRoad(l);
+
+        upLwRoof(l) = emissRoofS * STEBOL * Kokkos::pow(tempRoof(l), 4.0) +
+                      (1.0 - emissRoofS) * forcLRad(l);
         netLwRoof(l) = upLwRoof(l) - forcLRad(l);
 
         // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -298,11 +314,12 @@ void ComputeNetLongwave(URBANXX::_p_UrbanType &urban) {
         // View factors for roads
         const RoadViewFactors roadVF = {vf_sr(l), vf_wr(l)};
 
-        // Initialize impervious and pervious roads
+        // Initialize impervious and pervious roads (using snow-blended
+        // emissivities)
         auto impRoad = InitializeSingleRoad(
-            LtotForRoad, emissImpRoad(l), tempImpRoad(l), roadVF, fracImpRoad);
+            LtotForRoad, emissImpRoadS, tempImpRoad(l), roadVF, fracImpRoad);
         auto perRoad =
-            InitializeSingleRoad(LtotForRoad, emissPerRoad(l), tempPerRoad(l),
+            InitializeSingleRoad(LtotForRoad, emissPerRoadS, tempPerRoad(l),
                                  roadVF, fracPervRoad(l));
 
         // Combine both roads
@@ -358,8 +375,8 @@ void ComputeNetLongwave(URBANXX::_p_UrbanType &urban) {
                         hwr(l);
 
           impRoad.flux =
-              Fluxes(emissImpRoad(l), tempImpRoad(l), LtotForRoad, fracImpRoad);
-          perRoad.flux = Fluxes(emissPerRoad(l), tempPerRoad(l), LtotForRoad,
+              Fluxes(emissImpRoadS, tempImpRoad(l), LtotForRoad, fracImpRoad);
+          perRoad.flux = Fluxes(emissPerRoadS, tempPerRoad(l), LtotForRoad,
                                 fracPervRoad(l));
 
           RoadAbs =
@@ -398,9 +415,9 @@ void ComputeNetLongwave(URBANXX::_p_UrbanType &urban) {
 
           // step(3): Compute reflected radiation components for this iteration
           impRoad.ref =
-              ReflectRoad(LtotForRoad, emissImpRoad(l), roadVF, fracImpRoad);
-          perRoad.ref = ReflectRoad(LtotForRoad, emissPerRoad(l), roadVF,
-                                    fracPervRoad(l));
+              ReflectRoad(LtotForRoad, emissImpRoadS, roadVF, fracImpRoad);
+          perRoad.ref =
+              ReflectRoad(LtotForRoad, emissPerRoadS, roadVF, fracPervRoad(l));
 
           RoadRefToSky = impRoad.ref.toSkyByWt + perRoad.ref.toSkyByWt;
           RoadRefToSunlitWall =

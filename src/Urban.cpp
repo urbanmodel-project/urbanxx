@@ -5,6 +5,7 @@
 #include "private/UrbanHydrologyImpl.h"
 #include "private/UrbanLongwaveRadImpl.h"
 #include "private/UrbanShortwaveRadImpl.h"
+#include "private/UrbanSnowImpl.h"
 #include "private/UrbanSurfaceFluxesImpl.h"
 #include "private/UrbanTypeImpl.h"
 
@@ -91,6 +92,35 @@ void UrbanComputeNetLongwave(UrbanType urban, UrbanErrorCode *status) {
 
   try {
     URBANXX::ComputeNetLongwave(*urban);
+    *status = URBAN_SUCCESS;
+  } catch (...) {
+    *status = URBAN_ERR_INTERNAL;
+  }
+}
+
+void UrbanComputeSnowCover(UrbanType urban, UrbanErrorCode *status) {
+  if (urban == nullptr || status == nullptr) {
+    if (status)
+      *status = URBAN_ERR_INVALID_ARGUMENT;
+    return;
+  }
+
+  try {
+    URBANXX::ComputeSnowCover(*urban);
+    *status = URBAN_SUCCESS;
+  } catch (...) {
+    *status = URBAN_ERR_INTERNAL;
+  }
+}
+
+void UrbanComputeUpdateSnowFraction(UrbanType urban, UrbanErrorCode *status) {
+  if (urban == nullptr || status == nullptr) {
+    if (status)
+      *status = URBAN_ERR_INVALID_ARGUMENT;
+    return;
+  }
+  try {
+    URBANXX::ComputeUpdateSnowFraction(*urban);
     *status = URBAN_SUCCESS;
   } catch (...) {
     *status = URBAN_ERR_INTERNAL;

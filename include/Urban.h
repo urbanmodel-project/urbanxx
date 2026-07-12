@@ -232,6 +232,10 @@ URBAN_EXTERN void UrbanSetup(UrbanType urban, UrbanErrorCode *status);
 URBAN_EXTERN void UrbanAdvance(UrbanType urban, UrbanErrorCode *status);
 
 // Physics computation functions
+URBAN_EXTERN void UrbanComputeSnowCover(UrbanType urban,
+                                        UrbanErrorCode *status);
+URBAN_EXTERN void UrbanComputeUpdateSnowFraction(UrbanType urban,
+                                                 UrbanErrorCode *status);
 URBAN_EXTERN void UrbanComputeNetLongwave(UrbanType urban,
                                           UrbanErrorCode *status);
 URBAN_EXTERN void UrbanComputeNetShortwave(UrbanType urban,
@@ -712,6 +716,16 @@ URBAN_EXTERN void UrbanSetQflxSubSnowImperviousRoad(UrbanType urban,
                                                     const double *values,
                                                     int length,
                                                     UrbanErrorCode *status);
+
+// NMelt (SCA shape parameter) setter functions
+URBAN_EXTERN void UrbanSetNMeltRoof(UrbanType urban, const double *values,
+                                    int length, UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetNMeltImperviousRoad(UrbanType urban,
+                                              const double *values, int length,
+                                              UrbanErrorCode *status);
+URBAN_EXTERN void UrbanSetNMeltPerviousRoad(UrbanType urban,
+                                            const double *values, int length,
+                                            UrbanErrorCode *status);
 
 // DewCondensation compute function
 URBAN_EXTERN void
